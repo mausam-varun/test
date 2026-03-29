@@ -28,6 +28,7 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/intl-tel-input/build/css/intlTelInput.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -42,8 +43,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "10kB",
+                  "maximumError": "12kB"
                 }
               ],
               "outputHashing": "all"

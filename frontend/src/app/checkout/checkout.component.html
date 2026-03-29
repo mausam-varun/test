@@ -1,0 +1,141 @@
+<main class="checkout-page">
+  <section class="checkout-wrap">
+    <header class="checkout-head">
+      <h1>Secure Checkout</h1>
+      <p>Complete your order for handcrafted treasures</p>
+    </header>
+
+    <div class="checkout-grid">
+      <section class="checkout-form-card">
+        <h2>Shipping Details</h2>
+
+        <div class="checkout-status is-error" *ngIf="validationMessage">
+          {{ validationMessage }}
+        </div>
+
+        <div class="checkout-status is-error" *ngIf="submitErrorMessage">
+          {{ submitErrorMessage }}
+        </div>
+
+        <div class="checkout-status is-success" *ngIf="submitSuccessMessage">
+          <strong>{{ submitSuccessMessage }}</strong>
+          <span *ngIf="placedOrderNumber">Order Number: {{ placedOrderNumber }}</span>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Full Name
+            <input type="text" [(ngModel)]="fullName" placeholder="Enter your full name">
+          </label>
+
+          <label>
+            Email
+            <input type="email" [(ngModel)]="email" placeholder="name@example.com">
+          </label>
+
+          <label>
+            Phone
+            <input type="tel" [(ngModel)]="phone" placeholder="+91 98xxxxxx">
+          </label>
+
+          <label>
+            Address Line 1
+            <input type="text" [(ngModel)]="addressLine1" placeholder="Street address">
+          </label>
+
+          <label>
+            Address Line 2
+            <input type="text" [(ngModel)]="addressLine2" placeholder="Apartment, suite, etc. (optional)">
+          </label>
+
+          <label>
+            City
+            <input type="text" [(ngModel)]="city" placeholder="City">
+          </label>
+
+          <label>
+            State
+            <input type="text" [(ngModel)]="state" placeholder="State">
+          </label>
+
+          <label>
+            Postal Code
+            <input type="text" [(ngModel)]="postalCode" placeholder="Postal code">
+          </label>
+
+          <label>
+            Country
+            <input type="text" [(ngModel)]="country" placeholder="Country">
+          </label>
+        </div>
+
+        <h3>Payment Method</h3>
+        <div class="payment-options">
+          <label>
+            <input type="radio" name="paymentMethod" value="cod" [(ngModel)]="paymentMethod">
+            Cash on Delivery
+          </label>
+          <label>
+            <input type="radio" name="paymentMethod" value="card" [(ngModel)]="paymentMethod">
+            Credit / Debit Card
+          </label>
+          <label>
+            <input type="radio" name="paymentMethod" value="upi" [(ngModel)]="paymentMethod">
+            UPI
+          </label>
+        </div>
+      </section>
+
+      <aside class="order-summary-card">
+        <h2>Order Summary</h2>
+
+        <div class="summary-items" *ngIf="cartItems.length; else emptyCartState">
+          <article class="summary-item" *ngFor="let item of cartItems">
+            <img [src]="item.image" [alt]="item.name">
+            <div>
+              <h4>{{ item.name }}</h4>
+              <p>Qty:
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="item.quantity"
+                  (ngModelChange)="updateItemQuantity(item.id, $event)">
+              </p>
+              <button type="button" class="remove-item-btn" (click)="removeItem(item.id)">Remove</button>
+            </div>
+            <strong>${{ (item.price * item.quantity) | number:'1.2-2' }}</strong>
+          </article>
+        </div>
+
+        <ng-template #emptyCartState>
+          <p class="empty-cart">Your cart is empty. Add products from Home or Shop to continue.</p>
+        </ng-template>
+
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <span>${{ subtotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-line">
+          <span>Shipping</span>
+          <span>
+            <ng-container *ngIf="shipping === 0; else shippingValue">Free</ng-container>
+            <ng-template #shippingValue>${{ shipping | number:'1.2-2' }}</ng-template>
+          </span>
+        </div>
+        <div class="summary-line">
+          <span>Tax</span>
+          <span>${{ tax | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="summary-total">
+          <span>Total</span>
+          <span>${{ total | number:'1.2-2' }}</span>
+        </div>
+
+        <button type="button" class="place-order-btn" (click)="placeOrder()" [disabled]="!cartItems.length || isSubmitting">
+          {{ isSubmitting ? 'Placing Order...' : 'Place Order' }}
+        </button>
+      </aside>
+    </div>
+  </section>
+</main>

@@ -1,42 +1,60 @@
+require('dotenv').config();
+
 const express = require('express');
-const mongoose = require('mongoose');
+const path = require('path');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+
+const productRoutes = require('./routes/productRoutes');
+const authRoutes = require('./routes/authRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const sliderRoutes = require('./routes/sliderRoutes');
+const { initializeDatabase } = require('./services/db');
+const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5001;
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
+app.use(helmet());
+app.use(compression());
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB (replace with your connection string)
-mongoose.connect('mongodb://localhost:27017/divara-craft', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use(limiter);
 
-// Basic routes
-app.get('/', (req, res) => {
-  res.send('Divara Craft Backend API');
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
-// User routes (placeholder)
-app.get('/api/users', (req, res) => {
-  res.json({ message: 'Users endpoint' });
-});
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Product routes (placeholder)
-app.get('/api/products', (req, res) => {
-  res.json({ message: 'Products endpoint' });
-});
+app.use('/api/products', productRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/slider', sliderRoutes);
 
-// Admin routes (placeholder)
-app.get('/api/admin', (req, res) => {
-  res.json({ message: 'Admin dashboard endpoint' });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+      console.log(`Admin backend running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
+  }
+}
+
+startServer();

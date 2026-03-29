@@ -3,51 +3,9 @@
 }
 
 :host {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #092864;
+  font-family: 'Segoe UI', 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+  color: #1a1a1a;
   display: block;
-}
-
-.site-wrap {
-  background: #fdf8f3;
-  min-height: 100vh;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  padding: 14px 46px;
-  background: #ffffff;
-  color: #0f3e7e;
-  border-bottom: 1px solid #f0e5ce;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-}
-
-/* Keep brand at left, center nav exactly, and account at right */
-.brand {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-}
-
-.brand-logo {
-  height: 56px;
-  width: auto;
-}
-
-.main-nav {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 26px;
-  align-items: center;
-  font-weight: 700;
-  font-size: 1.02rem;
 }
 
 .main-nav a {

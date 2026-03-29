@@ -1,0 +1,175 @@
+:host {
+  display: block;
+}
+
+.slider-settings {
+  display: grid;
+  gap: 16px;
+}
+
+.page-head h2 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.page-head p {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+}
+
+.display-count-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.upload-row {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+button {
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  padding: 9px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button.danger {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.slider-item {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  gap: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.slider-item img {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.item-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+}
+
+.item-actions {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.messages {
+  min-height: 22px;
+}
+
+.message {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.message.success {
+  color: #166534;
+}
+
+.message.error {
+  color: #b91c1c;
+}
+
+.muted {
+  margin: 0;
+  color: #64748b;
+}
+
+.filename {
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 980px) {
+  .slider-item {
+    grid-template-columns: 1fr;
+  }
+
+  .slider-item img {
+    width: 100%;
+    height: 180px;
+  }
+
+  .item-fields,
+  .form-grid,
+  .upload-row {
+    grid-template-columns: 1fr;
+  }
+
+  .item-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

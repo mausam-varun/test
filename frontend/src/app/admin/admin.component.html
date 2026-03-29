@@ -1,2 +1,176 @@
-<h1>Admin Dashboard</h1>
-<p>Welcome to the admin panel. Here you can manage users, products, and more.</p>
+<section class="admin-products-page">
+
+	<div class="card upload-card">
+		<div class="card-title-row">
+			<h2>{{ editMode ? 'Edit Product #' + editingProductId : 'Upload New Product' }}</h2>
+			<button *ngIf="editMode" class="btn-cancel" type="button" (click)="cancelEdit()">Cancel</button>
+		</div>
+
+		<div class="ai-mode-panel">
+			<div>
+				<p class="ai-mode-title">AI Indexing</p>
+				<p class="ai-mode-subtitle">Current: <strong>{{ activeAiMode }}</strong> <span class="ai-mode-source">({{ aiModeSource }})</span></p>
+			</div>
+			<div class="ai-mode-actions">
+				<select [(ngModel)]="selectedAiMode" [disabled]="isUpdatingAiMode || isSubmitting">
+					<option value="async">Async</option>
+					<option value="sync">Sync</option>
+					<option value="off">Off</option>
+				</select>
+				<button class="btn-ai-mode" type="button" [disabled]="isUpdatingAiMode || isSubmitting || selectedAiMode === activeAiMode" (click)="updateAiIndexingMode()">
+					{{ isUpdatingAiMode ? 'Saving...' : 'Apply Mode' }}
+				</button>
+			</div>
+		</div>
+
+		<div class="form-grid">
+			<label>
+				<span>Product Name</span>
+				<input type="text" [(ngModel)]="productName" placeholder="e.g. Floral Embroidered Kurta" />
+			</label>
+
+			<label>
+				<span>Price (INR)</span>
+				<input type="number" min="1" [(ngModel)]="productPrice" placeholder="e.g. 1499" />
+			</label>
+
+			<label>
+				<span>Category</span>
+				<input type="text" [(ngModel)]="productCategory" placeholder="e.g. Women Ethnic" />
+			</label>
+
+			<label>
+				<span>Color</span>
+				<input type="text" [(ngModel)]="productColor" placeholder="e.g. red,gold" />
+			</label>
+
+			<label>
+				<span>Size</span>
+				<input type="text" [(ngModel)]="productSize" placeholder="e.g. 2.4" />
+			</label>
+
+			<label>
+				<span>Design</span>
+				<input type="text" [(ngModel)]="productDesign" placeholder="e.g. kundan" />
+			</label>
+
+			<label>
+				<span>Pattern</span>
+				<input type="text" [(ngModel)]="productPattern" placeholder="e.g. floral" />
+			</label>
+
+			<label>
+				<span>Style</span>
+				<input type="text" [(ngModel)]="productStyle" placeholder="e.g. ethnic" />
+			</label>
+
+			<label>
+				<span>Material</span>
+				<input type="text" [(ngModel)]="productMaterial" placeholder="e.g. alloy" />
+			</label>
+
+			<label class="full-width">
+				<span>Description</span>
+				<textarea rows="4" [(ngModel)]="productDescription" placeholder="Short product details for admin reference"></textarea>
+			</label>
+
+			<div class="full-width file-picker-section">
+				<span class="file-picker-label">Product Images (JPG/PNG — select one or more)</span>
+				<label class="file-pick-btn">
+					Choose Images
+					<input type="file" accept="image/png,image/jpeg" multiple (change)="onImagesSelected($event)" />
+				</label>
+
+				<!-- Existing images when editing -->
+				<div class="images-grid" *ngIf="editMode && editExistingImages.length > 0">
+					<p class="images-section-title">Current saved images (will be replaced if you upload new ones):</p>
+					<div class="image-thumb-card existing" *ngFor="let img of editExistingImages">
+						<img [src]="img.image_url" [alt]="'Saved image'" />
+						<span class="primary-badge" *ngIf="img.is_primary_image">Primary</span>
+					</div>
+				</div>
+
+				<!-- Newly selected images with primary picker -->
+				<div class="images-grid" *ngIf="selectedImages.length > 0">
+					<p class="images-section-title">New images to upload:</p>
+					<div
+						class="image-thumb-card"
+						*ngFor="let img of selectedImages; let i = index"
+						[class.is-primary]="img.isPrimary"
+					>
+						<button class="btn-remove-image" type="button" (click)="removeSelectedImage(i)" title="Remove">&#x2715;</button>
+						<img [src]="img.previewUrl" [alt]="img.file.name" />
+						<span class="img-filename">{{ img.file.name }}</span>
+						<button
+							class="btn-set-primary"
+							type="button"
+							[class.active]="img.isPrimary"
+							(click)="setPrimaryImage(i)"
+						>
+							{{ img.isPrimary ? '&#9733; Primary' : 'Set as Primary' }}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<button class="btn-upload" type="button" [disabled]="isSubmitting" (click)="saveProduct()">
+			<ng-container *ngIf="!isSubmitting">
+				{{ editMode ? 'Update Product' : 'Upload Product' }}
+			</ng-container>
+			<ng-container *ngIf="isSubmitting">
+				{{ editMode ? 'Updating...' : 'Uploading...' }}
+			</ng-container>
+		</button>
+
+		<p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+		<p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+		<p class="message" [class.success]="aiIndexingState === 'success'" [class.error]="aiIndexingState === 'error'" [class.info]="aiIndexingState === 'info'" *ngIf="aiIndexingMessage">
+			{{ aiIndexingMessage }}
+		</p>
+	</div>
+
+	<div class="card list-card">
+		<div class="list-header">
+			<h2>Uploaded Products</h2>
+			<span *ngIf="isLoadingProducts">Loading...</span>
+		</div>
+
+		<p class="empty-text" *ngIf="!isLoadingProducts && products.length === 0">No products uploaded yet.</p>
+
+		<div class="table-wrap" *ngIf="products.length > 0">
+			<table>
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Image</th>
+						<th>Name</th>
+						<th>Category</th>
+						<th>Price</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let product of products" [class.editing-row]="editingProductId === product.id">
+						<td>{{ product.id }}</td>
+						<td><img [src]="product.image_url" [alt]="product.name" /></td>
+						<td>{{ product.name }}</td>
+						<td>{{ product.category }}</td>
+						<td>&#8377;{{ product.price | number:'1.0-2' }}</td>
+						<td class="actions-cell">
+							<ng-container *ngIf="confirmDeleteId !== product.id">
+								<button class="btn-edit" (click)="startEdit(product)">Edit</button>
+								<button class="btn-delete" (click)="requestDelete(product.id)">Delete</button>
+							</ng-container>
+							<ng-container *ngIf="confirmDeleteId === product.id">
+								<span class="confirm-text">Delete?</span>
+								<button class="btn-confirm-yes" (click)="confirmDelete(product.id)">Yes</button>
+								<button class="btn-confirm-no" (click)="cancelDelete()">No</button>
+							</ng-container>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,96 @@
+<div class="auth-popup-backdrop" *ngIf="isOpen" (click)="close()">
+  <section class="auth-popup" role="dialog" aria-modal="true" aria-labelledby="signup-popup-title" (click)="$event.stopPropagation()">
+    <button type="button" class="auth-popup__close" (click)="close()" aria-label="Close signup popup">
+      &times;
+    </button>
+
+    <div class="auth-popup__header">
+      <span class="auth-popup__eyebrow">Divara Craft</span>
+      <h2 id="signup-popup-title">{{ isLoginView ? 'Welcome Back' : 'Create Your Account' }}</h2>
+      <p>{{ isLoginView ? 'Login with your email and password.' : 'Sign up with both email and mobile details from any page.' }}</p>
+    </div>
+
+    <form class="auth-popup__form" (ngSubmit)="submit()">
+      <label class="auth-popup__field" *ngIf="!isLoginView">
+        <span>Full Name</span>
+        <input
+          type="text"
+          name="fullName"
+          [(ngModel)]="fullName"
+          placeholder="Enter your full name">
+      </label>
+
+      <label class="auth-popup__field">
+        <span>Email Address</span>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="name@example.com">
+      </label>
+
+      <div class="auth-popup__mobile-row" *ngIf="!isLoginView">
+        <label class="auth-popup__field auth-popup__field--country">
+          <span>Code</span>
+          <select name="countryCode" [(ngModel)]="selectedCountryCode">
+            <option *ngFor="let option of countryCodeOptions" [value]="option.code">{{ option.label }}</option>
+          </select>
+        </label>
+
+        <label class="auth-popup__field auth-popup__field--mobile">
+          <span>Mobile Number</span>
+          <input
+            type="tel"
+            name="mobile"
+            [(ngModel)]="mobile"
+            placeholder="Enter mobile number"
+            autocomplete="tel">
+        </label>
+      </div>
+
+      <label class="auth-popup__field">
+        <span>Password</span>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          [placeholder]="isLoginView ? 'Enter your password' : 'Create a password'">
+      </label>
+
+      <label class="auth-popup__field" *ngIf="!isLoginView">
+        <span>Confirm Password</span>
+        <input
+          type="password"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          placeholder="Confirm your password">
+      </label>
+
+      <p class="auth-popup__message is-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="auth-popup__message is-success" *ngIf="successMessage">{{ successMessage }}</p>
+
+      <button type="submit" class="auth-popup__submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? (isLoginView ? 'Logging In...' : 'Creating Account...') : (isLoginView ? 'Login' : 'Create Account') }}
+      </button>
+    </form>
+
+    <p class="auth-popup__switch-text" *ngIf="!isLoginView">
+      If you have account
+      <button type="button" class="auth-popup__inline-link" (click)="showLogin()">Login</button>
+    </p>
+
+    <p class="auth-popup__switch-text" *ngIf="isLoginView">
+      Don't have an account?
+      <button type="button" class="auth-popup__inline-link" (click)="showSignup()">Sign Up</button>
+    </p>
+
+    <div class="auth-popup__divider">
+      <span>or</span>
+    </div>
+
+    <button type="button" class="auth-popup__google-btn" (click)="continueWithGoogle()">
+      <span class="auth-popup__google-icon">G</span>
+      Continue with Gmail
+    </button>
+  </section>
+</div>

@@ -1,0 +1,85 @@
+<section class="profile-page">
+  <div class="profile-page__container">
+    <header class="profile-page__header">
+      <h1>My Profile</h1>
+      <p>Update your account details below.</p>
+    </header>
+
+    <form class="profile-form" (ngSubmit)="submit()">
+      <label class="profile-form__field">
+        <span>Full Name</span>
+        <input
+          type="text"
+          name="name"
+          [value]="name"
+          (input)="onNameInput($event)"
+          placeholder="Enter your name"
+          required>
+      </label>
+
+      <div class="profile-form__field">
+        <span>Email Address</span>
+        <div class="profile-form__email-row">
+          <input
+            type="email"
+            name="email"
+            [value]="email"
+            (input)="onEmailInput($event)"
+            placeholder="name@example.com"
+            required>
+          <button
+            type="button"
+            class="profile-form__verify-email-btn"
+            *ngIf="showVerifyBtn"
+            [disabled]="isRequestingVerification"
+            (click)="requestVerificationFromBtn()">
+            {{ isRequestingVerification ? 'Sending...' : 'Verify' }}
+          </button>
+        </div>
+        <span class="profile-form__email-hint is-error" *ngIf="showEmailFormatError">
+          Enter a valid email address.
+        </span>
+        <span class="profile-form__email-hint is-info" *ngIf="showVerifyBtn">
+          A verification code will be sent to your new email.
+        </span>
+        <span class="profile-form__email-hint is-success" *ngIf="emailVerified">
+          &#10003; Email verified.
+        </span>
+      </div>
+
+      <label class="profile-form__field">
+        <span>Mobile Number</span>
+        <input
+          type="tel"
+          name="phone"
+          [value]="phone"
+          (input)="onPhoneInput($event)"
+          placeholder="Enter mobile number">
+      </label>
+
+      <p class="profile-form__message is-success" *ngIf="successMessage">{{ successMessage }}</p>
+      <p class="profile-form__message is-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <button type="submit" class="profile-form__submit" [disabled]="isSaving">
+        {{ isSaving ? 'Saving...' : 'Update Profile' }}
+      </button>
+
+      <div class="profile-form__verify" *ngIf="verificationCodeSent">
+        <label class="profile-form__field">
+          <span>Email Verification Code</span>
+          <input
+            type="text"
+            name="verificationCode"
+            [value]="verificationCode"
+            (input)="onVerificationCodeInput($event)"
+            placeholder="Enter 6-digit code"
+            maxlength="6">
+        </label>
+
+        <button type="button" class="profile-form__verify-btn" [disabled]="isVerifyingEmail" (click)="verifyAndUpdateEmail()">
+          {{ isVerifyingEmail ? 'Verifying...' : 'Verify Email & Update' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

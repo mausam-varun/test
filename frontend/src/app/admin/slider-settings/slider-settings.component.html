@@ -1,0 +1,107 @@
+<section class="slider-settings">
+  <header class="page-head">
+    <h2>Hero Slider Settings</h2>
+    <p>Manage top slider images and choose how many should be displayed (2-5).</p>
+  </header>
+
+  <div class="messages">
+    <p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </div>
+
+  <article class="card">
+    <h3>Display Count</h3>
+    <div class="display-count-row">
+      <label for="displayCount">Visible slider images:</label>
+      <select id="displayCount" [(ngModel)]="displayCount">
+        <option [ngValue]="2">2</option>
+        <option [ngValue]="3">3</option>
+        <option [ngValue]="4">4</option>
+        <option [ngValue]="5">5</option>
+      </select>
+      <button type="button" (click)="saveDisplayCount()" [disabled]="isSaving">Save</button>
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>Add Slider Image</h3>
+
+    <div class="form-grid">
+      <label>
+        Title
+        <input type="text" [(ngModel)]="newTitle" placeholder="Optional title">
+      </label>
+
+      <label>
+        Subtitle
+        <input type="text" [(ngModel)]="newSubtitle" placeholder="Optional subtitle">
+      </label>
+
+      <label>
+        Sort Order
+        <input type="number" [(ngModel)]="newSortOrder" min="0">
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="newIsActive">
+        Active
+      </label>
+    </div>
+
+    <div class="upload-row">
+      <label>
+        Image URL
+        <input type="url" [(ngModel)]="newImageUrl" placeholder="https://...">
+      </label>
+
+      <label>
+        Or Upload Image
+        <input type="file" accept="image/png,image/jpeg" (change)="onNewImageSelected($event)">
+      </label>
+      <span class="filename" *ngIf="newImageFileName">{{ newImageFileName }}</span>
+    </div>
+
+    <button type="button" class="primary" (click)="addSliderItem()" [disabled]="isSaving">Add Slider Image</button>
+  </article>
+
+  <article class="card">
+    <h3>Slider Images</h3>
+
+    <p *ngIf="isLoading" class="muted">Loading slider images...</p>
+
+    <div class="slider-item" *ngFor="let item of sliderItems">
+      <img [src]="item.image_url" [alt]="item.title || 'Slider image'">
+
+      <div class="item-fields">
+        <label>
+          Image URL
+          <input type="url" [(ngModel)]="item.image_url">
+        </label>
+        <label>
+          Title
+          <input type="text" [(ngModel)]="item.title">
+        </label>
+        <label>
+          Subtitle
+          <input type="text" [(ngModel)]="item.subtitle">
+        </label>
+        <label>
+          Sort Order
+          <input type="number" [(ngModel)]="item.sort_order" min="0">
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="item.is_active" (change)="toggleItemActive(item)">
+          Active
+        </label>
+      </div>
+
+      <div class="item-actions">
+        <button type="button" (click)="saveItem(item)" [disabled]="isSaving">Save</button>
+        <button type="button" class="danger" (click)="deleteItem(item.id)" [disabled]="isSaving">Delete</button>
+      </div>
+    </div>
+
+    <p *ngIf="!isLoading && !sliderItems.length" class="muted">No slider images yet.</p>
+  </article>
+</section>

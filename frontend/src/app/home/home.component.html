@@ -1,89 +1,175 @@
-<header class="navbar">
-  <div class="logo">Divara Craft</div>
+<main class="home-page">
+  <section class="home-wrap">
+    <app-hero
+      [imageUrls]="heroSliderImages"
+      [imageUrl]="heroImage"
+      imageAlt="Luxury handcrafted bangle stack and earrings">
+    </app-hero>
 
-  <nav>
-    <a class="active">Home</a>
-    <a>Shop</a>
-    <a>About</a>
-    <a>Contact</a>
-  </nav>
+    <section class="section-block ai-match">
+      <h2 class="section-title">Find Your Perfect Bangles Match ✨</h2>
+      <p class="ai-match__subtitle">Upload your outfit - we'll suggest matching bangles instantly</p>
 
-  <div class="icons">
-    <span>👤</span>
-    <span>❤</span>
-    <span class="cart">🛒<b>0</b></span>
-  </div>
-</header>
+      <div class="ai-match__panel ai-box">
+        <div class="upload-box">
+          <div class="upload-box__icon" aria-hidden="true">📷</div>
+          <p class="upload-box__title">Drag & drop your image here</p>
 
-<section class="hero">
-  <div class="hero-text">
-    <h5>HANDMADE WITH LOVE 💙</h5>
-    <h1>Premium Handmade Treasures</h1>
-    <p>
-      Exquisite bangles, earrings & home décor crafted with tradition.
-    </p>
+          <input
+            #dressImageInput
+            id="dressImage"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onDressImageSelected($event)">
 
-    <button>Shop Collection →</button>
+          <button type="button" class="upload-btn" (click)="dressImageInput.click()" [disabled]="isMatching">
+            {{ isMatching ? 'Matching...' : 'Upload Image' }}
+          </button>
 
-    <div class="hero-features">
-      <span>✔ Free Shipping</span>
-      <span>✔ Easy Returns</span>
-      <span>✔ Worldwide Delivery</span>
-    </div>
-  </div>
+          <button
+            type="button"
+            class="match-init-btn"
+            (click)="findMatchingBangles()"
+            [disabled]="isMatching || !selectedDressImage">
+            {{ isMatching ? 'Matching...' : 'Match Product' }}
+          </button>
 
-  <div class="hero-img">
-    <img [src]="carouselImages[activeSlideIndex]" />
-  </div>
-</section>
+          <p class="upload-box__hint">✨ 92% users found their perfect match</p>
+        </div>
 
-<section class="categories">
-  <h2>Shop by Category</h2>
+        <p *ngIf="matchError" class="ai-match__error">{{ matchError }}</p>
 
-  <div class="category-grid">
-    <div *ngFor="let c of categories" class="category-card">
-      <img [src]="c.image" />
-      <p>{{ c.name }}</p>
-    </div>
-  </div>
-</section>
+        <div class="ai-match__details" *ngIf="selectedDressImagePreview || detectedDetails">
+          <article *ngIf="selectedDressImagePreview">
+            <h3>Uploaded Image</h3>
+            <img [src]="selectedDressImagePreview" alt="Uploaded dress" class="ai-match__preview">
+          </article>
 
-<section class="products">
-  <div class="header">
-    <h2>Featured Products</h2>
-    <span>View All →</span>
-  </div>
+          <article *ngIf="detectedDetails">
+            <h3>Detected Details</h3>
+            <p><strong>Category:</strong> {{ detectedDetails.category || 'bangles' }}</p>
+            <p><strong>Colors:</strong> {{ (detectedDetails.colors || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Design:</strong> {{ (detectedDetails.design || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Pattern:</strong> {{ (detectedDetails.pattern || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Style:</strong> {{ (detectedDetails.style || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Material:</strong> {{ (detectedDetails.material || []).join(', ') || 'N/A' }}</p>
+          </article>
+        </div>
 
-  <div class="product-grid">
-    <div *ngFor="let p of featuredProducts" class="product-card">
-      <img [src]="p.image" />
+        <div class="ai-match__generated" *ngIf="generatedBangleImageUrl">
+          <h3>AI Generated Matching Bangle Design</h3>
+          <img [src]="generatedBangleImageUrl" alt="AI generated matching bangles">
+        </div>
 
-      <h4>{{ p.name }}</h4>
+        <div class="ai-match__grid" *ngIf="matchedProducts.length">
+          <article class="ai-match__card" *ngFor="let product of matchedProducts; trackBy: trackByMatchedId">
+            <a class="ai-match__link" [routerLink]="['/product', product.id]" aria-label="View product details">
+              <img [src]="product.imageUrl" [alt]="product.name">
+            </a>
+            <div>
+              <a class="ai-match__title-link" [routerLink]="['/product', product.id]">
+                <h4>{{ product.name }}</h4>
+              </a>
+              <p class="price">Rs {{ product.price }}</p>
+              <p class="rating">★★★★★</p>
+              <button type="button" class="match-btn" [routerLink]="['/product', product.id]">View Product</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
 
-      <div class="rating">
-        ⭐⭐⭐⭐⭐ <span>({{ p.rating }})</span>
+    <section class="section-block">
+      <div class="category-slider__header">
+        <h2 class="section-title"><span class="orn">❦</span> Shop by Category <span class="orn">❦</span></h2>
+
+        <div class="category-slider__nav" aria-label="Category navigation">
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideCategoriesPrev()"
+            [disabled]="!canSlideCategoriesPrev"
+            aria-label="Show previous categories">
+            &#8249;
+          </button>
+
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideCategoriesNext()"
+            [disabled]="!canSlideCategoriesNext"
+            aria-label="Show next categories">
+            &#8250;
+          </button>
+        </div>
       </div>
 
-      <p class="price">{{ p.price }}</p>
+      <div class="category-slider">
+        <div
+          class="category-slider__track"
+          [style.transform]="'translateX(-' + categorySliderOffsetPercent + '%)'">
+          <a
+            *ngFor="let category of categories; trackBy: trackByName"
+            class="category-card"
+            [routerLink]="['/shop']"
+            [queryParams]="{ category: category.name }"
+            [style.flex]="'0 0 calc(100% / ' + categoriesVisibleCount + ')'">
+            <div class="category-card__media">
+              <img [src]="category.image" [alt]="category.name">
+            </div>
 
-      <button (click)="addToCart(p)">Add to Cart →</button>
-    </div>
-  </div>
-</section>
+            <div class="category-card__body">
+              <span class="category-card__eyebrow">Browse</span>
+              <h3>{{ category.name }}</h3>
+              <span class="category-card__cta">Open Collection</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
 
-<section class="newsletter">
-  <div>
-    <h3>Join Our Newsletter</h3>
-    <p>Get 10% OFF your first order</p>
-  </div>
+    <section class="section-block">
+      <div class="category-slider__header">
+        <h2 class="section-title"><span class="orn">❦</span> Featured Products <span class="orn">❦</span></h2>
 
-  <div class="input-box">
-    <input placeholder="Enter your email address" />
-    <button>Subscribe →</button>
-  </div>
-</section>
+        <div class="category-slider__nav" aria-label="Featured products navigation">
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideFeaturedPrev()"
+            [disabled]="!canSlideFeaturedPrev"
+            aria-label="Show previous featured products">
+            &#8249;
+          </button>
 
-<footer>
-  <h2>Divara Craft</h2>
-  <p>© 2026 Divara Craft. All Rights Reserved</p>
-</footer>
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideFeaturedNext()"
+            [disabled]="!canSlideFeaturedNext"
+            aria-label="Show next featured products">
+            &#8250;
+          </button>
+        </div>
+      </div>
+
+      <div class="featured-slider">
+        <div
+          class="featured-slider__track"
+          [style.transform]="'translateX(-' + featuredSliderOffsetPercent + '%)'">
+          <div
+            *ngFor="let product of featuredProducts; trackBy: trackById"
+            class="featured-slider__item"
+            [style.flex]="'0 0 calc(100% / ' + featuredVisibleCount + ')'">
+            <app-product-card
+              [product]="product"
+              [isWishlisted]="isWishlisted(product.id)"
+              (wishlist)="addToWishlist($event)"
+              (add)="addToCart($event)">
+            </app-product-card>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>

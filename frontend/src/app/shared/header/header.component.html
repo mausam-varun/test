@@ -1,0 +1,68 @@
+<header class="navbar">
+  <div class="navbar-container">
+    <a class="logo" routerLink="/" aria-label="Divara Craft home">
+      <img src="assets/divara_final.jpg" alt="Divara Craft" class="logo-img">
+    </a>
+
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+      <a class="nav-link" routerLink="/shop" routerLinkActive="active">Shop</a>
+      <a class="nav-link" routerLink="/about" routerLinkActive="active">About</a>
+      <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact</a>
+    </nav>
+
+    <div class="nav-tools">
+      <button type="button" class="account-link" title="Sign Up" (click)="openSignupPopup()" *ngIf="!isAuthenticated">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Sign Up</span>
+      </button>
+
+      <a class="account-user" *ngIf="isAuthenticated" title="Signed in user" routerLink="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>{{ userDisplayName }}</span>
+      </a>
+
+      <a class="action-link wishlist" routerLink="/wishlist" aria-label="Wishlist" [class.wishlist-bump]="isWishlistBumping" (click)="onWishlistIconClick()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span class="wishlist-crackers" aria-hidden="true">
+          <span
+            class="wishlist-cracker"
+            *ngFor="let particle of wishlistBurstParticles"
+            [style.--tx.px]="particle.x"
+            [style.--ty.px]="particle.y"
+            [style.--size.px]="particle.size"
+            [style.animationDelay.s]="particle.delay">
+          </span>
+        </span>
+        <span class="wishlist-count" *ngIf="wishlistCount > 0" [class.wishlist-count-bump]="isWishlistBumping">{{ wishlistCount }}</span>
+      </a>
+
+      <a class="action-link cart" routerLink="/checkout" aria-label="Cart" [class.cart-bump]="isCartBumping">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39A2 2 0 0 0 9.63 16h9.72a2 2 0 0 0 1.95-1.61L23 6H6"></path>
+        </svg>
+        <span class="cart-crackers" aria-hidden="true">
+          <span
+            class="cart-cracker"
+            *ngFor="let particle of cartBurstParticles"
+            [style.--tx.px]="particle.x"
+            [style.--ty.px]="particle.y"
+            [style.--size.px]="particle.size"
+            [style.animationDelay.s]="particle.delay">
+          </span>
+        </span>
+        <span class="cart-count" [class.cart-count-bump]="isCartBumping">{{ cartCount }}</span>
+      </a>
+    </div>
+  </div>
+</header>

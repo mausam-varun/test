@@ -1,0 +1,104 @@
+<main class="product-detail-page">
+  <section class="product-detail-shell">
+    <div class="product-detail-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading product details...</p>
+    </div>
+
+    <div class="product-detail-state is-error" *ngIf="!isLoading && errorMessage">
+      <h2>Product unavailable</h2>
+      <p>{{ errorMessage }}</p>
+      <a routerLink="/shop" class="back-link">Back to Shop</a>
+    </div>
+
+    <ng-container *ngIf="!isLoading && product as currentProduct">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a routerLink="/home">Home</a>
+        <span>/</span>
+        <a routerLink="/shop">Shop</a>
+        <span>/</span>
+        <span>{{ currentProduct.name }}</span>
+      </nav>
+
+      <section class="product-detail-grid">
+        <div class="gallery-panel">
+          <div
+            class="main-image-frame"
+            (mousemove)="onImageMove($event)"
+            (mouseleave)="onImageLeave()">
+            <img
+              [src]="currentImage"
+              [alt]="currentProduct.name"
+              class="main-image"
+              [class.is-zooming]="isZooming"
+              [style.transform-origin]="zoomOrigin">
+            <span class="zoom-hint">Hover to zoom</span>
+          </div>
+
+          <div class="thumb-strip" *ngIf="galleryImages.length > 1">
+            <button
+              type="button"
+              class="thumb-btn"
+              *ngFor="let image of galleryImages; trackBy: trackByImage"
+              [class.is-active]="image.image_url === currentImage"
+              (click)="selectImage(image.image_url)">
+              <img [src]="image.image_url" [alt]="currentProduct.name">
+              <span *ngIf="image.is_primary_image" class="primary-badge">Primary</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="content-panel">
+          <p class="eyebrow">{{ currentProduct.category }}</p>
+          <h1>{{ currentProduct.name }}</h1>
+
+          <div class="rating-row" aria-label="Product rating">
+            <span class="stars">
+              <span *ngFor="let star of starIndices" [class.is-filled]="star <= roundedRating">★</span>
+            </span>
+            <strong>{{ currentProduct.rating | number:'1.1-1' }}</strong>
+            <span>({{ currentProduct.reviews }} reviews)</span>
+          </div>
+
+          <p class="price">₹{{ currentProduct.price | number:'1.2-2' }}</p>
+
+          <p class="description">{{ currentProduct.description }}</p>
+
+          <div class="action-row">
+            <button type="button" class="primary-btn" *ngIf="quantity === 0" (click)="addToCart()">Add to Cart</button>
+            
+            <div class="quantity-control" *ngIf="quantity > 0">
+              <button type="button" class="quantity-btn decrease" (click)="onDecrement()" aria-label="Decrease quantity">−</button>
+              <span class="quantity-display">{{ quantity }}</span>
+              <button type="button" class="quantity-btn increase" (click)="onIncrement()" aria-label="Increase quantity">+</button>
+            </div>
+
+            <button type="button" class="secondary-btn" [class.is-wishlisted]="isWishlisted" (click)="addToWishlist()">
+              {{ isWishlisted ? 'Wishlisted ✓' : 'Add to Wishlist' }}
+            </button>
+          </div>
+
+          <div class="detail-meta">
+            <article>
+              <span class="meta-label">Category</span>
+              <strong>{{ currentProduct.category }}</strong>
+            </article>
+            <article>
+              <span class="meta-label">Material</span>
+              <strong>{{ currentProduct.material }}</strong>
+            </article>
+            <article>
+              <span class="meta-label">Gallery</span>
+              <strong>{{ currentProduct.images.length }} image{{ currentProduct.images.length === 1 ? '' : 's' }}</strong>
+            </article>
+          </div>
+
+          <section class="story-panel">
+            <h2>Product Description</h2>
+            <p>{{ currentProduct.description }}</p>
+          </section>
+        </div>
+      </section>
+    </ng-container>
+  </section>
+</main>

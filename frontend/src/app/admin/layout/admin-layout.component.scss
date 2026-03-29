@@ -1,0 +1,323 @@
+/* ─── Variables ───────────────────────────────────────────── */
+$sidebar-w: 232px;
+$sidebar-collapsed-w: 64px;
+$header-h: 58px;
+$footer-h: 44px;
+$sidebar-bg: #0f172a;
+$sidebar-hover: #1e293b;
+$sidebar-active: #2563eb;
+$header-bg: #ffffff;
+$content-bg: #f1f5f9;
+$border: #e2e8f0;
+
+/* ─── Shell layout ────────────────────────────────────────── */
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background: $content-bg;
+  position: relative;
+}
+
+/* ─── Sidebar ─────────────────────────────────────────────── */
+.admin-sidebar {
+  width: $sidebar-w;
+  min-height: 100vh;
+  background: $sidebar-bg;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.22s ease;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 200;
+}
+
+.admin-shell.sidebar-collapsed .admin-sidebar {
+  width: $sidebar-collapsed-w;
+}
+
+/* Brand */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 68px;
+  flex-shrink: 0;
+}
+
+.brand-icon svg {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.brand-sub {
+  font-size: 0.7rem;
+  color: #64748b;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 1px;
+}
+
+/* Nav */
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+}
+
+.nav-section-label {
+  margin: 0 0 6px;
+  padding: 0 16px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #475569;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  margin: 2px 8px;
+  border-radius: 9px;
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-hover;
+    color: #e2e8f0;
+  }
+
+  &.active {
+    background: $sidebar-active;
+    color: #fff;
+
+    .nav-icon { color: #fff; }
+  }
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #64748b;
+  transition: color 0.14s;
+
+  .nav-item:hover & { color: #e2e8f0; }
+}
+
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  font-size: 0.73rem;
+  color: #475569;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Mobile overlay ──────────────────────────────────────── */
+.sidebar-overlay {
+  display: none;
+}
+
+/* ─── Main area ───────────────────────────────────────────── */
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+/* ─── Top header ──────────────────────────────────────────── */
+.admin-header {
+  height: $header-h;
+  background: $header-bg;
+  border-bottom: 1px solid $border;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+  flex-shrink: 0;
+}
+
+.btn-toggle {
+  background: transparent;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 7px 8px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+}
+
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #64748b;
+  flex: 1;
+  overflow: hidden;
+}
+
+.breadcrumb-sep {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.breadcrumb-active {
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 2px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.admin-info {
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 540px) { display: none; }
+}
+
+.admin-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.admin-role {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+/* ─── Content ─────────────────────────────────────────────── */
+.admin-content {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+}
+
+/* ─── Footer ──────────────────────────────────────────────── */
+.admin-footer {
+  height: $footer-h;
+  background: $header-bg;
+  border-top: 1px solid $border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.footer-sep {
+  color: #cbd5e1;
+}
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    transform: translateX(-100%);
+    width: $sidebar-w !important;
+    transition: transform 0.22s ease;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 199;
+    backdrop-filter: blur(2px);
+  }
+
+  .admin-shell.sidebar-collapsed .admin-main,
+  .admin-main {
+    margin-left: 0 !important;
+  }
+}

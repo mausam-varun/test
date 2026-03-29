@@ -1,0 +1,114 @@
+<section class="product-list-page">
+
+  <!-- Page Header -->
+  <header class="pl-header">
+    <div class="pl-header-inner">
+      <div class="pl-header-text">
+        <h1>Our Products</h1>
+        <p>Handcrafted with love — explore our full catalogue</p>
+      </div>
+
+      <!-- Search & Filter bar -->
+      <div class="pl-toolbar">
+        <div class="pl-search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            class="pl-search"
+            placeholder="Search products…"
+            [(ngModel)]="searchText"
+            (ngModelChange)="onSearchChange()"
+          />
+        </div>
+
+        <select class="pl-category-select" [(ngModel)]="selectedCategory" (ngModelChange)="onCategoryChange()">
+          <option value="">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+
+        <button class="btn-clear" *ngIf="searchText || selectedCategory" (click)="clearFilters()">
+          Clear
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div class="pl-status" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading products…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="pl-status error" *ngIf="!isLoading && errorMessage">
+    <p>{{ errorMessage }}</p>
+    <button class="btn-retry" (click)="loadProducts()">Retry</button>
+  </div>
+
+  <!-- Empty -->
+  <div class="pl-status" *ngIf="!isLoading && !errorMessage && filteredProducts.length === 0">
+    <p>No products found. <button class="btn-link" (click)="clearFilters()">Clear filters</button></p>
+  </div>
+
+  <!-- Results summary -->
+  <div class="pl-results-bar" *ngIf="!isLoading && !errorMessage && filteredProducts.length > 0">
+    <span>Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ currentPage * pageSize <= filteredProducts.length ? currentPage * pageSize : filteredProducts.length }} of {{ filteredProducts.length }} products</span>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="pl-grid" *ngIf="!isLoading && pagedProducts.length > 0">
+    <article class="pl-card" *ngFor="let product of pagedProducts">
+      <div class="pl-card-img-wrap">
+        <img
+          [src]="getImageUrl(product)"
+          [alt]="product.name"
+          class="pl-card-img"
+          loading="lazy"
+        />
+        <span class="pl-card-category">{{ product.category }}</span>
+      </div>
+      <div class="pl-card-body">
+        <h3 class="pl-card-name">{{ product.name }}</h3>
+        <p class="pl-card-desc" *ngIf="product.description">{{ product.description }}</p>
+        <div class="pl-card-footer">
+          <span class="pl-card-price">&#8377;{{ product.price | number:'1.0-2' }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- Pagination -->
+  <nav class="pl-pagination" *ngIf="!isLoading && totalPages > 1" aria-label="Product pages">
+    <button class="pg-btn pg-arrow" [disabled]="currentPage === 1" (click)="prevPage()" aria-label="Previous page">
+      &#8249;
+    </button>
+
+    <button
+      class="pg-btn"
+      *ngIf="getPageNumbers()[0] > 1"
+      (click)="goToPage(1)"
+    >1</button>
+    <span class="pg-ellipsis" *ngIf="getPageNumbers()[0] > 2">…</span>
+
+    <button
+      class="pg-btn"
+      *ngFor="let page of getPageNumbers()"
+      [class.active]="page === currentPage"
+      (click)="goToPage(page)"
+    >{{ page }}</button>
+
+    <span class="pg-ellipsis" *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1">…</span>
+    <button
+      class="pg-btn"
+      *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages"
+      (click)="goToPage(totalPages)"
+    >{{ totalPages }}</button>
+
+    <button class="pg-btn pg-arrow" [disabled]="currentPage === totalPages" (click)="nextPage()" aria-label="Next page">
+      &#8250;
+    </button>
+  </nav>
+
+</section>

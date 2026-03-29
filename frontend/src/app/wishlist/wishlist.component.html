@@ -1,0 +1,40 @@
+<main class="wishlist-page">
+  <section class="wishlist-wrap">
+    <header class="wishlist-head">
+      <h1>My Wishlist</h1>
+      <p>Save your favorite handcrafted pieces for later</p>
+    </header>
+
+    <section class="wishlist-card" *ngIf="wishlistItems.length; else emptyWishlist">
+      <article class="wishlist-item" *ngFor="let item of wishlistItems">
+        <a class="wishlist-item__media-link" [routerLink]="['/product', item.id]" aria-label="View product details">
+          <img [src]="item.image" [alt]="item.name">
+        </a>
+
+        <div class="wishlist-item__content">
+          <a class="wishlist-item__title-link" [routerLink]="['/product', item.id]">
+            <h3>{{ item.name }}</h3>
+          </a>
+          <p class="wishlist-item__rating">
+            <span class="stars">★★★★★</span>
+            <span>({{ item.reviews }})</span>
+          </p>
+          <p class="wishlist-item__price">${{ item.price | number:'1.2-2' }}</p>
+        </div>
+
+        <div class="wishlist-item__actions">
+          <button type="button" class="move-btn" (click)="moveToCart(item)">Move to Cart</button>
+          <button type="button" class="remove-btn" (click)="removeFromWishlist(item.id)">Remove</button>
+        </div>
+      </article>
+    </section>
+
+    <ng-template #emptyWishlist>
+      <section class="wishlist-empty">
+        <h2>Your wishlist is empty</h2>
+        <p>Browse our collection and add products you love.</p>
+        <a routerLink="/shop" class="shop-btn">Explore Shop</a>
+      </section>
+    </ng-template>
+  </section>
+</main>

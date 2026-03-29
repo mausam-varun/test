@@ -1,0 +1,227 @@
+<section class="apl-page">
+
+  <!-- Page Header -->
+  <div class="apl-top-bar">
+    <div class="apl-top-left">
+      <h1>Product List</h1>
+      <p *ngIf="!isLoading && !errorMessage">
+        {{ filteredProducts.length }} product{{ filteredProducts.length !== 1 ? 's' : '' }} found
+      </p>
+    </div>
+    <button class="btn-add" (click)="goToAddProduct()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add Product
+    </button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="apl-toolbar">
+    <div class="apl-search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        class="apl-search"
+        placeholder="Search by name, category or description…"
+        [(ngModel)]="searchText"
+        (ngModelChange)="applyFilter()"
+      />
+    </div>
+
+    <select class="apl-select" [(ngModel)]="selectedCategory" (ngModelChange)="applyFilter()">
+      <option value="">All Categories</option>
+      <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+    </select>
+
+    <button class="btn-clear" *ngIf="searchText || selectedCategory" (click)="clearFilters()">
+      Clear
+    </button>
+  </div>
+
+  <!-- Feedback messages -->
+  <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+  <p class="msg error"   *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button class="btn-link" (click)="loadProducts()">Retry</button>
+  </p>
+
+  <!-- Loading -->
+  <div class="apl-loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <span>Loading products…</span>
+  </div>
+
+  <!-- Empty -->
+  <div class="apl-empty" *ngIf="!isLoading && !errorMessage && filteredProducts.length === 0">
+    <p>No products found.
+      <button class="btn-link" (click)="clearFilters()">Clear filters</button>
+    </p>
+  </div>
+
+  <!-- Table -->
+  <div class="apl-table-wrap" *ngIf="!isLoading && pagedProducts.length > 0">
+    <table class="apl-table">
+      <thead>
+        <tr>
+          <th class="col-img">Image</th>
+          <th class="col-name">Product Name</th>
+          <th class="col-cat">Category</th>
+          <th class="col-price">Price</th>
+          <th class="col-imgs">Images</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of pagedProducts; let i = index" class="apl-row">
+          <!-- Thumbnail -->
+          <td class="col-img">
+            <div class="thumb-wrap">
+              <img [src]="getImageUrl(product)" [alt]="product.name" class="thumb" loading="lazy" />
+            </div>
+          </td>
+
+          <!-- Name + description -->
+          <td class="col-name">
+            <span class="product-name">{{ product.name }}</span>
+            <span class="product-desc" *ngIf="product.description">{{ product.description }}</span>
+          </td>
+
+          <!-- Category -->
+          <td class="col-cat">
+            <span class="badge-cat">{{ product.category }}</span>
+          </td>
+
+          <!-- Price -->
+          <td class="col-price">
+            <span class="price">&#8377;{{ product.price | number:'1.0-2' }}</span>
+          </td>
+
+          <!-- Image count -->
+          <td class="col-imgs">
+            <div class="image-gallery-wrap" [class.scrollable]="getProductImages(product).length > 2">
+              <div class="image-gallery" [class.scrollable]="getProductImages(product).length > 2">
+                <button
+                  type="button"
+                  class="gallery-thumb-btn"
+                  *ngFor="let image of getVisibleProductImages(product); let imageIndex = index"
+                  [class.primary]="image.is_primary_image"
+                  (click)="openImagePreview(product, imageIndex)"
+                  [attr.aria-label]="'Preview image for ' + product.name"
+                >
+                  <img [src]="image.image_url" [alt]="product.name" class="gallery-thumb" loading="lazy" />
+                </button>
+
+                <button
+                  type="button"
+                  class="more-images-btn"
+                  *ngIf="getHiddenImageCount(product) > 0"
+                  (click)="openHiddenImagesPreview(product)"
+                  [attr.aria-label]="'Preview remaining images for ' + product.name"
+                >
+                  +{{ getHiddenImageCount(product) }}
+                </button>
+              </div>
+            </div>
+            <span class="image-count-label">{{ getProductImages(product).length }} images</span>
+          </td>
+
+          <!-- Actions -->
+          <td class="col-actions">
+            <ng-container *ngIf="confirmDeleteId !== product.id">
+              <button class="btn-delete" (click)="requestDelete(product.id)">Delete</button>
+            </ng-container>
+            <ng-container *ngIf="confirmDeleteId === product.id">
+              <span class="confirm-text">Delete?</span>
+              <button class="btn-confirm-yes" (click)="confirmDelete(product.id)">Yes</button>
+              <button class="btn-confirm-no" (click)="cancelDelete()">No</button>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="apl-pagination-row" *ngIf="!isLoading && filteredProducts.length > 0">
+    <span class="pg-info">Showing {{ startIndex }}–{{ endIndex }} of {{ filteredProducts.length }}</span>
+
+    <nav class="apl-pagination" *ngIf="totalPages > 1">
+      <button class="pg-btn pg-arrow" [disabled]="currentPage === 1" (click)="prevPage()">&#8249;</button>
+
+      <button class="pg-btn" *ngIf="getPageNumbers()[0] > 1" (click)="goToPage(1)">1</button>
+      <span class="pg-ellipsis" *ngIf="getPageNumbers()[0] > 2">…</span>
+
+      <button
+        class="pg-btn"
+        *ngFor="let page of getPageNumbers()"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >{{ page }}</button>
+
+      <span class="pg-ellipsis" *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1">…</span>
+      <button
+        class="pg-btn"
+        *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages"
+        (click)="goToPage(totalPages)"
+      >{{ totalPages }}</button>
+
+      <button class="pg-btn pg-arrow" [disabled]="currentPage === totalPages" (click)="nextPage()">&#8250;</button>
+    </nav>
+  </div>
+
+  <div class="preview-overlay" *ngIf="previewImageUrl" (click)="closeImagePreview()">
+    <div class="preview-card" role="dialog" aria-modal="true" [attr.aria-label]="'Image preview for ' + previewProductName" (click)="$event.stopPropagation()">
+      <div class="preview-top-row">
+        <div class="preview-heading">
+          <h3>{{ previewProductName || 'Product Image' }}</h3>
+          <p *ngIf="hasPreviewNavigation">Use Left/Right arrow keys to switch images</p>
+        </div>
+        <div class="preview-actions">
+          <span class="preview-counter" *ngIf="hasPreviewNavigation">{{ previewImageCounterLabel }}</span>
+          <button type="button" class="btn-close-preview" (click)="closeImagePreview()">Close</button>
+        </div>
+      </div>
+
+      <div class="preview-image-wrap">
+        <button
+          type="button"
+          class="btn-preview-nav prev"
+          *ngIf="hasPreviewNavigation"
+          (click)="showPrevPreviewImage()"
+          aria-label="Previous image"
+        >
+          &#8249;
+        </button>
+
+        <img [src]="previewImageUrl" [alt]="previewImageAlt" class="preview-image" />
+
+        <button
+          type="button"
+          class="btn-preview-nav next"
+          *ngIf="hasPreviewNavigation"
+          (click)="showNextPreviewImage()"
+          aria-label="Next image"
+        >
+          &#8250;
+        </button>
+      </div>
+
+      <div class="preview-thumbs" *ngIf="hasPreviewNavigation">
+        <button
+          type="button"
+          class="preview-thumb-btn"
+          *ngFor="let image of previewImages; let imageIndex = index"
+          [class.active]="imageIndex === previewImageIndex"
+          (click)="selectPreviewImage(imageIndex)"
+          [attr.aria-label]="'Select preview image ' + (imageIndex + 1)"
+        >
+          <img [src]="image.image_url" [alt]="previewProductName" loading="lazy" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+</section>

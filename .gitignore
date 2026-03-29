@@ -1,0 +1,14 @@
+.DS_Store
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.angular/
+**/.angular/
+coverage/
+*.log
+.env
+**/.env
+!.env.example
+uploads/
+admin/backend/uploads/

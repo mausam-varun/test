@@ -1,0 +1,179 @@
+{
+  "info": {
+    "name": "DivaraCraft AI + Admin Proxy",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "AI Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{ai_base_url}}/health",
+          "host": ["{{ai_base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Process Product",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": 101,\n  \"image_url\": \"https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0\",\n  \"metadata\": {\n    \"colors\": [\"red\", \"gold\"],\n    \"category\": \"bangles\",\n    \"size\": \"2.4\",\n    \"design\": \"kundan\",\n    \"pattern\": \"floral\",\n    \"style\": \"ethnic\",\n    \"material\": \"alloy\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{ai_base_url}}/process-product",
+          "host": ["{{ai_base_url}}"],
+          "path": ["process-product"]
+        }
+      }
+    },
+    {
+      "name": "Match Bangles (AI URL)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image_url",
+              "value": "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0",
+              "type": "text"
+            },
+            {
+              "key": "design",
+              "value": "kundan",
+              "type": "text"
+            },
+            {
+              "key": "style",
+              "value": "ethnic",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{ai_base_url}}/match-bangles",
+          "host": ["{{ai_base_url}}"],
+          "path": ["match-bangles"]
+        }
+      }
+    },
+    {
+      "name": "Match Bangles (AI file)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image_file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "design",
+              "value": "kundan",
+              "type": "text"
+            },
+            {
+              "key": "style",
+              "value": "ethnic",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{ai_base_url}}/match-bangles",
+          "host": ["{{ai_base_url}}"],
+          "path": ["match-bangles"]
+        }
+      }
+    },
+    {
+      "name": "Match Bangles (Admin Proxy URL)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image_url",
+              "value": "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0",
+              "type": "text"
+            },
+            {
+              "key": "design",
+              "value": "kundan",
+              "type": "text"
+            },
+            {
+              "key": "style",
+              "value": "ethnic",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{admin_base_url}}/api/products/match-bangles",
+          "host": ["{{admin_base_url}}"],
+          "path": ["api", "products", "match-bangles"]
+        }
+      }
+    },
+    {
+      "name": "Match Bangles (Admin Proxy file)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image_file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "design",
+              "value": "kundan",
+              "type": "text"
+            },
+            {
+              "key": "style",
+              "value": "ethnic",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{admin_base_url}}/api/products/match-bangles",
+          "host": ["{{admin_base_url}}"],
+          "path": ["api", "products", "match-bangles"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "ai_base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "admin_base_url",
+      "value": "http://localhost:5001"
+    }
+  ]
+}
