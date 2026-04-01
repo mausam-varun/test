@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, Inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CartService } from '../services/cart.service';
@@ -49,6 +49,7 @@ export class ShopComponent implements OnInit, OnDestroy {
   searchText = '';
   isLoading = false;
   errorMessage = '';
+  isMobileFiltersOpen = false;
   recentlyAddedProductIds = new Set<number>();
   private requestedCategoryName = '';
   private readonly addedTextTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
@@ -206,6 +207,26 @@ export class ShopComponent implements OnInit, OnDestroy {
   onCategoryClick(category: Category): void {
     category.selected = !category.selected;
     this.filterProducts();
+  }
+
+  toggleMobileFilters(): void {
+    this.isMobileFiltersOpen = !this.isMobileFiltersOpen;
+  }
+
+  closeMobileFilters(): void {
+    this.isMobileFiltersOpen = false;
+  }
+
+  @HostListener('window:keydown.escape')
+  onEscapePressed(): void {
+    this.closeMobileFilters();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (window.innerWidth > 768 && this.isMobileFiltersOpen) {
+      this.closeMobileFilters();
+    }
   }
 
   onSortChange(sortValue: string): void {

@@ -1,4 +1,5 @@
 const { processProductForSimilarity } = require('./aiProductService');
+const { enqueueAiIndexJob } = require('./aiIndexQueue');
 
 let runtimeAiIndexingMode = null;
 
@@ -76,16 +77,29 @@ async function runPrimaryImageAiWorkflow({ productId, imageUrl, metadata }) {
   }
 
   if (mode === 'async') {
-    processProductForSimilarity({ productId, imageUrl, metadata }).catch((error) => {
-      console.warn(`AI indexing failed for product ${productId}:`, error.message);
-    });
+    try {
+      const queuedJob = await enqueueAiIndexJob({ productId, imageUrl, metadata });
 
-    return {
-      attempted: true,
-      stored: false,
-      mode,
-      message: 'AI indexing queued in background'
-    };
+      return {
+        attempted: true,
+        stored: false,
+        mode,
+        message: `AI indexing queued with job ${queuedJob.jobId}`,
+        queue: queuedJob
+      };
+    } catch (queueError) {
+      console.warn(`AI queue unavailable for product ${productId}, falling back to in-process async handling:`, queueError.message);
+      processProductForSimilarity({ productId, imageUrl, metadata }).catch((error) => {
+        console.warn(`AI indexing failed for product ${productId}:`, error.message);
+      });
+
+      return {
+        attempted: true,
+        stored: false,
+        mode,
+        message: 'AI indexing queue unavailable; processing in fallback background mode'
+      };
+    }
   }
 
   try {
@@ -111,6 +125,6 @@ module.exports = {
   buildAiMetadata,
   getAiIndexingMode,
   getAiIndexingModeState,
-  runPrimaryImageAiWorkflow
-  ,setAiIndexingMode
+  runPrimaryImageAiWorkflow,
+  setAiIndexingMode
 };

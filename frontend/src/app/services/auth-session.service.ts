@@ -6,6 +6,7 @@ export interface SessionUser {
   name: string;
   email?: string;
   phone?: string;
+  avatarUrl?: string;
 }
 
 @Injectable({
@@ -82,6 +83,12 @@ export class AuthSessionService {
     const id = typeof candidate['id'] === 'number' ? candidate['id'] : undefined;
     const email = typeof candidate['email'] === 'string' ? candidate['email'] : undefined;
     const phone = typeof candidate['phone'] === 'string' ? candidate['phone'] : undefined;
+    const avatarUrl = [
+      candidate['avatarUrl'],
+      candidate['avatar_url'],
+      candidate['profileImage'],
+      candidate['profile_image']
+    ].find((value) => typeof value === 'string' && String(value).trim().length > 0) as string | undefined;
 
     const rawName = [
       candidate['name'],
@@ -98,7 +105,8 @@ export class AuthSessionService {
       id,
       name: rawName.trim(),
       email,
-      phone
+      phone,
+      avatarUrl: avatarUrl ? avatarUrl.trim() : undefined
     };
   }
 

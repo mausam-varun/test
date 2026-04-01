@@ -13,6 +13,7 @@ function normalizeSliderItem(row) {
     image_url: row.image_url,
     title: row.title || '',
     subtitle: row.subtitle || '',
+    cta_url: row.cta_url || '',
     sort_order: Number(row.sort_order) || 0,
     is_active: Boolean(row.is_active),
     created_at: row.created_at,
@@ -46,7 +47,7 @@ async function updateSliderDisplayCount(displayCount) {
 async function listSliderItems({ onlyActive = false, limit = null } = {}) {
   const db = getPool();
   const params = [];
-  let query = `SELECT id, image_url, title, subtitle, sort_order, is_active, created_at, updated_at
+  let query = `SELECT id, image_url, title, subtitle, cta_url, sort_order, is_active, created_at, updated_at
                FROM product_slider`;
 
   if (onlyActive) {
@@ -64,12 +65,12 @@ async function listSliderItems({ onlyActive = false, limit = null } = {}) {
   return rows.map(normalizeSliderItem);
 }
 
-async function createSliderItem({ imageUrl, title = '', subtitle = '', sortOrder = 0, isActive = true }) {
+async function createSliderItem({ imageUrl, title = '', subtitle = '', ctaUrl = '', sortOrder = 0, isActive = true }) {
   const db = getPool();
   const [result] = await db.execute(
-    `INSERT INTO product_slider (image_url, title, subtitle, sort_order, is_active)
-     VALUES (?, ?, ?, ?, ?)`,
-    [imageUrl, title.trim(), subtitle.trim(), Number(sortOrder) || 0, toBooleanFlag(isActive)]
+    `INSERT INTO product_slider (image_url, title, subtitle, cta_url, sort_order, is_active)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [imageUrl, title.trim(), subtitle.trim(), ctaUrl.trim(), Number(sortOrder) || 0, toBooleanFlag(isActive)]
   );
 
   return getSliderItemById(result.insertId);
@@ -78,7 +79,7 @@ async function createSliderItem({ imageUrl, title = '', subtitle = '', sortOrder
 async function getSliderItemById(id) {
   const db = getPool();
   const [rows] = await db.execute(
-    `SELECT id, image_url, title, subtitle, sort_order, is_active, created_at, updated_at
+    `SELECT id, image_url, title, subtitle, cta_url, sort_order, is_active, created_at, updated_at
      FROM product_slider
      WHERE id = ?
      LIMIT 1`,
@@ -110,6 +111,11 @@ async function updateSliderItemById(id, updates) {
   if (updates.subtitle !== undefined) {
     fields.push('subtitle = ?');
     values.push(String(updates.subtitle || '').trim());
+  }
+
+  if (updates.cta_url !== undefined) {
+    fields.push('cta_url = ?');
+    values.push(String(updates.cta_url || '').trim());
   }
 
   if (updates.sort_order !== undefined) {

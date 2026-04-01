@@ -19,7 +19,7 @@
             <span class="stars">★★★★★</span>
             <span>({{ item.reviews }})</span>
           </p>
-          <p class="wishlist-item__price">${{ item.price | number:'1.2-2' }}</p>
+          <p class="wishlist-item__price">{{ item.price | displayCurrency:2 }}</p>
         </div>
 
         <div class="wishlist-item__actions">

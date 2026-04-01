@@ -1,9 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 import { AuthPopupService } from '../../services/auth-popup.service';
 import { AuthSessionService } from '../../services/auth-session.service';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { CurrencyPreferenceService } from '../services/currency-preference.service';
 
 interface CartBurstParticle {
   id: number;
@@ -23,8 +25,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   wishlistCount: number = 0;
   isAuthenticated: boolean = false;
   userDisplayName: string = '';
+  userAvatarUrl: string = '';
   isCartBumping: boolean = false;
   isWishlistBumping: boolean = false;
+  isProfileMenuOpen: boolean = false;
   cartBurstParticles: CartBurstParticle[] = [];
   wishlistBurstParticles: CartBurstParticle[] = [];
 
@@ -36,20 +40,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private cartBurstTimeout: ReturnType<typeof setTimeout> | null = null;
   private wishlistBurstTimeout: ReturnType<typeof setTimeout> | null = null;
   private nextParticleId: number = 1;
+  private isComponentInitialized: boolean = false;
 
   constructor(
+    private readonly router: Router,
     private readonly authPopupService: AuthPopupService,
     private readonly authSessionService: AuthSessionService,
     private readonly cartService: CartService,
-    private readonly wishlistService: WishlistService
+    private readonly wishlistService: WishlistService,
+    private readonly currencyPreferenceService: CurrencyPreferenceService
   ) {}
 
   ngOnInit(): void {
+    this.currencyPreferenceService.syncFrontendCurrencyWithSystem();
+
     this.subscriptions.add(
       this.cartService.cartItems$.subscribe((items) => {
         const nextCartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
-        if (nextCartCount > this.previousCartCount) {
+        if (nextCartCount > this.previousCartCount && this.isComponentInitialized) {
           this.triggerCartBump();
         }
 
@@ -62,7 +71,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.wishlistService.wishlistItems$.subscribe((items) => {
         const nextWishlistCount = items.length;
 
-        if (nextWishlistCount > this.previousWishlistCount) {
+        if (nextWishlistCount > this.previousWishlistCount && this.isComponentInitialized) {
           this.triggerWishlistBump();
         }
 
@@ -75,8 +84,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.authSessionService.user$.subscribe((user) => {
         this.isAuthenticated = Boolean(user);
         this.userDisplayName = user?.name || '';
+        this.userAvatarUrl = user?.avatarUrl || '';
       })
     );
+
+    // Mark component as initialized after subscriptions are set up
+    // This prevent animations from triggering on initial load when data is restored from storage
+    setTimeout(() => {
+      this.isComponentInitialized = true;
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -107,8 +123,49 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authPopupService.open();
   }
 
+  toggleProfileMenu(event?: Event): void {
+    event?.stopPropagation();
+    this.isProfileMenuOpen = !this.isProfileMenuOpen;
+  }
+
+  closeProfileMenu(): void {
+    this.isProfileMenuOpen = false;
+  }
+
+  editProfile(event?: Event): void {
+    event?.stopPropagation();
+    this.closeProfileMenu();
+    this.router.navigate(['/profile']);
+  }
+
+  logout(event?: Event): void {
+    event?.stopPropagation();
+    this.authSessionService.clearSession();
+    this.closeProfileMenu();
+    this.router.navigate(['/']);
+  }
+
+  get userInitials(): string {
+    const parts = String(this.userDisplayName || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (!parts.length) {
+      return 'U';
+    }
+
+    return parts.map((part) => part.charAt(0).toUpperCase()).join('');
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeProfileMenu();
+  }
+
   onWishlistIconClick(): void {
-    this.triggerWishlistBump();
+    // Animation intentionally disabled on click - only triggers on add/remove
   }
 
   private triggerCartBump(): void {

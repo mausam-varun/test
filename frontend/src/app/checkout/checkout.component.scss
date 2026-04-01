@@ -87,6 +87,21 @@
   color: #2c6a3f;
 }
 
+.track-order-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.45rem 1.1rem;
+  background: #4f46e5;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+
+  &:hover { background: #4338ca; }
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -33,8 +33,13 @@
       </label>
 
       <label>
-        Subtitle
-        <input type="text" [(ngModel)]="newSubtitle" placeholder="Optional subtitle">
+        Subtitle / Description
+        <input type="text" [(ngModel)]="newSubtitle" placeholder="Short description shown on banner">
+      </label>
+
+      <label>
+        Button Link (URL)
+        <input type="url" [(ngModel)]="newCtaUrl" placeholder="e.g. /shop or https://...">
       </label>
 
       <label>
@@ -82,8 +87,12 @@
           <input type="text" [(ngModel)]="item.title">
         </label>
         <label>
-          Subtitle
+          Subtitle / Description
           <input type="text" [(ngModel)]="item.subtitle">
+        </label>
+        <label>
+          Button Link (URL)
+          <input type="url" [(ngModel)]="item.cta_url" placeholder="e.g. /shop or https://...">
         </label>
         <label>
           Sort Order

@@ -218,6 +218,38 @@ router.get('/users/:id', async (req, res) => {
   }
 });
 
+router.get('/admins/:id/currency', async (req, res) => {
+  try {
+    const preferredCurrency = await authService.getAdminCurrencyPreference(req.params.id);
+    res.json({
+      status: 'ok',
+      adminId: Number(req.params.id),
+      preferred_currency: preferredCurrency
+    });
+  } catch (error) {
+    const statusCode = String(error.message || '').includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: error.message });
+  }
+});
+
+router.put('/admins/:id/currency', async (req, res) => {
+  try {
+    const { currency } = req.body || {};
+    if (!currency) {
+      return res.status(400).json({ error: 'currency is required' });
+    }
+
+    const updated = await authService.updateAdminCurrencyPreference(req.params.id, currency);
+    res.json({
+      status: 'ok',
+      ...updated
+    });
+  } catch (error) {
+    const statusCode = String(error.message || '').includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: error.message });
+  }
+});
+
 // Delete user
 router.delete('/users/:id', async (req, res) => {
   try {
@@ -228,6 +260,71 @@ router.delete('/users/:id', async (req, res) => {
     res.json({ status: 'ok', message: 'User deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Google OAuth Sign-In
+router.post('/google-signin', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Google token is required' });
+    }
+
+    if (typeof token !== 'string') {
+      return res.status(400).json({ error: 'Token must be a string' });
+    }
+
+    const user = await authService.loginOrCreateGoogleUser(token);
+
+    if (!user || !user.id) {
+      return res.status(500).json({ error: 'User creation or retrieval failed' });
+    }
+
+    res.json({
+      status: 'ok',
+      user,
+      token: `user-token-${user.id}`
+    });
+  } catch (error) {
+    console.error('Google OAuth error:', {
+      message: error.message,
+      stack: error.stack,
+      tokenLength: req.body?.token?.length
+    });
+
+    const errorMessage = error.message || 'Google sign-in failed';
+    const statusCode = errorMessage.includes('already registered') ? 409 : 401;
+
+    res.status(statusCode).json({ 
+      error: errorMessage,
+      code: statusCode
+    });
+  }
+});
+
+router.post('/google-signin-profile', async (req, res) => {
+  try {
+    const { email, name, picture } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const user = await authService.loginOrCreateGoogleProfileUser({ email, name, picture });
+
+    if (!user || !user.id) {
+      return res.status(500).json({ error: 'User creation or retrieval failed' });
+    }
+
+    res.json({
+      status: 'ok',
+      user,
+      token: `user-token-${user.id}`
+    });
+  } catch (error) {
+    res.status(401).json({ error: error.message || 'Google sign-in failed' });
   }
 });
 

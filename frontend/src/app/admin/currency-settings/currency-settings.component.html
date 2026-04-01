@@ -1,0 +1,84 @@
+<div class="currency-settings-page">
+
+  <div class="cs-card">
+    <div class="cs-card-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      <h2>Currency Display Settings</h2>
+      <span class="cs-badge">Super Admin</span>
+    </div>
+
+    <p class="cs-description">
+      Set a multiplier applied to USD prices when shown to customers <strong>outside India</strong>.
+      India users always see INR at the fixed conversion rate. This does not affect stored database amounts.
+    </p>
+
+    <div class="cs-section">
+      <label class="cs-label" for="usd-multiplier">USD Display Multiplier (1 – 10)</label>
+      <div class="cs-slider-row">
+        <input
+          id="usd-multiplier"
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          [(ngModel)]="multiplier"
+          class="cs-slider"
+        />
+        <div class="cs-quick-btns">
+          <button
+            *ngFor="let opt of multiplierOptions"
+            type="button"
+            class="cs-opt-btn"
+            [class.active]="multiplier === opt"
+            (click)="multiplier = opt"
+          >×{{ opt }}</button>
+        </div>
+      </div>
+      <div class="cs-value-display">
+        Selected: <strong>×{{ multiplier }}</strong>
+      </div>
+    </div>
+
+    <div class="cs-preview">
+      <h3>Live Preview</h3>
+      <div class="cs-preview-row">
+        <div class="cs-preview-item">
+          <span class="cs-preview-label">Outside India (USD ×{{ multiplier }})</span>
+          <span class="cs-preview-amount">$100 → {{ previewUsd }}</span>
+        </div>
+        <div class="cs-preview-item">
+          <span class="cs-preview-label">India (INR, fixed rate)</span>
+          <span class="cs-preview-amount">$100 → {{ previewInr }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cs-actions">
+      <button
+        type="button"
+        class="cs-save-btn"
+        [disabled]="isSaving"
+        (click)="onSave()"
+      >
+        <svg *ngIf="!isSaving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <svg *ngIf="isSaving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="8"/>
+        </svg>
+        {{ isSaving ? 'Saving…' : 'Save Multiplier' }}
+      </button>
+
+      <div *ngIf="message" class="cs-message" [class.error]="messageType === 'error'">
+        {{ message }}
+      </div>
+    </div>
+
+  </div>
+
+</div>

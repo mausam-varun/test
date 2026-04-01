@@ -11,6 +11,8 @@ const productRoutes = require('./routes/productRoutes');
 const authRoutes = require('./routes/authRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const sliderRoutes = require('./routes/sliderRoutes');
+const aiQueueRoutes = require('./routes/aiQueueRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 const { initializeDatabase } = require('./services/db');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
@@ -41,6 +43,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/slider', sliderRoutes);
+app.use('/api/admin/ai-queue', aiQueueRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

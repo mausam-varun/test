@@ -5,10 +5,12 @@ import { AboutComponent } from './about/about.component';
 import { ShopComponent } from './shop/shop.component';
 import { ContactComponent } from './contact/contact.component';
 import { LoginComponent } from './login/login.component';
+import { AdminSignupComponent } from './admin-signup/admin-signup.component';
 import { CheckoutComponent } from './checkout/checkout.component';
 import { ProductDetailComponent } from './product-detail/product-detail.component';
 import { WishlistComponent } from './wishlist/wishlist.component';
 import { ProfileComponent } from './profile/profile.component';
+import { OrderTrackingComponent } from './order-tracking/order-tracking.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent, pathMatch: 'full' },
@@ -16,11 +18,15 @@ const routes: Routes = [
   { path: 'shop', component: ShopComponent },
   { path: 'about', component: AboutComponent },
   { path: 'contact', component: ContactComponent },
+  { path: 'admin/login', component: LoginComponent },
+  { path: 'admin/signup', component: AdminSignupComponent },
   { path: 'login', component: LoginComponent },
   { path: 'product/:id', component: ProductDetailComponent },
   { path: 'checkout', component: CheckoutComponent },
   { path: 'wishlist', component: WishlistComponent },
   { path: 'profile', component: ProfileComponent },
+  { path: 'track-order', component: OrderTrackingComponent },
+  { path: 'track-order/:orderNumber', component: OrderTrackingComponent },
   { path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule) },
   { path: '**', redirectTo: '' }
 ];

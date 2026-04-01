@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_ENDPOINTS } from '../config/app-config';
 
 interface ProductImage {
   id: number;
@@ -24,7 +25,7 @@ interface Product {
   styleUrls: ['./product-list.component.scss']
 })
 export class ProductListComponent implements OnInit {
-  private readonly apiUrl = 'http://localhost:5002/api/products';
+  private readonly apiUrl = API_ENDPOINTS.products;
 
   allProducts: Product[] = [];
   filteredProducts: Product[] = [];

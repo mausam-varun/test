@@ -304,12 +304,18 @@ async function initializeDatabase() {
       id INT PRIMARY KEY AUTO_INCREMENT,
       email VARCHAR(255) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
-      user_type ENUM('super_admin', 'admin') NOT NULL DEFAULT 'admin',
+      preferred_currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+      user_type ENUM('super_admin', 'admin', 'partner') NOT NULL DEFAULT 'admin',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       last_login TIMESTAMP NULL,
       INDEX idx_admin_users_email (email)
     )
   `);
+
+  await ensureColumnExists(db, 'admin_users', 'preferred_currency', "VARCHAR(10) NOT NULL DEFAULT 'USD'");
+  await db.query(
+    "ALTER TABLE admin_users MODIFY COLUMN user_type ENUM('super_admin', 'admin', 'partner') NOT NULL DEFAULT 'admin'"
+  );
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS product_slider (
@@ -338,6 +344,27 @@ async function initializeDatabase() {
     VALUES (1, 5)
     ON DUPLICATE KEY UPDATE id = id
   `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      \`key\` VARCHAR(100) PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_by INT DEFAULT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.query(`
+    INSERT INTO app_settings (\`key\`, value)
+    VALUES ('usd_display_multiplier', '1')
+    ON DUPLICATE KEY UPDATE \`key\` = \`key\`
+  `);
+
+  // Shiprocket shipment tracking columns (migration-safe)
+  await ensureColumnExists(db, 'orders', 'shiprocket_order_id', 'VARCHAR(100) DEFAULT NULL');
+  await ensureColumnExists(db, 'orders', 'shiprocket_shipment_id', 'VARCHAR(100) DEFAULT NULL');
+  await ensureColumnExists(db, 'orders', 'awb_code', 'VARCHAR(100) DEFAULT NULL');
+  await ensureColumnExists(db, 'orders', 'courier_name', 'VARCHAR(150) DEFAULT NULL');
+  await ensureColumnExists(db, 'orders', 'tracking_url', 'TEXT DEFAULT NULL');
 }
 
 module.exports = {

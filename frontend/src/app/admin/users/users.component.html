@@ -45,6 +45,7 @@
           >
             <option value="admin">Admin</option>
             <option value="super_admin">Super Admin</option>
+            <option value="partner">Partner</option>
           </select>
         </div>
 
@@ -90,8 +91,8 @@
             <td class="col-id"><span class="badge-id">{{ user.id }}</span></td>
             <td class="col-email">{{ user.email }}</td>
             <td class="col-type">
-              <span class="badge" [ngClass]="user.user_type === 'super_admin' ? 'super' : 'regular'">
-                {{ user.user_type === 'super_admin' ? 'Super Admin' : 'Admin' }}
+              <span class="badge" [ngClass]="user.user_type === 'super_admin' ? 'super' : (user.user_type === 'partner' ? 'partner' : 'regular')">
+                {{ user.user_type === 'super_admin' ? 'Super Admin' : (user.user_type === 'partner' ? 'Partner' : 'Admin') }}
               </span>
             </td>
             <td class="col-created">{{ formatDate(user.created_at) }}</td>

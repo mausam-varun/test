@@ -24,13 +24,17 @@ async function getProductSchemaConfig() {
       const db = getPool();
       const [productColumns] = await db.query('SHOW COLUMNS FROM products');
       const [imageColumns] = await db.query('SHOW COLUMNS FROM product_images');
+      const [categoryColumns] = await db.query('SHOW COLUMNS FROM categories');
 
       const productColumnNames = new Set(productColumns.map((column) => column.Field));
       const imageColumnNames = new Set(imageColumns.map((column) => column.Field));
+      const categoryColumnNames = new Set(categoryColumns.map((column) => column.Field));
 
       return {
         productMode: productColumnNames.has('title') ? 'normalized' : 'flat',
-        imagePrimaryColumn: imageColumnNames.has('is_primary') ? 'is_primary' : 'is_primary_image'
+        imagePrimaryColumn: imageColumnNames.has('is_primary') ? 'is_primary' : 'is_primary_image',
+        hasProductSlug: productColumnNames.has('slug'),
+        hasCategorySlug: categoryColumnNames.has('slug')
       };
     })().catch((error) => {
       productSchemaConfigPromise = null;
@@ -84,19 +88,36 @@ function buildProductWithImages(product, images = []) {
   };
 }
 
-async function insertProductImages(db, productId, images) {
+async function insertProductImages(db, productId, images, schemaConfig = null) {
+  const schema = schemaConfig || await getProductSchemaConfig();
   for (const image of images) {
     await db.execute(
-      `INSERT INTO product_images (product_id, image_url, is_primary)
+      `INSERT INTO product_images (product_id, image_url, ${schema.imagePrimaryColumn})
        VALUES (?, ?, ?)`,
       [productId, image.image_url, image.is_primary_image ? 1 : 0]
     );
   }
 }
 
-async function upsertCategoryByName(db, categoryName) {
+async function upsertCategoryByName(db, categoryName, schema) {
   const normalized = String(categoryName || '').trim();
   if (!normalized) return null;
+
+  if (!schema?.hasCategorySlug) {
+    const [existingRows] = await db.execute(
+      'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) LIMIT 1',
+      [normalized]
+    );
+    if (existingRows.length) {
+      return existingRows[0].id;
+    }
+
+    const [insertResult] = await db.execute(
+      'INSERT INTO categories (name) VALUES (?)',
+      [normalized]
+    );
+    return insertResult.insertId;
+  }
 
   const slug = slugify(normalized);
   await db.execute(
@@ -111,6 +132,11 @@ async function upsertCategoryByName(db, categoryName) {
 }
 
 async function buildUniqueProductSlug(db, title) {
+  const schema = await getProductSchemaConfig();
+  if (!schema.hasProductSlug) {
+    return null;
+  }
+
   const base = slugify(title);
   let candidate = base;
   let attempt = 0;
@@ -129,17 +155,37 @@ async function buildUniqueProductSlug(db, title) {
 
 async function createProduct({ name, price, category, description, images }) {
   const db = getPool();
-  const categoryId = await upsertCategoryByName(db, category);
-  const slug = await buildUniqueProductSlug(db, name);
+  const schema = await getProductSchemaConfig();
+  let result;
 
-  const [result] = await db.execute(
-    `INSERT INTO products (title, slug, description, base_price, stock, category_id, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [name, slug, description, price, 0, categoryId, 1]
-  );
+  if (schema.productMode === 'normalized') {
+    const categoryId = await upsertCategoryByName(db, category, schema);
+
+    if (schema.hasProductSlug) {
+      const slug = await buildUniqueProductSlug(db, name);
+      [result] = await db.execute(
+        `INSERT INTO products (title, slug, description, base_price, stock, category_id, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name, slug, description, price, 0, categoryId, 1]
+      );
+    } else {
+      [result] = await db.execute(
+        `INSERT INTO products (title, description, base_price, stock, category_id, is_active)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [name, description, price, 0, categoryId, 1]
+      );
+    }
+  } else {
+    const primaryImage = images.find((image) => image.is_primary_image) || images[0] || null;
+    [result] = await db.execute(
+      `INSERT INTO products (name, price, category, description, image_url)
+       VALUES (?, ?, ?, ?, ?)`,
+      [name, price, category || '', description, primaryImage ? primaryImage.image_url : null]
+    );
+  }
 
   const productId = result.insertId;
-  await insertProductImages(db, productId, images);
+  await insertProductImages(db, productId, images, schema);
   return fetchProductById(productId);
 }
 
@@ -262,20 +308,23 @@ async function fetchProductById(id) {
 
 async function updateProductById(id, updates, replacementImages = null) {
   const db = getPool();
+  const schema = await getProductSchemaConfig();
 
-  if (updates.name !== undefined) {
-    updates.title = updates.name;
-    delete updates.name;
-  }
+  if (schema.productMode === 'normalized') {
+    if (updates.name !== undefined) {
+      updates.title = updates.name;
+      delete updates.name;
+    }
 
-  if (updates.price !== undefined) {
-    updates.base_price = updates.price;
-    delete updates.price;
-  }
+    if (updates.price !== undefined) {
+      updates.base_price = updates.price;
+      delete updates.price;
+    }
 
-  if (updates.category !== undefined) {
-    updates.category_id = await upsertCategoryByName(db, updates.category);
-    delete updates.category;
+    if (updates.category !== undefined) {
+      updates.category_id = await upsertCategoryByName(db, updates.category, schema);
+      delete updates.category;
+    }
   }
 
   const fields = Object.keys(updates);
@@ -288,7 +337,12 @@ async function updateProductById(id, updates, replacementImages = null) {
 
   if (replacementImages && replacementImages.length) {
     await db.execute('DELETE FROM product_images WHERE product_id = ?', [id]);
-    await insertProductImages(db, id, replacementImages);
+    await insertProductImages(db, id, replacementImages, schema);
+
+    if (schema.productMode === 'flat') {
+      const primaryImage = replacementImages.find((image) => image.is_primary_image) || replacementImages[0] || null;
+      await db.execute('UPDATE products SET image_url = ? WHERE id = ?', [primaryImage ? primaryImage.image_url : null, id]);
+    }
   }
 
   return fetchProductById(id);
@@ -296,6 +350,7 @@ async function updateProductById(id, updates, replacementImages = null) {
 
 async function setPrimaryImage(productId, imageId) {
   const db = getPool();
+  const schema = await getProductSchemaConfig();
 
   const [rows] = await db.execute(
     `SELECT id, image_url
@@ -309,8 +364,14 @@ async function setPrimaryImage(productId, imageId) {
     return null;
   }
 
-  await db.execute('UPDATE product_images SET is_primary = 0 WHERE product_id = ?', [productId]);
-  await db.execute('UPDATE product_images SET is_primary = 1 WHERE id = ? AND product_id = ?', [imageId, productId]);
+  await db.execute(
+    `UPDATE product_images SET ${schema.imagePrimaryColumn} = 0 WHERE product_id = ?`,
+    [productId]
+  );
+  await db.execute(
+    `UPDATE product_images SET ${schema.imagePrimaryColumn} = 1 WHERE id = ? AND product_id = ?`,
+    [imageId, productId]
+  );
 
   return fetchProductById(productId);
 }

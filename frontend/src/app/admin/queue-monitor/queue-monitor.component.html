@@ -1,0 +1,103 @@
+<section class="queue-monitor">
+  <header class="queue-monitor__header">
+    <div>
+      <h2>AI Queue Monitor</h2>
+      <p>Track background indexing jobs and handle failures.</p>
+    </div>
+    <button class="btn" (click)="refresh()" [disabled]="loading">Refresh</button>
+  </header>
+
+  <div class="queue-monitor__alerts" *ngIf="actionMessage || actionError">
+    <p class="ok" *ngIf="actionMessage">{{ actionMessage }}</p>
+    <p class="err" *ngIf="actionError">{{ actionError }}</p>
+  </div>
+
+  <div class="queue-monitor__cards" *ngIf="stats as s">
+    <article class="card">
+      <h3>Main Queue</h3>
+      <p class="name">{{ s.queueName }}</p>
+      <div class="metrics">
+        <span>Waiting: {{ countOf(s.main, 'waiting') }}</span>
+        <span>Active: {{ countOf(s.main, 'active') }}</span>
+        <span>Delayed: {{ countOf(s.main, 'delayed') }}</span>
+        <span>Failed: {{ countOf(s.main, 'failed') }}</span>
+        <span>Completed: {{ countOf(s.main, 'completed') }}</span>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3>Dead Letter Queue</h3>
+      <p class="name">{{ s.deadLetterQueueName }}</p>
+      <div class="metrics">
+        <span>Waiting: {{ countOf(s.deadLetter, 'waiting') }}</span>
+        <span>Active: {{ countOf(s.deadLetter, 'active') }}</span>
+        <span>Failed: {{ countOf(s.deadLetter, 'failed') }}</span>
+        <span>Completed: {{ countOf(s.deadLetter, 'completed') }}</span>
+      </div>
+    </article>
+  </div>
+
+  <section class="table-wrap">
+    <h3>Main Queue Failed Jobs</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Product</th>
+          <th>Attempts</th>
+          <th>Reason</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let job of failedJobs">
+          <td>{{ job.id }}</td>
+          <td>{{ job.data.productId || '-' }}</td>
+          <td>{{ job.attemptsMade }}/{{ job.attemptsMax }}</td>
+          <td class="reason">{{ job.failedReason || '-' }}</td>
+          <td>{{ formatDate(job.finishedOn || job.timestamp) }}</td>
+          <td>
+            <button class="btn-small" (click)="retryJob(job.id)">Retry</button>
+            <button class="btn-small danger" (click)="removeJob(job.id)">Remove</button>
+          </td>
+        </tr>
+        <tr *ngIf="!failedJobs.length">
+          <td colspan="6">No failed jobs in main queue.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="table-wrap">
+    <h3>Dead Letter Queue Jobs</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>DLQ Job ID</th>
+          <th>Source Job</th>
+          <th>Product</th>
+          <th>Reason</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let job of deadLetterJobs">
+          <td>{{ job.id }}</td>
+          <td>{{ job.data.sourceJobId || '-' }}</td>
+          <td>{{ job.data.productId || '-' }}</td>
+          <td class="reason">{{ job.data.failedReason || '-' }}</td>
+          <td>{{ formatDate(job.timestamp) }}</td>
+          <td>
+            <button class="btn-small" (click)="retryJob(job.id, true)">Retry</button>
+            <button class="btn-small danger" (click)="removeJob(job.id, true)">Remove</button>
+          </td>
+        </tr>
+        <tr *ngIf="!deadLetterJobs.length">
+          <td colspan="6">No jobs in dead-letter queue.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</section>

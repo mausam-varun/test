@@ -53,13 +53,15 @@
   overflow: hidden;
   border-radius: 16px;
   background: linear-gradient(180deg, #f7f2e8 0%, #fff 100%);
-  aspect-ratio: 1 / 1.08;
+  aspect-ratio: 1 / 1;
+  min-height: clamp(320px, 44vw, 560px);
 }
 
 .main-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
   transition: transform 0.18s ease-out;
 }
@@ -82,9 +84,14 @@
 
 .thumb-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 12px;
   margin-top: 14px;
+}
+
+.thumb-strip.is-single {
+  grid-template-columns: minmax(0, 170px);
+  justify-content: start;
 }
 
 .thumb-btn {
@@ -93,13 +100,15 @@
   border-radius: 12px;
   overflow: hidden;
   padding: 0;
-  background: #fff;
+  background: #f8f5ef;
+  aspect-ratio: 16 / 9;
 }
 
 .thumb-btn img {
   width: 100%;
-  height: 86px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
   display: block;
 }
 
@@ -345,5 +354,9 @@
 
   .detail-meta {
     grid-template-columns: 1fr;
+  }
+
+  .thumb-strip {
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   }
 }

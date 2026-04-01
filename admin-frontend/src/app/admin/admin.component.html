@@ -1,0 +1,130 @@
+<section class="admin-products-page">
+	<header class="page-header">
+		<div>
+			<h1>Product Upload</h1>
+			<p>Add new items to your store inventory.</p>
+		</div>
+		<div class="admin-currency-control">
+			<label for="admin-currency-select">Currency</label>
+			<select
+				id="admin-currency-select"
+				[(ngModel)]="selectedCurrency"
+				[disabled]="isSavingCurrency"
+				(change)="onHeaderCurrencyChange()"
+			>
+				<option *ngFor="let option of currencyOptions" [value]="option.value">{{ option.label }}</option>
+			</select>
+			<small *ngIf="currencyMessage">{{ currencyMessage }}</small>
+		</div>
+	</header>
+
+	<div class="card upload-card">
+		<h2>Upload New Product</h2>
+
+		<div class="form-grid">
+			<label>
+				<span>Product Name</span>
+				<input type="text" [(ngModel)]="productName" placeholder="e.g. Floral Embroidered Kurta" />
+			</label>
+
+			<label>
+				<span>Price</span>
+				<input type="number" min="1" [(ngModel)]="productPrice" placeholder="e.g. 1499" />
+			</label>
+
+			<label>
+				<span>Category</span>
+				<input type="text" [(ngModel)]="productCategory" placeholder="e.g. bangles" />
+			</label>
+
+			<p class="full-width" *ngIf="pricePreviewInUsd !== null">
+				Saved as USD in database: <strong>${{ pricePreviewInUsd | number:'1.0-2' }}</strong>
+			</p>
+
+			<label>
+				<span>Size</span>
+				<input type="text" [(ngModel)]="productSize" placeholder="e.g. 3 or M/L/XL" />
+			</label>
+
+			<label class="full-width">
+				<span>Description</span>
+				<textarea rows="3" [(ngModel)]="productDescription" placeholder="Short product details for admin reference"></textarea>
+			</label>
+
+			<label class="full-width">
+				<span>Colors (comma-separated)</span>
+				<input type="text" [(ngModel)]="productColors" placeholder="e.g. blue, gold, white" />
+			</label>
+
+			<label class="full-width">
+				<span>Color Hex Values (comma-separated)</span>
+				<input type="text" [(ngModel)]="productColorHex" placeholder="e.g. #1E3A5F, #C9A24A, #F5F5F5" />
+			</label>
+
+			<label class="full-width">
+				<span>Designs (comma-separated)</span>
+				<input type="text" [(ngModel)]="productDesigns" placeholder="e.g. floral, leaf, geometric" />
+			</label>
+
+			<label class="full-width">
+				<span>Patterns (comma-separated)</span>
+				<input type="text" [(ngModel)]="productPatterns" placeholder="e.g. embroidered, vine, repetitive" />
+			</label>
+
+			<label class="full-width">
+				<span>Styles (comma-separated)</span>
+				<input type="text" [(ngModel)]="productStyles" placeholder="e.g. ethnic, traditional, festive" />
+			</label>
+
+			<label class="full-width">
+				<span>Materials (comma-separated)</span>
+				<input type="text" [(ngModel)]="productMaterials" placeholder="e.g. fabric, thread work, metal embellishment" />
+			</label>
+
+			<label class="full-width file-picker">
+				<span>Product Image (JPG/PNG)</span>
+				<input type="file" accept="image/png,image/jpeg" (change)="onImageSelected($event)" />
+				<small *ngIf="selectedImageName">Selected: {{ selectedImageName }}</small>
+			</label>
+		</div>
+
+		<button class="btn-upload" type="button" [disabled]="isSubmitting" (click)="uploadProduct()">
+			{{ isSubmitting ? 'Uploading...' : 'Upload Product' }}
+		</button>
+
+		<p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+		<p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+	</div>
+
+	<div class="card list-card">
+		<div class="list-header">
+			<h2>Uploaded Products</h2>
+			<span *ngIf="isLoadingProducts">Loading...</span>
+		</div>
+
+		<p class="empty-text" *ngIf="!isLoadingProducts && products.length === 0">No products uploaded yet.</p>
+
+		<div class="table-wrap" *ngIf="products.length > 0">
+			<table>
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Image</th>
+						<th>Name</th>
+						<th>Category</th>
+						<th>Price</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let product of products">
+						<td>{{ product.id }}</td>
+						<td><img [src]="product.image_url" [alt]="product.name" /></td>
+						<td>{{ product.name }}</td>
+						<td>{{ product.category }}</td>
+						<td>${{ product.price | number:'1.0-2' }}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>

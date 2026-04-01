@@ -4,6 +4,13 @@ import { Subscription } from 'rxjs';
 import { CountryISO, PhoneNumberFormat, SearchCountryField } from 'ngx-intl-tel-input';
 import { AuthPopupService } from '../../services/auth-popup.service';
 import { AuthSessionService } from '../../services/auth-session.service';
+import { APP_CONFIG, isGoogleOAuthConfigured } from '../../config/app-config';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 @Component({
   selector: 'app-auth-signup-popup',
@@ -11,7 +18,7 @@ import { AuthSessionService } from '../../services/auth-session.service';
   styleUrls: ['./auth-signup-popup.component.scss']
 })
 export class AuthSignupPopupComponent implements OnInit, OnDestroy {
-  private readonly apiUrl = 'http://localhost:5001/api/auth';
+  private readonly apiUrl = APP_CONFIG.AUTH_API_URL;
   private readonly authSessionService = inject(AuthSessionService);
 
   readonly countryCodeOptions = [
@@ -112,6 +119,7 @@ export class AuthSignupPopupComponent implements OnInit, OnDestroy {
   password = '';
   confirmPassword = '';
   isSubmitting = false;
+  isSubmittingGoogle = false;
   errorMessage = '';
   successMessage = '';
 
@@ -165,7 +173,84 @@ export class AuthSignupPopupComponent implements OnInit, OnDestroy {
 
   continueWithGoogle(): void {
     this.resetMessages();
-    this.successMessage = 'Google sign-in button is ready for frontend wiring.';
+
+    // Check if Google OAuth is configured
+    if (!isGoogleOAuthConfigured()) {
+      this.errorMessage = `Google Sign-In is not configured.\n\nTo enable it:\n1. Get Client ID from Google Cloud Console\n2. Update GOOGLE_CLIENT_ID in app/config/app-config.ts\n3. Refresh the page`;
+      return;
+    }
+
+    this.isSubmittingGoogle = true;
+
+    // Use OAuth popup flow for reliable user-initiated sign-in.
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+      this.errorMessage = 'Google Sign-In library not loaded. Please refresh the page.';
+      this.isSubmittingGoogle = false;
+      return;
+    }
+
+    try {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        callback: (response: any) => {
+          if (!response?.access_token) {
+            this.errorMessage = 'Google sign-in failed. Access token not received.';
+            this.isSubmittingGoogle = false;
+            return;
+          }
+
+          this.handleGoogleAccessToken(response.access_token);
+        },
+        error_callback: () => {
+          this.errorMessage = 'Google sign-in was cancelled or blocked.';
+          this.isSubmittingGoogle = false;
+        }
+      });
+
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      this.errorMessage = 'Failed to initialize Google Sign-In. Please try again.';
+      this.isSubmittingGoogle = false;
+    }
+  }
+
+  private handleGoogleAccessToken(accessToken: string): void {
+    this.http.get<any>('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }).subscribe({
+      next: (googleProfile) => {
+        this.http.post<any>(`${this.apiUrl}/google-signin-profile`, {
+          email: googleProfile?.email,
+          name: googleProfile?.name,
+          picture: googleProfile?.picture || null
+        }).subscribe({
+          next: (backendResponse) => {
+            this.isSubmittingGoogle = false;
+
+            if (backendResponse?.token && backendResponse?.user) {
+              this.authSessionService.setSession(backendResponse.token, backendResponse.user);
+              this.successMessage = 'Signed in with Google successfully!';
+              setTimeout(() => this.close(), 1200);
+              return;
+            }
+
+            this.errorMessage = 'Google sign-in failed: Invalid response from server.';
+          },
+          error: (error) => {
+            this.isSubmittingGoogle = false;
+            this.errorMessage = error?.error?.error || 'Google sign-in failed on server.';
+          }
+        });
+      },
+      error: () => {
+        this.isSubmittingGoogle = false;
+        this.errorMessage = 'Failed to fetch Google profile. Please try again.';
+      }
+    });
   }
 
   submit(): void {

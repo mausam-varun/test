@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_ENDPOINTS } from '../../config/app-config';
 
 interface SliderItem {
   id: number;
   image_url: string;
   title: string;
   subtitle: string;
+  cta_url: string;
   sort_order: number;
   is_active: boolean;
 }
@@ -21,13 +23,14 @@ interface SliderAdminResponse {
   styleUrls: ['./slider-settings.component.scss']
 })
 export class SliderSettingsComponent implements OnInit {
-  private readonly apiBaseUrl = 'http://localhost:5001/api/slider';
+  private readonly apiBaseUrl = API_ENDPOINTS.slider;
 
   sliderItems: SliderItem[] = [];
   displayCount = 5;
 
   newTitle = '';
   newSubtitle = '';
+  newCtaUrl = '';
   newImageUrl = '';
   newSortOrder = 0;
   newIsActive = true;
@@ -131,6 +134,7 @@ export class SliderSettingsComponent implements OnInit {
 
     payload.append('title', this.newTitle.trim());
     payload.append('subtitle', this.newSubtitle.trim());
+    payload.append('cta_url', this.newCtaUrl.trim());
     payload.append('sort_order', String(this.newSortOrder || 0));
     payload.append('is_active', String(this.newIsActive));
 
@@ -156,6 +160,7 @@ export class SliderSettingsComponent implements OnInit {
     this.updateSliderItem(item.id, {
       title: item.title,
       subtitle: item.subtitle,
+      cta_url: item.cta_url,
       sort_order: item.sort_order,
       image_url: item.image_url,
       is_active: item.is_active
@@ -202,6 +207,7 @@ export class SliderSettingsComponent implements OnInit {
   private resetForm(): void {
     this.newTitle = '';
     this.newSubtitle = '';
+    this.newCtaUrl = '';
     this.newImageUrl = '';
     this.newSortOrder = 0;
     this.newIsActive = true;

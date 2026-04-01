@@ -19,7 +19,10 @@
 
         <div class="checkout-status is-success" *ngIf="submitSuccessMessage">
           <strong>{{ submitSuccessMessage }}</strong>
-          <span *ngIf="placedOrderNumber">Order Number: {{ placedOrderNumber }}</span>
+          <span *ngIf="placedOrderNumber">Order Number: <b>{{ placedOrderNumber }}</b></span>
+          <a *ngIf="placedOrderNumber" [routerLink]="['/track-order', placedOrderNumber]" class="track-order-link">
+            &#128672; Track Your Order
+          </a>
         </div>
 
         <div class="form-grid">
@@ -103,7 +106,7 @@
               </p>
               <button type="button" class="remove-item-btn" (click)="removeItem(item.id)">Remove</button>
             </div>
-            <strong>${{ (item.price * item.quantity) | number:'1.2-2' }}</strong>
+            <strong>{{ (item.price * item.quantity) | displayCurrency:2 }}</strong>
           </article>
         </div>
 
@@ -113,23 +116,23 @@
 
         <div class="summary-line">
           <span>Subtotal</span>
-          <span>${{ subtotal | number:'1.2-2' }}</span>
+          <span>{{ subtotal | displayCurrency:2 }}</span>
         </div>
         <div class="summary-line">
           <span>Shipping</span>
           <span>
             <ng-container *ngIf="shipping === 0; else shippingValue">Free</ng-container>
-            <ng-template #shippingValue>${{ shipping | number:'1.2-2' }}</ng-template>
+            <ng-template #shippingValue>{{ shipping | displayCurrency:2 }}</ng-template>
           </span>
         </div>
         <div class="summary-line">
           <span>Tax</span>
-          <span>${{ tax | number:'1.2-2' }}</span>
+          <span>{{ tax | displayCurrency:2 }}</span>
         </div>
 
         <div class="summary-total">
           <span>Total</span>
-          <span>${{ total | number:'1.2-2' }}</span>
+          <span>{{ total | displayCurrency:2 }}</span>
         </div>
 
         <button type="button" class="place-order-btn" (click)="placeOrder()" [disabled]="!cartItems.length || isSubmitting">

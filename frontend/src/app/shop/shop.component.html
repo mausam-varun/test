@@ -8,8 +8,26 @@
 
 <!-- Shop Container -->
 <div class="shop-container">
+  <button
+    type="button"
+    class="mobile-filter-toggle"
+    (click)="toggleMobileFilters()"
+    [attr.aria-expanded]="isMobileFiltersOpen"
+    aria-controls="shop-mobile-filters"
+    aria-label="Toggle filters">
+    <span>{{ isMobileFiltersOpen ? 'Hide Filters' : 'Show Filters' }}</span>
+  </button>
+
+  <button
+    type="button"
+    class="mobile-filters-backdrop"
+    *ngIf="isMobileFiltersOpen"
+    (click)="closeMobileFilters()"
+    aria-label="Close filters">
+  </button>
+
   <!-- Sidebar -->
-  <aside class="shop-sidebar">
+  <aside class="shop-sidebar" id="shop-mobile-filters" [class.is-mobile-open]="isMobileFiltersOpen">
     <!-- Categories -->
     <div class="filter-section">
       <h3 class="filter-title">Shop By Category</h3>
@@ -44,7 +62,7 @@
           class="price-slider">
       </div>
       <div class="price-display">
-        ₹{{ priceRange[0] | number: '1.0-0' }} - ₹{{ priceRange[1] | number: '1.0-0' }}
+        {{ priceRange[0] | displayCurrency:0 }} - {{ priceRange[1] | displayCurrency:0 }}
       </div>
     </div>
 
@@ -62,6 +80,10 @@
         </label>
       </div>
     </div>
+
+    <button type="button" class="mobile-filters-close" (click)="closeMobileFilters()">
+      Apply Filters
+    </button>
   </aside>
 
   <!-- Main Content -->
@@ -99,7 +121,7 @@
             <span class="rating-count">({{ product.reviews }})</span>
           </div>
 
-          <p class="product-price">₹{{ product.price | number: '1.2-2' }}</p>
+          <p class="product-price">{{ product.price | displayCurrency:2 }}</p>
 
           <div class="product-actions">
             <a class="btn-view-details" [routerLink]="['/product', product.id]">View Details</a>
@@ -219,7 +241,7 @@
           </svg>
         </div>
         <h4 class="badge-title">Free Worldwide Shipping</h4>
-        <p class="badge-desc">On orders over $50</p>
+        <p class="badge-desc">On orders over {{ 50 | displayCurrency:0 }}</p>
       </div>
     </div>
   </div>

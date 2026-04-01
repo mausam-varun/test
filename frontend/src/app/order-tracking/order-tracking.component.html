@@ -1,0 +1,122 @@
+<section class="tracking-page">
+  <div class="tracking-container">
+    <h1 class="page-title">Track Your Order</h1>
+
+    <!-- Search bar -->
+    <div class="search-bar">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Enter order number e.g. -DC00000001"
+        [(ngModel)]="searchInput"
+        (keyup.enter)="search()"
+      />
+      <button class="btn-primary" (click)="search()">Track</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Fetching tracking details...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" *ngIf="errorMessage && !isLoading">
+      <span class="error-icon">&#9888;</span> {{ errorMessage }}
+    </div>
+
+    <!-- Tracking result -->
+    <div class="tracking-result" *ngIf="tracking && !isLoading">
+
+      <!-- Order summary -->
+      <div class="order-summary-card">
+        <div class="summary-row">
+          <span class="label">Order Number</span>
+          <span class="value bold">{{ tracking.order_number }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Customer</span>
+          <span class="value">{{ tracking.customer_name }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Destination</span>
+          <span class="value">{{ tracking.destination }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Ordered On</span>
+          <span class="value">{{ tracking.ordered_at | date:'dd MMM yyyy, h:mm a' }}</span>
+        </div>
+        <div class="summary-row" *ngIf="tracking.courier_name">
+          <span class="label">Courier</span>
+          <span class="value courier-badge">{{ tracking.courier_name }}</span>
+        </div>
+        <div class="summary-row" *ngIf="tracking.awb_code">
+          <span class="label">AWB / Tracking No.</span>
+          <span class="value mono">{{ tracking.awb_code }}</span>
+        </div>
+        <div class="summary-row" *ngIf="tracking.tracking_url">
+          <span class="label">Courier Tracking</span>
+          <a [href]="tracking.tracking_url" target="_blank" rel="noopener" class="external-link">
+            Open on Shiprocket &#8599;
+          </a>
+        </div>
+      </div>
+
+      <!-- Status stepper -->
+      <div class="status-stepper" *ngIf="tracking.order_status !== 'cancelled'">
+        <div
+          class="step"
+          *ngFor="let step of statusSteps; let i = index"
+          [class.completed]="i <= currentStepIndex"
+          [class.active]="i === currentStepIndex"
+        >
+          <div class="step-circle">
+            <span *ngIf="i < currentStepIndex">&#10003;</span>
+            <span *ngIf="i >= currentStepIndex">{{ i + 1 }}</span>
+          </div>
+          <div class="step-label">
+            <ng-container [ngSwitch]="step">
+              <span *ngSwitchCase="'placed'">Order Placed</span>
+              <span *ngSwitchCase="'processing'">Processing</span>
+              <span *ngSwitchCase="'shipped'">Shipped</span>
+              <span *ngSwitchCase="'delivered'">Delivered</span>
+            </ng-container>
+          </div>
+          <div class="step-connector" *ngIf="i < statusSteps.length - 1" [class.filled]="i < currentStepIndex"></div>
+        </div>
+      </div>
+
+      <!-- Cancelled badge -->
+      <div class="cancelled-badge" *ngIf="tracking.order_status === 'cancelled'">
+        Order Cancelled
+      </div>
+
+      <!-- Current status highlight -->
+      <div class="status-banner" [ngClass]="tracking.order_status">
+        {{ statusLabel }}
+      </div>
+
+      <!-- Live activity feed -->
+      <div class="activity-feed" *ngIf="liveActivities.length > 0">
+        <h3 class="feed-title">Shipment Activity</h3>
+        <ul class="activity-list">
+          <li class="activity-item" *ngFor="let act of liveActivities">
+            <span class="act-date">{{ act.date }}</span>
+            <span class="act-activity">{{ act.activity }}</span>
+            <span class="act-location" *ngIf="act.location">{{ act.location }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- No live data yet -->
+      <div class="no-live" *ngIf="liveActivities.length === 0 && tracking.awb_code">
+        <p>Live shipment updates will appear here once the courier scans the parcel.</p>
+      </div>
+
+      <div class="no-awb" *ngIf="!tracking.awb_code && tracking.order_status === 'placed'">
+        <p>Your order has been received. Courier assignment is in progress. Check back in a few minutes for live tracking.</p>
+      </div>
+
+    </div>
+  </div>
+</section>

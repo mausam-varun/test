@@ -2,6 +2,8 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CartService } from '../services/cart.service';
 import { WishlistService } from '../services/wishlist.service';
+import { HeroSlide } from './components/hero/hero.component';
+import { API_ENDPOINTS } from '../config/app-config';
 
 interface CategoryCardModel {
   name: string;
@@ -68,6 +70,7 @@ interface SliderImage {
   image_url: string;
   title?: string;
   subtitle?: string;
+  cta_url?: string;
 }
 
 interface SliderPublicResponse {
@@ -81,8 +84,8 @@ interface SliderPublicResponse {
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  private readonly productApiBaseUrl = 'http://localhost:5001/api/products';
-  private readonly sliderApiBaseUrl = 'http://localhost:5001/api/slider';
+  private readonly productApiBaseUrl = API_ENDPOINTS.products;
+  private readonly sliderApiBaseUrl = API_ENDPOINTS.slider;
   private readonly featuredProductsLimit = 8;
 
   readonly heroImage = 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=1400&q=80';
@@ -96,6 +99,7 @@ export class HomeComponent implements OnInit {
   ];
 
   heroSliderImages: string[] = [];
+  heroSlides: HeroSlide[] = [];
 
   featuredProducts: ProductCardModel[] = [];
   categorySliderIndex = 0;
@@ -158,11 +162,18 @@ export class HomeComponent implements OnInit {
     this.http.get<SliderPublicResponse>(`${this.sliderApiBaseUrl}/public`).subscribe({
       next: (response) => {
         const images = Array.isArray(response?.images) ? response.images : [];
-        this.heroSliderImages = images
-          .map((item) => item.image_url)
-          .filter((url) => typeof url === 'string' && url.trim().length > 0);
+        this.heroSlides = images
+          .filter((item) => typeof item.image_url === 'string' && item.image_url.trim().length > 0)
+          .map((item) => ({
+            image_url: item.image_url,
+            title: item.title || '',
+            subtitle: item.subtitle || '',
+            cta_url: item.cta_url || ''
+          }));
+        this.heroSliderImages = this.heroSlides.map((s) => s.image_url);
       },
       error: () => {
+        this.heroSlides = [];
         this.heroSliderImages = [];
       }
     });

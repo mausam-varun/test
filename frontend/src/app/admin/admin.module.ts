@@ -9,6 +9,9 @@ import { AdminProductListComponent } from './product-list/product-list.component
 import { AdminLayoutComponent } from './layout/admin-layout.component';
 import { UsersComponent } from './users/users.component';
 import { SliderSettingsComponent } from './slider-settings/slider-settings.component';
+import { QueueMonitorComponent } from './queue-monitor/queue-monitor.component';
+import { CurrencySettingsComponent } from './currency-settings/currency-settings.component';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -16,12 +19,15 @@ import { SliderSettingsComponent } from './slider-settings/slider-settings.compo
     AdminProductListComponent,
     AdminLayoutComponent,
     UsersComponent,
-    SliderSettingsComponent
+    SliderSettingsComponent,
+    QueueMonitorComponent,
+    CurrencySettingsComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     HttpClientModule,
+    SharedModule,
     AdminRoutingModule
   ]
 })

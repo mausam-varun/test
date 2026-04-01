@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
+import { API_ENDPOINTS } from '../config/app-config';
 
 export interface CatalogProductImage {
   id?: number;
@@ -38,7 +39,7 @@ export interface CatalogProduct {
   providedIn: 'root'
 })
 export class ProductCatalogService {
-  private readonly apiBaseUrl = 'http://localhost:5001/api/products';
+  private readonly apiBaseUrl = API_ENDPOINTS.products;
 
   constructor(private readonly http: HttpClient) {}
 

@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { APP_CONFIG } from '../../config/app-config';
 
 interface AdminUser {
   id: number;
   email: string;
-  user_type: 'super_admin' | 'admin';
+  user_type: 'super_admin' | 'admin' | 'partner';
   created_at: string;
   last_login: string | null;
 }
@@ -15,7 +16,7 @@ interface AdminUser {
   styleUrls: ['./users.component.scss']
 })
 export class UsersComponent implements OnInit {
-  private readonly apiUrl = 'http://localhost:5002/api/auth';
+  private readonly apiUrl = APP_CONFIG.AUTH_API_URL;
 
   users: AdminUser[] = [];
   isLoading = false;
@@ -25,7 +26,7 @@ export class UsersComponent implements OnInit {
 
   newUserEmail = '';
   newUserPassword = '';
-  newUserType: 'super_admin' | 'admin' = 'admin';
+  newUserType: 'super_admin' | 'admin' | 'partner' = 'admin';
   isCreating = false;
 
   constructor(private readonly http: HttpClient) {}

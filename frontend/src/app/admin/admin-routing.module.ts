@@ -5,6 +5,8 @@ import { AdminProductListComponent } from './product-list/product-list.component
 import { AdminLayoutComponent } from './layout/admin-layout.component';
 import { UsersComponent } from './users/users.component';
 import { SliderSettingsComponent } from './slider-settings/slider-settings.component';
+import { QueueMonitorComponent } from './queue-monitor/queue-monitor.component';
+import { CurrencySettingsComponent } from './currency-settings/currency-settings.component';
 
 const routes: Routes = [
   {
@@ -15,7 +17,9 @@ const routes: Routes = [
       { path: 'add-product', component: AdminComponent },
       { path: 'products', component: AdminProductListComponent },
       { path: 'users', component: UsersComponent },
-      { path: 'slider-settings', component: SliderSettingsComponent }
+      { path: 'slider-settings', component: SliderSettingsComponent },
+      { path: 'ai-queue', component: QueueMonitorComponent },
+      { path: 'currency-settings', component: CurrencySettingsComponent }
     ]
   }
 ];

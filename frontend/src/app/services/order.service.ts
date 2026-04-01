@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_ENDPOINTS } from '../config/app-config';
 
 export type CheckoutPaymentMethod = 'cod' | 'card' | 'upi';
 
@@ -50,15 +51,33 @@ export interface PlaceOrderResponse {
   order: PlacedOrder;
 }
 
+export interface OrderTrackingResponse {
+  order_number: string;
+  order_status: string;
+  awb_code: string | null;
+  courier_name: string | null;
+  tracking_url: string | null;
+  shiprocket_order_id: string | null;
+  shiprocket_shipment_id: string | null;
+  customer_name: string;
+  destination: string;
+  ordered_at: string;
+  live_tracking: any;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
-  private readonly apiBaseUrl = 'http://localhost:5001/api/orders';
+  private readonly apiBaseUrl = API_ENDPOINTS.orders;
 
   constructor(private readonly http: HttpClient) {}
 
   placeOrder(payload: PlaceOrderPayload): Observable<PlaceOrderResponse> {
     return this.http.post<PlaceOrderResponse>(this.apiBaseUrl, payload);
+  }
+
+  getOrderTracking(orderNumber: string): Observable<OrderTrackingResponse> {
+    return this.http.get<OrderTrackingResponse>(API_ENDPOINTS.orderTracking(orderNumber));
   }
 }

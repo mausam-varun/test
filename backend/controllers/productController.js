@@ -17,10 +17,57 @@ const {
   runPrimaryImageAiWorkflow,
   setAiIndexingMode
 } = require('../services/productAiWorkflowService');
+const { getAdminCurrencyPreference } = require('../services/authService');
 const sharp = require('sharp');
 const { analyzeImage, generateBangleImageFromMetadata } = require('../services/openai.service');
 const { getUploadProductDetails } = require('../services/prompt'); 
 
+const DEFAULT_CURRENCY = 'USD';
+const FALLBACK_INR_TO_USD_RATE = 1 / 83;
+
+function getInrToUsdRate() {
+  const configuredRate = Number(process.env.INR_TO_USD_RATE);
+  if (Number.isFinite(configuredRate) && configuredRate > 0) {
+    return configuredRate;
+  }
+  return FALLBACK_INR_TO_USD_RATE;
+}
+
+function parseCurrency(value) {
+  if (value === undefined || value === null || value === '') {
+    return DEFAULT_CURRENCY;
+  }
+  return String(value).trim().toUpperCase();
+}
+
+function convertToUsd(amount, sourceCurrency) {
+  if (sourceCurrency === 'USD') {
+    return Number(amount.toFixed(2));
+  }
+
+  if (sourceCurrency === 'INR') {
+    return Number((amount * getInrToUsdRate()).toFixed(2));
+  }
+
+  throw new AppError('unsupported currency. allowed values: USD, INR', 400);
+}
+
+async function resolveSourceCurrency(currency, adminId) {
+  if (currency !== undefined && currency !== null && String(currency).trim() !== '') {
+    return parseCurrency(currency);
+  }
+
+  const numericAdminId = Number(adminId);
+  if (Number.isInteger(numericAdminId) && numericAdminId > 0) {
+    try {
+      return await getAdminCurrencyPreference(numericAdminId);
+    } catch (error) {
+      console.warn('Unable to load admin preferred currency, using USD fallback:', error.message);
+    }
+  }
+
+  return DEFAULT_CURRENCY;
+}
 
 
 
@@ -45,6 +92,8 @@ exports.addProduct = asyncHandler(async (req, res) => {
   const {
     name,
     price,
+    currency,
+    admin_id,
     category,
     description = '',
     size = '',
@@ -70,6 +119,9 @@ exports.addProduct = asyncHandler(async (req, res) => {
   if (parsedPrice === null) {
     throw new AppError('price must be a valid non-negative number', 400);
   }
+
+  const sourceCurrency = await resolveSourceCurrency(currency, admin_id);
+  const priceInUsd = convertToUsd(parsedPrice, sourceCurrency);
 
   // Resize primary image to max 1024px and run AI analysis
   const primaryFile = uploadedFiles[0];
@@ -116,7 +168,7 @@ exports.addProduct = asyncHandler(async (req, res) => {
     is_primary_image: index === 0
   }));
 
-  const product = await createProduct({ name, price: parsedPrice, category, description: finalDescription, images });
+  const product = await createProduct({ name, price: priceInUsd, category, description: finalDescription, images });
 
   // Update product description in DB with AI-generated text if it was auto-derived
   if (!description && finalDescription) {
@@ -214,7 +266,8 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     if (parsedPrice === null) {
       throw new AppError('price must be a valid non-negative number', 400);
     }
-    updates.price = parsedPrice;
+    const sourceCurrency = await resolveSourceCurrency(req.body.currency, req.body.admin_id);
+    updates.price = convertToUsd(parsedPrice, sourceCurrency);
   }
 
   const uploadedFiles = getUploadedFiles(req);

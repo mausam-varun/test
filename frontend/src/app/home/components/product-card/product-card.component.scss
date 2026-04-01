@@ -16,6 +16,8 @@
   position: relative;
   overflow: hidden;
   border-radius: 12px;
+  aspect-ratio: 4 / 3;
+  background: #f5f1eb;
 }
 
 .product-card__image-link,
@@ -26,12 +28,14 @@
 
 .product-card__image-link {
   display: block;
+  height: 100%;
 }
 
 .product-card__image-wrap img {
   width: 100%;
-  height: 170px;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -148,8 +152,8 @@
 }
 
 @media (max-width: 560px) {
-  .product-card__image-wrap img {
-    height: 160px;
+  .product-card__image-wrap {
+    aspect-ratio: 1 / 1;
   }
 }
 

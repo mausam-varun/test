@@ -11,6 +11,7 @@ import { SharedModule } from './shared/shared.module';
 import { ShopModule } from './shop/shop.module';
 import { ContactModule } from './contact/contact.module';
 import { LoginComponent } from './login/login.component';
+import { AdminSignupComponent } from './admin-signup/admin-signup.component';
 import { HeroComponent } from './home/components/hero/hero.component';
 import { CategoryCardComponent } from './home/components/category-card/category-card.component';
 import { ProductCardComponent } from './home/components/product-card/product-card.component';
@@ -18,6 +19,7 @@ import { CheckoutComponent } from './checkout/checkout.component';
 import { ProductDetailComponent } from './product-detail/product-detail.component';
 import { WishlistComponent } from './wishlist/wishlist.component';
 import { ProfileComponent } from './profile/profile.component';
+import { OrderTrackingComponent } from './order-tracking/order-tracking.component';
 
 @NgModule({
   declarations: [
@@ -25,13 +27,15 @@ import { ProfileComponent } from './profile/profile.component';
     HomeComponent,
     AboutComponent,
     LoginComponent,
+    AdminSignupComponent,
     HeroComponent,
     CategoryCardComponent,
     ProductCardComponent,
     CheckoutComponent,
     ProductDetailComponent,
     WishlistComponent,
-    ProfileComponent
+    ProfileComponent,
+    OrderTrackingComponent
   ],
   imports: [
     BrowserModule,

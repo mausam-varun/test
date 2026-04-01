@@ -1,23 +1,24 @@
 <section class="hero">
-  <div class="hero__content">
-    <p class="hero__badge">{{ badgeText }} <span aria-hidden="true">❤</span></p>
-    <h1 class="hero__title">{{ title }}</h1>
-    <p class="hero__description">{{ description }}</p>
-    <button class="hero__cta btn-primary" type="button">{{ ctaText }} <span aria-hidden="true">→</span></button>
-
-    <ul class="hero__features">
-      <li *ngFor="let feature of features">{{ feature }}</li>
-    </ul>
-  </div>
-
   <div class="hero__media">
     <img
-      [src]="resolvedImageUrls[currentSlideIndex]"
+      [src]="currentSlide.image_url"
       [alt]="imageAlt"
       loading="eager">
 
+    <div class="hero__overlay"></div>
+
+    <div class="hero__content">
+      <p class="hero__badge">{{ badgeText }} <span aria-hidden="true">❤</span></p>
+      <h1 class="hero__title">{{ currentTitle }}</h1>
+      <p class="hero__description">{{ currentDescription }}</p>
+      <a class="hero__cta" [routerLink]="currentCtaLink">{{ ctaText }} <span aria-hidden="true">→</span></a>
+      <ul class="hero__features">
+        <li *ngFor="let feature of features">{{ feature }}</li>
+      </ul>
+    </div>
+
     <button
-      *ngIf="resolvedImageUrls.length > 1"
+      *ngIf="resolvedSlides.length > 1"
       type="button"
       class="hero__nav hero__nav--prev"
       aria-label="Previous slide"
@@ -26,7 +27,7 @@
     </button>
 
     <button
-      *ngIf="resolvedImageUrls.length > 1"
+      *ngIf="resolvedSlides.length > 1"
       type="button"
       class="hero__nav hero__nav--next"
       aria-label="Next slide"
@@ -34,10 +35,10 @@
       &#10095;
     </button>
 
-    <div class="hero__dots" *ngIf="resolvedImageUrls.length > 1">
+    <div class="hero__dots" *ngIf="resolvedSlides.length > 1">
       <button
         type="button"
-        *ngFor="let image of resolvedImageUrls; index as i"
+        *ngFor="let slide of resolvedSlides; index as i"
         [class.active]="i === currentSlideIndex"
         (click)="goToSlide(i)"
         [attr.aria-label]="'Go to slide ' + (i + 1)">

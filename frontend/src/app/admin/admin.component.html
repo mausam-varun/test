@@ -1,4 +1,10 @@
 <section class="admin-products-page">
+	<div class="admin-header-bar">
+		<div>
+			<h1>Admin Product Panel</h1>
+			<p>Currency preference is controlled from the top header and product prices are stored in USD.</p>
+		</div>
+	</div>
 
 	<div class="card upload-card">
 		<div class="card-title-row">
@@ -30,7 +36,7 @@
 			</label>
 
 			<label>
-				<span>Price (INR)</span>
+				<span>Price</span>
 				<input type="number" min="1" [(ngModel)]="productPrice" placeholder="e.g. 1499" />
 			</label>
 
@@ -38,6 +44,10 @@
 				<span>Category</span>
 				<input type="text" [(ngModel)]="productCategory" placeholder="e.g. Women Ethnic" />
 			</label>
+
+			<p class="full-width" *ngIf="pricePreviewInUsd !== null">
+				Saved as USD in database: <strong>${{ pricePreviewInUsd | number:'1.0-2' }}</strong>
+			</p>
 
 			<label>
 				<span>Color</span>
@@ -156,7 +166,7 @@
 						<td><img [src]="product.image_url" [alt]="product.name" /></td>
 						<td>{{ product.name }}</td>
 						<td>{{ product.category }}</td>
-						<td>&#8377;{{ product.price | number:'1.0-2' }}</td>
+						<td>{{ product.price | displayCurrency:2 }}</td>
 						<td class="actions-cell">
 							<ng-container *ngIf="confirmDeleteId !== product.id">
 								<button class="btn-edit" (click)="startEdit(product)">Edit</button>

@@ -3,6 +3,8 @@ const AppError = require('../utils/AppError');
 const { createOrder } = require('../services/orderService');
 const { sendOrderConfirmationEmail } = require('../services/emailService');
 const { generateInvoicePdfBuffer } = require('../services/invoiceService');
+const { createShiprocketOrder } = require('../services/shiprocketService');
+const { getPool } = require('../services/db');
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -95,14 +97,42 @@ exports.placeOrder = asyncHandler(async (req, res) => {
     order
   });
 
-  // Send confirmation emails with invoice after responding (non-blocking)
+  // Non-blocking post-order tasks: email + Shiprocket
   (async () => {
+    // 1. Send confirmation email with invoice
     try {
       const invoiceBuffer = await generateInvoicePdfBuffer({ order });
       const invoiceFilename = `invoice-${String(order.order_number || order.id).replace(/[^A-Za-z0-9_-]/g, '')}.pdf`;
       await sendOrderConfirmationEmail({ order, invoiceBuffer, invoiceFilename });
     } catch (err) {
       console.error('[OrderEmail] Failed to send order confirmation email:', err.message);
+    }
+
+    // 2. Push order to Shiprocket and save tracking info
+    try {
+      const shiprocket = await createShiprocketOrder(order);
+      const db = getPool();
+      await db.execute(
+        `UPDATE orders
+         SET shiprocket_order_id    = ?,
+             shiprocket_shipment_id = ?,
+             awb_code               = ?,
+             courier_name           = ?,
+             tracking_url           = ?,
+             order_status           = 'processing'
+         WHERE id = ?`,
+        [
+          shiprocket.shiprocket_order_id || null,
+          String(shiprocket.shiprocket_shipment_id || ''),
+          shiprocket.awb_code || null,
+          shiprocket.courier_name || null,
+          shiprocket.tracking_url || null,
+          order.id
+        ]
+      );
+      console.log(`[Shiprocket] Order ${order.order_number} created. AWB: ${shiprocket.awb_code || 'pending'}`);
+    } catch (err) {
+      console.error('[Shiprocket] Failed to create Shiprocket order (non-fatal):', err.message);
     }
   })();
 });

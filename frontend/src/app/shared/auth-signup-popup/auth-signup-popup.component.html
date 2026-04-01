@@ -88,9 +88,9 @@
       <span>or</span>
     </div>
 
-    <button type="button" class="auth-popup__google-btn" (click)="continueWithGoogle()">
-      <span class="auth-popup__google-icon">G</span>
-      Continue with Gmail
+    <button type="button" class="auth-popup__google-btn" (click)="continueWithGoogle()" [disabled]="isSubmittingGoogle">
+      <span class="auth-popup__google-icon">{{ isSubmittingGoogle ? '...' : 'G' }}</span>
+      {{ isSubmittingGoogle ? 'Signing in...' : 'Continue with Gmail' }}
     </button>
   </section>
 </div>

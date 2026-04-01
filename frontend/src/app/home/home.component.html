@@ -1,6 +1,7 @@
 <main class="home-page">
   <section class="home-wrap">
     <app-hero
+      [slides]="heroSlides"
       [imageUrls]="heroSliderImages"
       [imageUrl]="heroImage"
       imageAlt="Luxury handcrafted bangle stack and earrings">
@@ -70,7 +71,7 @@
               <a class="ai-match__title-link" [routerLink]="['/product', product.id]">
                 <h4>{{ product.name }}</h4>
               </a>
-              <p class="price">Rs {{ product.price }}</p>
+              <p class="price">{{ product.price | displayCurrency:2 }}</p>
               <p class="rating">★★★★★</p>
               <button type="button" class="match-btn" [routerLink]="['/product', product.id]">View Product</button>
             </div>

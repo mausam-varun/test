@@ -38,7 +38,7 @@ exports.getAdminSlider = asyncHandler(async (req, res) => {
 });
 
 exports.createSlider = asyncHandler(async (req, res) => {
-  const { image_url: imageUrlFromBody, title = '', subtitle = '', sort_order = 0, is_active = true } = req.body || {};
+  const { image_url: imageUrlFromBody, title = '', subtitle = '', cta_url = '', sort_order = 0, is_active = true } = req.body || {};
 
   let imageUrl = String(imageUrlFromBody || '').trim();
 
@@ -54,6 +54,7 @@ exports.createSlider = asyncHandler(async (req, res) => {
     imageUrl,
     title,
     subtitle,
+    ctaUrl: cta_url,
     sortOrder: sort_order,
     isActive: is_active
   });
@@ -76,6 +77,7 @@ exports.updateSlider = asyncHandler(async (req, res) => {
 
   if (req.body.title !== undefined) updates.title = req.body.title;
   if (req.body.subtitle !== undefined) updates.subtitle = req.body.subtitle;
+  if (req.body.cta_url !== undefined) updates.cta_url = req.body.cta_url;
   if (req.body.sort_order !== undefined) updates.sort_order = req.body.sort_order;
   if (req.body.is_active !== undefined) updates.is_active = req.body.is_active;
   if (req.body.image_url !== undefined) updates.image_url = String(req.body.image_url || '').trim();

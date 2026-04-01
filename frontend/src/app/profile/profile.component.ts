@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthSessionService, SessionUser } from '../services/auth-session.service';
+import { APP_CONFIG } from '../config/app-config';
 
 @Component({
   selector: 'app-profile',
@@ -10,8 +11,9 @@ import { AuthSessionService, SessionUser } from '../services/auth-session.servic
   styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-  private readonly apiUrl = 'http://localhost:5001/api/auth';
+  private readonly apiUrl = APP_CONFIG.AUTH_API_URL;
   private readonly subscriptions = new Subscription();
+  private readonly cropOutputSize = 320;
 
   user: SessionUser | null = null;
 
@@ -26,8 +28,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
   emailVerified = false;
   verificationCode = '';
   pendingPayload: { name: string; email: string; phone: string } | null = null;
+  avatarUrl = '';
+  cropSourceImage = '';
+  cropScaleFactor = 1;
+  cropDragOffsetX = 0;
+  cropDragOffsetY = 0;
+  isApplyingCrop = false;
   successMessage = '';
   errorMessage = '';
+
+  private isCropDragging = false;
+  private cropDragStartX = 0;
+  private cropDragStartY = 0;
+  private cropDragLastX = 0;
+  private cropDragLastY = 0;
 
   get isEmailChanged(): boolean {
     return this.email.trim().toLowerCase() !== String(this.user?.email || '').trim().toLowerCase();
@@ -64,6 +78,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.name = user.name || '';
         this.email = user.email || '';
         this.phone = user.phone || '';
+        this.avatarUrl = user.avatarUrl || '';
       })
     );
   }
@@ -96,6 +111,143 @@ export class ProfileComponent implements OnInit, OnDestroy {
   onVerificationCodeInput(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     this.verificationCode = target?.value || '';
+  }
+
+  onAvatarFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      this.errorMessage = 'Please select a valid image file.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) {
+        this.errorMessage = 'Unable to read selected image.';
+        return;
+      }
+
+      this.cropSourceImage = result;
+      this.cropScaleFactor = 1;
+      this.cropDragOffsetX = 0;
+      this.cropDragOffsetY = 0;
+      this.resetMessages();
+    };
+    reader.onerror = () => {
+      this.errorMessage = 'Failed to load image.';
+    };
+
+    reader.readAsDataURL(file);
+    if (input) {
+      input.value = '';
+    }
+  }
+
+  cancelCrop(): void {
+    this.cropSourceImage = '';
+    this.cropScaleFactor = 1;
+    this.cropDragOffsetX = 0;
+    this.cropDragOffsetY = 0;
+    this.isCropDragging = false;
+  }
+
+  onCropMouseDown(event: MouseEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    this.isCropDragging = true;
+    this.cropDragStartX = event.clientX;
+    this.cropDragStartY = event.clientY;
+    this.cropDragLastX = this.cropDragOffsetX;
+    this.cropDragLastY = this.cropDragOffsetY;
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onCropMouseMove(event: MouseEvent): void {
+    if (!this.isCropDragging) return;
+    const deltaX = event.clientX - this.cropDragStartX;
+    const deltaY = event.clientY - this.cropDragStartY;
+    this.cropDragOffsetX = this.cropDragLastX + deltaX;
+    this.cropDragOffsetY = this.cropDragLastY + deltaY;
+  }
+
+  @HostListener('document:mouseup')
+  onCropMouseUp(): void {
+    this.isCropDragging = false;
+  }
+
+  onCropWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const zoomSpeed = 0.1;
+    const direction = event.deltaY > 0 ? -1 : 1;
+    this.cropScaleFactor = Math.max(1, Math.min(3, this.cropScaleFactor + direction * zoomSpeed));
+  }
+
+  applyCrop(): void {
+    if (!this.cropSourceImage) {
+      return;
+    }
+
+    this.isApplyingCrop = true;
+    const image = new Image();
+
+    image.onload = () => {
+      try {
+        const outputSize = this.cropOutputSize;
+        const canvas = document.createElement('canvas');
+        canvas.width = outputSize;
+        canvas.height = outputSize;
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          throw new Error('Canvas context is unavailable');
+        }
+
+        const imgW = image.naturalWidth || image.width;
+        const imgH = image.naturalHeight || image.height;
+        const baseScale = Math.max(outputSize / imgW, outputSize / imgH);
+        const effectiveScale = baseScale * Math.max(this.cropScaleFactor, 1);
+
+        const sourceW = outputSize / effectiveScale;
+        const sourceH = outputSize / effectiveScale;
+
+        const centerX = (imgW / 2) - (this.cropDragOffsetX / effectiveScale);
+        const centerY = (imgH / 2) - (this.cropDragOffsetY / effectiveScale);
+
+        let sx = centerX - (sourceW / 2);
+        let sy = centerY - (sourceH / 2);
+
+        sx = Math.max(0, Math.min(sx, Math.max(0, imgW - sourceW)));
+        sy = Math.max(0, Math.min(sy, Math.max(0, imgH - sourceH)));
+
+        ctx.clearRect(0, 0, outputSize, outputSize);
+        ctx.drawImage(image, sx, sy, sourceW, sourceH, 0, 0, outputSize, outputSize);
+
+        this.avatarUrl = canvas.toDataURL('image/jpeg', 0.92);
+        this.cancelCrop();
+      } catch {
+        this.errorMessage = 'Failed to crop image. Please try another image.';
+      } finally {
+        this.isApplyingCrop = false;
+      }
+    };
+
+    image.onerror = () => {
+      this.errorMessage = 'Failed to process image.';
+      this.isApplyingCrop = false;
+    };
+
+    image.src = this.cropSourceImage;
+  }
+
+  removeAvatar(): void {
+    this.avatarUrl = '';
+    this.cancelCrop();
   }
 
   submit(): void {
@@ -149,10 +301,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
           id: this.user?.id,
           name: this.name.trim(),
           email: this.email.trim(),
-          phone: this.phone.trim()
+          phone: this.phone.trim(),
+          avatarUrl: this.avatarUrl
         };
 
-        this.authSessionService.updateProfile(updatedUser);
+        this.authSessionService.updateProfile({
+          ...updatedUser,
+          avatarUrl: this.avatarUrl
+        });
         this.successMessage = 'Profile updated successfully.';
       },
       error: (error) => {
@@ -192,10 +348,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
           id: this.user?.id,
           name: this.pendingPayload?.name,
           email: this.pendingPayload?.email,
-          phone: this.pendingPayload?.phone
+          phone: this.pendingPayload?.phone,
+          avatarUrl: this.avatarUrl
         };
 
-        this.authSessionService.updateProfile(updatedUser);
+        this.authSessionService.updateProfile({
+          ...updatedUser,
+          avatarUrl: this.avatarUrl
+        });
         this.successMessage = response?.message || 'Email verified and profile updated successfully.';
         this.verificationCodeSent = false;
         this.emailVerified = true;

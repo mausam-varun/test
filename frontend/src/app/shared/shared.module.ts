@@ -6,12 +6,14 @@ import { NgxIntlTelInputModule } from 'ngx-intl-tel-input';
 import { AuthSignupPopupComponent } from './auth-signup-popup/auth-signup-popup.component';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
+import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
 
 @NgModule({
   declarations: [
     HeaderComponent,
     FooterComponent,
-    AuthSignupPopupComponent
+    AuthSignupPopupComponent,
+    DisplayCurrencyPipe
   ],
   imports: [
     CommonModule,
@@ -22,7 +24,8 @@ import { FooterComponent } from './footer/footer.component';
   exports: [
     HeaderComponent,
     FooterComponent,
-    AuthSignupPopupComponent
+    AuthSignupPopupComponent,
+    DisplayCurrencyPipe
   ]
 })
 export class SharedModule { }

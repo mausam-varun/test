@@ -1,0 +1,103 @@
+<div class="login-page">
+
+  <div class="login-container">
+
+    <div class="login-card">
+
+      <div class="login-header">
+        <div class="logo-icon">
+          <svg viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="10" fill="#2563eb"/>
+            <path d="M10 28L20 12l10 16H10z" fill="#fff" opacity=".9"/>
+            <circle cx="20" cy="21" r="3" fill="#fff"/>
+          </svg>
+        </div>
+        <h1>DivaraCraft</h1>
+        <p>Create Admin Account</p>
+      </div>
+
+      <form class="login-form" (ngSubmit)="onSubmit()">
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="admin@example.com"
+            [(ngModel)]="email"
+            name="email"
+            (focus)="clearError()"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="userType">User Type</label>
+          <select
+            id="userType"
+            [(ngModel)]="userType"
+            name="userType"
+            [disabled]="isLoading"
+          >
+            <option *ngFor="let option of userTypeOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="At least 6 characters"
+            [(ngModel)]="password"
+            name="password"
+            (focus)="clearError()"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            placeholder="Re-enter password"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            (focus)="clearError()"
+            required
+          />
+        </div>
+
+        <div class="message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="message success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="isLoading"
+        >
+          <ng-container *ngIf="!isLoading">Create Account</ng-container>
+          <ng-container *ngIf="isLoading">Creating...</ng-container>
+        </button>
+
+        <a class="auth-link" routerLink="/admin/login">Already have an account? Sign in</a>
+
+      </form>
+
+      <div class="login-footer">
+        <p>Admin account creation for system access</p>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

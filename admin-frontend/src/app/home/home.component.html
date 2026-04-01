@@ -1,0 +1,134 @@
+  <section class="carousel">
+    <div class="carousel-inner">
+      <div class="carousel-slide" *ngFor="let img of carouselImages; index as i" [class.active]="i === activeSlideIndex">
+        <img [src]="img" [alt]="'Slide ' + (i + 1)" />
+      </div>
+      <div class="carousel-overlay">
+        <h2>Handcrafted Elegance</h2>
+        <p>Discover unique decor & accessories curated for you</p>
+      </div>
+      <button class="carousel-control prev" (click)="prevSlide()">‹</button>
+      <button class="carousel-control next" (click)="nextSlide()">›</button>
+    </div>
+    <div class="carousel-dots">
+      <button
+        *ngFor="let img of carouselImages; index as i"
+        class="dot"
+        [class.active]="i === activeSlideIndex"
+        (click)="selectSlide(i)">
+      </button>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Handmade with Love <span>♥</span></h1>
+      <p>Unique & Beautiful Handcrafted Treasures</p>
+      <a class="btn primary" href="#categories">Shop Now</a>
+    </div>
+    <div class="hero-image" aria-hidden="true"></div>
+  </section>
+
+  <section id="categories" class="section">
+    <h2>Shop by Category</h2>
+    <div class="grid categories-grid">
+      <div class="card category-card" *ngFor="let cat of categories">
+        <img [src]="cat.image" [alt]="cat.name" />
+        <div class="card-text">{{cat.name}}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section featured">
+    <h2>Featured Products</h2>
+    <div class="grid products-grid">
+      <div class="card product-card" *ngFor="let product of featuredProducts">
+        <img [src]="product.image" [alt]="product.name" />
+        <div class="product-info">
+          <p class="product-name">{{product.name}}</p>
+          <p class="product-price">{{product.price}}</p>
+          <button class="btn secondary">Add to Cart ›</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section featured ai-match-section">
+    <h2>AI Bangle Match</h2>
+
+    <div
+      class="upload-box"
+      [class.drag-active]="isDragging"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      <input
+        #fileInput
+        class="file-input"
+        type="file"
+        accept="image/jpeg,image/png"
+        (change)="onFileSelected($event)" />
+      <p class="upload-title">Drop JPG/PNG here or choose a file</p>
+      <p class="upload-file-name" *ngIf="selectedFileName">Selected: {{ selectedFileName }}</p>
+      <div class="upload-actions">
+        <button class="btn secondary" type="button" (click)="fileInput.click()">Choose Image</button>
+        <button class="btn secondary" type="button" (click)="handleUpload()" [disabled]="isLoading">
+          Find Similar Bangles
+        </button>
+      </div>
+    </div>
+
+    <p class="status-message" *ngIf="isLoading">Generating designs...</p>
+    <p class="status-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="status-message" *ngIf="noResultsMessage">{{ noResultsMessage }}</p>
+
+    <div class="grid products-grid" *ngIf="isLoading">
+      <div class="card product-card skeleton-card" *ngFor="let item of skeletonCards">
+        <div class="skeleton-image"></div>
+        <div class="product-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line tiny"></div>
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-button"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid products-grid" *ngIf="!isLoading && matchedProducts.length">
+      <div class="card product-card" *ngFor="let product of matchedProducts">
+        <img [src]="product.image" [alt]="product.name" />
+        <div class="product-info">
+          <p class="product-name">{{ product.name }}</p>
+          <p class="product-price">{{ product.price }}</p>
+          <button class="btn secondary">Add to Cart ›</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer" id="footer">
+    <div class="footer-columns">
+      <div>
+        <h3>Quick Links</h3>
+        <a href="#">Shop</a>
+        <a href="#">About Us</a>
+        <a href="#">Contact Us</a>
+      </div>
+      <div>
+        <h3>Customer Service</h3>
+        <a href="#">FAQ</a>
+        <a href="#">Shipping & Returns</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+      <div>
+        <h3>Follow Us</h3>
+        <div class="socials">Facebook • Instagram • Pinterest</div>
+      </div>
+      <div>
+        <h3>Contact Us</h3>
+        <p>✉ Email: info@divaracraft.com</p>
+        <p>☎ +123-456-7990</p>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2023 Divara Craft. All Rights Reserved.</div>
+  </footer>

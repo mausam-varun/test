@@ -1,5 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_ENDPOINTS } from '../config/app-config';
+import { CurrencyPreferenceService, DisplayCurrency } from '../shared/services/currency-preference.service';
 
 interface ProductImage {
   id: number;
@@ -47,7 +49,7 @@ interface AiIndexingModeResponse {
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit, OnDestroy {
-  private readonly apiBaseUrl = 'http://localhost:5002/api/products';
+  private readonly apiBaseUrl = API_ENDPOINTS.products;
 
   // Form fields
   productName = '';
@@ -79,12 +81,17 @@ export class AdminComponent implements OnInit, OnDestroy {
   selectedAiMode: 'off' | 'async' | 'sync' = 'async';
   activeAiMode: 'off' | 'async' | 'sync' = 'async';
   aiModeSource = 'env';
+  adminId: number | null = null;
 
   products: Product[] = [];
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly currencyPreferenceService: CurrencyPreferenceService
+  ) {}
 
   ngOnInit(): void {
+    this.adminId = this.getAdminIdFromSession();
     this.loadAiIndexingMode();
     this.loadProducts();
   }
@@ -270,6 +277,10 @@ export class AdminComponent implements OnInit, OnDestroy {
     const payload = new FormData();
     payload.append('name', this.productName.trim());
     payload.append('price', String(this.productPrice));
+    payload.append('currency', this.selectedCurrency);
+    if (this.adminId) {
+      payload.append('admin_id', String(this.adminId));
+    }
     payload.append('category', this.productCategory.trim());
     payload.append('description', this.productDescription.trim());
     payload.append('color', this.productColor.trim());
@@ -302,6 +313,13 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Could not load products from backend.';
       }
     });
+  }
+
+  get pricePreviewInUsd(): number | null {
+    if (this.productPrice === null || this.productPrice <= 0) {
+      return null;
+    }
+    return this.currencyPreferenceService.convertToUsd(this.productPrice, this.selectedCurrency);
   }
 
   private loadAiIndexingMode(): void {
@@ -365,6 +383,25 @@ export class AdminComponent implements OnInit, OnDestroy {
   private revokeAllPreviews(): void {
     this.selectedImages.forEach(img => URL.revokeObjectURL(img.previewUrl));
     this.selectedImages = [];
+  }
+
+  private getAdminIdFromSession(): number | null {
+    try {
+      const raw = localStorage.getItem('admin_user');
+      if (!raw) {
+        return null;
+      }
+
+      const parsed = JSON.parse(raw) as { id?: number | string };
+      const numericId = Number(parsed?.id);
+      return Number.isInteger(numericId) && numericId > 0 ? numericId : null;
+    } catch {
+      return null;
+    }
+  }
+
+  get selectedCurrency(): DisplayCurrency {
+    return this.currencyPreferenceService.getCurrency();
   }
 
 }

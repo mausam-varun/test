@@ -73,7 +73,7 @@
         <h3 class="pl-card-name">{{ product.name }}</h3>
         <p class="pl-card-desc" *ngIf="product.description">{{ product.description }}</p>
         <div class="pl-card-footer">
-          <span class="pl-card-price">&#8377;{{ product.price | number:'1.0-2' }}</span>
+          <span class="pl-card-price">{{ product.price | displayCurrency:2 }}</span>
         </div>
       </div>
     </article>

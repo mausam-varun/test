@@ -11,10 +11,15 @@
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
-  padding: 0 20px 20px;
+  padding: 0 0 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.home-wrap > app-hero {
+  width: 100%;
+  display: block;
 }
 
 .section-block {

@@ -35,7 +35,10 @@
             <span class="zoom-hint">Hover to zoom</span>
           </div>
 
-          <div class="thumb-strip" *ngIf="galleryImages.length > 1">
+          <div
+            class="thumb-strip"
+            *ngIf="galleryImages.length > 0"
+            [class.is-single]="galleryImages.length === 1">
             <button
               type="button"
               class="thumb-btn"
@@ -60,7 +63,7 @@
             <span>({{ currentProduct.reviews }} reviews)</span>
           </div>
 
-          <p class="price">₹{{ currentProduct.price | number:'1.2-2' }}</p>
+          <p class="price">{{ currentProduct.price | displayCurrency:2 }}</p>
 
           <p class="description">{{ currentProduct.description }}</p>
 
