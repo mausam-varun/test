@@ -29,6 +29,12 @@ interface QueueJobsResponse {
   jobs: QueueJob[];
 }
 
+interface AiProviderResponse {
+  provider?: 'openai' | 'gemini' | string;
+  source?: 'env' | 'runtime' | string;
+  message?: string;
+}
+
 @Component({
   selector: 'app-queue-monitor',
   templateUrl: './queue-monitor.component.html',
@@ -38,8 +44,13 @@ export class QueueMonitorComponent implements OnInit {
   private readonly baseUrl = API_ENDPOINTS.adminAiQueue;
 
   loading = false;
+  isUpdatingAiProvider = false;
   actionMessage = '';
   actionError = '';
+
+  selectedAiProvider: 'openai' | 'gemini' = 'openai';
+  activeAiProvider: 'openai' | 'gemini' = 'openai';
+  aiProviderSource = 'env';
 
   stats: QueueStatsResponse | null = null;
   failedJobs: QueueJob[] = [];
@@ -48,7 +59,49 @@ export class QueueMonitorComponent implements OnInit {
   constructor(private readonly http: HttpClient) {}
 
   ngOnInit(): void {
+    this.loadAiProvider();
     this.refresh();
+  }
+
+  loadAiProvider(): void {
+    this.http.get<AiProviderResponse>(`${this.baseUrl}/provider`).subscribe({
+      next: (response) => {
+        const provider = response?.provider === 'gemini' ? 'gemini' : 'openai';
+        this.activeAiProvider = provider;
+        this.selectedAiProvider = provider;
+        this.aiProviderSource = response?.source || 'env';
+      },
+      error: () => {
+        this.activeAiProvider = 'openai';
+        this.selectedAiProvider = 'openai';
+        this.aiProviderSource = 'env';
+      }
+    });
+  }
+
+  updateAiProvider(): void {
+    if (this.isUpdatingAiProvider) {
+      return;
+    }
+
+    this.isUpdatingAiProvider = true;
+    this.actionMessage = '';
+    this.actionError = '';
+
+    this.http.patch<AiProviderResponse>(`${this.baseUrl}/provider`, { provider: this.selectedAiProvider }).subscribe({
+      next: (response) => {
+        const provider = response?.provider === 'gemini' ? 'gemini' : 'openai';
+        this.isUpdatingAiProvider = false;
+        this.activeAiProvider = provider;
+        this.selectedAiProvider = provider;
+        this.aiProviderSource = response?.source || 'runtime';
+        this.actionMessage = response?.message || `AI model set to ${provider === 'gemini' ? 'Gemini' : 'OpenAI'}.`;
+      },
+      error: (err) => {
+        this.isUpdatingAiProvider = false;
+        this.actionError = err?.error?.message || err?.error?.error || 'Failed to update AI model';
+      }
+    });
   }
 
   refresh(): void {
@@ -102,7 +155,9 @@ export class QueueMonitorComponent implements OnInit {
     this.actionError = '';
 
     const suffix = dlq ? '?dlq=true' : '';
-    this.http.post<{ message: string }>(`${this.baseUrl}/jobs/${jobId}/retry${suffix}`, {}).subscribe({
+    this.http.post<{ message: string }>(`${this.baseUrl}/jobs/${jobId}/retry${suffix}`, {
+      ai_provider: this.selectedAiProvider
+    }).subscribe({
       next: (res) => {
         this.actionMessage = res?.message || 'Job retried';
         this.refresh();

@@ -1,0 +1,118 @@
+<div class="rating-popup-backdrop" *ngIf="isOpen" (click)="close()">
+  <div class="rating-popup-card" role="dialog" aria-modal="true" aria-label="Rate your delivered order" (click)="$event.stopPropagation()">
+    <div class="rating-popup__header">
+      <div>
+        <p class="eyebrow">Post-delivery feedback</p>
+        <h2>Rate your order</h2>
+        <p class="subtitle" *ngIf="pendingOrder">
+          Order <strong>{{ pendingOrder.orderNumber }}</strong> was delivered. Tell us how your Divara Craft experience felt.
+        </p>
+      </div>
+      <button type="button" class="close-btn" (click)="remindLater()" aria-label="Close review popup">×</button>
+    </div>
+
+    <div class="success-banner" *ngIf="successMessage">
+      <strong>{{ successMessage }}</strong>
+      <p *ngIf="couponCode">Reward unlocked: <span>{{ couponCode }}</span></p>
+    </div>
+
+    <div class="preview-banner" *ngIf="isPreviewMode">
+      Preview mode enabled — this localhost trigger tests the popup UI only and does not save data to the admin report.
+    </div>
+
+    <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <section class="rating-step">
+      <h3>1. Overall rating</h3>
+      <div class="star-row" aria-label="Overall rating selector">
+        <button
+          type="button"
+          class="star-btn"
+          *ngFor="let star of stars"
+          [class.is-active]="star <= overallRating"
+          (click)="selectOverallRating(star)">
+          ★
+        </button>
+      </div>
+    </section>
+
+    <section class="rating-step" *ngIf="overallRating > 0 && shouldShowDetailedMetrics">
+      <h3>2. What stood out?</h3>
+      <div class="metric-row" *ngFor="let metric of detailedMetrics">
+        <span>{{ metric.label }}</span>
+        <div class="star-row star-row--small">
+          <button
+            type="button"
+            class="star-btn"
+            *ngFor="let star of stars"
+            [class.is-active]="star <= getMetricValue(metric.key)"
+            (click)="setMetricValue(metric.key, star)">
+            ★
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="rating-step" *ngIf="isLowRating">
+      <h3>2. What went wrong?</h3>
+      <textarea
+        [(ngModel)]="reviewText"
+        rows="4"
+        placeholder="Tell us what disappointed you so our support team can help better.">
+      </textarea>
+    </section>
+
+    <section class="rating-step">
+      <h3>{{ shouldShowDetailedMetrics ? '3' : '2' }}. How do you feel?</h3>
+      <div class="emotion-grid">
+        <button
+          type="button"
+          class="emotion-chip"
+          *ngFor="let emotionOption of emotions"
+          [class.is-selected]="emotion === emotionOption.value"
+          (click)="selectEmotion(emotionOption.value)">
+          {{ emotionOption.label }}
+        </button>
+      </div>
+    </section>
+
+    <section class="rating-step" *ngIf="!isLowRating">
+      <h3>{{ shouldShowDetailedMetrics ? '4' : '3' }}. Optional notes</h3>
+      <textarea
+        [(ngModel)]="reviewText"
+        rows="4"
+        placeholder="Share a few words about the design, comfort, packaging, or gifting experience.">
+      </textarea>
+    </section>
+
+    <section class="rating-step">
+      <h3>Add photos (optional)</h3>
+      <label class="upload-box">
+        <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" />
+        <span>Upload up to 4 images</span>
+      </label>
+
+      <div class="preview-grid" *ngIf="imagePreviews.length">
+        <div class="preview-item" *ngFor="let preview of imagePreviews; let i = index">
+          <button
+            type="button"
+            class="remove-preview-btn"
+            (click)="removeSelectedImage(i)"
+            aria-label="Remove selected image">
+            ×
+          </button>
+          <img [src]="preview" alt="Review upload preview" />
+        </div>
+      </div>
+    </section>
+
+    <div class="rating-popup__actions">
+      <button type="button" class="btn-secondary" (click)="remindLater()" [disabled]="isSubmitting">
+        Remind me later
+      </button>
+      <button type="button" class="btn-primary" (click)="submit()" [disabled]="!canSubmit">
+        {{ isSubmitting ? 'Submitting...' : (isPreviewMode ? 'Preview submit' : 'Submit review') }}
+      </button>
+    </div>
+  </div>
+</div>

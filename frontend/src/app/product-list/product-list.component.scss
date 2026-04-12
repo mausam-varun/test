@@ -248,10 +248,12 @@
   font-size: 0.8rem;
   color: #64748b;
   line-height: 1.55;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  max-height: 2.5em;
   overflow: hidden;
+}
+
+.pl-card-desc :is(p, ul, ol) {
+  margin: 0;
 }
 
 .pl-card-footer {

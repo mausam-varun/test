@@ -1,119 +1,100 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CartService } from '../services/cart.service';
 import { WishlistService } from '../services/wishlist.service';
-import { HeroSlide } from './components/hero/hero.component';
 import { API_ENDPOINTS } from '../config/app-config';
+import { Subject, interval } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-interface CategoryCardModel {
-  name: string;
-  image: string;
-}
+// ========== INTERFACES ==========
 
-interface ProductCardModel {
+interface Product {
   id: number;
   name: string;
   image: string;
   price: number;
   rating: number;
   reviews: number;
+  isOnSale?: boolean;
+  originalPrice?: number;
+  countdown?: { days: number; hours: number; minutes: number; seconds: number };
 }
 
-interface MatchResultPayload {
-  colors?: string[];
-  color_hex?: string[];
-  category?: string;
-  size?: string;
-  design?: string[];
-  pattern?: string[];
-  style?: string[];
-  material?: string[];
-}
-
-interface MatchResult {
-  id: number;
-  similarity: number;
-  payload?: MatchResultPayload;
-}
-
-interface MatchBanglesResponse {
-  matches: MatchResult[];
-  query_metadata?: MatchResultPayload | null;
-  generated_image_base64?: string | null;
-}
-
-interface CatalogProductImage {
-  image_url: string;
-  is_primary_image: boolean;
-}
-
-interface CatalogProduct {
+interface Category {
   id: number;
   name: string;
-  price: number;
+  image: string;
+  productCount: number;
+}
+
+interface Blog {
+  id: number;
+  title: string;
+  image: string;
   category: string;
-  description: string;
-  image_url: string;
-  images?: CatalogProductImage[];
+  author: string;
+  date: string;
+  excerpt: string;
 }
 
-interface MatchedProductView {
-  id: number;
-  name: string;
-  price: number;
-  imageUrl: string;
-  similarity: number;
-}
-
-interface SliderImage {
+interface HeroSlide {
   id: number;
   image_url: string;
-  title?: string;
-  subtitle?: string;
-  cta_url?: string;
+  title: string;
+  subtitle: string;
+  cta_url: string;
+  sort_order: number;
+  is_active: boolean;
 }
 
-interface SliderPublicResponse {
-  display_count: number;
-  images: SliderImage[];
-}
+// ========== COMPONENT ==========
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  private countdownInterval$ = interval(1000).pipe(takeUntil(this.destroy$));
+
   private readonly productApiBaseUrl = API_ENDPOINTS.products;
-  private readonly sliderApiBaseUrl = API_ENDPOINTS.slider;
-  private readonly featuredProductsLimit = 8;
+  private readonly categoryApiBaseUrl = API_ENDPOINTS.categories;
 
-  readonly heroImage = 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=1400&q=80';
-
-  readonly categories: CategoryCardModel[] = [
-    { name: 'Bangles', image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=500&q=80' },
-    { name: 'Earrings', image: 'https://images.unsplash.com/photo-1617038220278-4bcf45f2cf52?auto=format&fit=crop&w=500&q=80' },
-    { name: 'Home Decor', image: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?auto=format&fit=crop&w=500&q=80' },
-    { name: 'Wall Hangings', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=500&q=80' },
-    { name: 'Gift Sets', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80' }
-  ];
-
-  heroSliderImages: string[] = [];
+  // Data properties
   heroSlides: HeroSlide[] = [];
+  heroSliderImages: string[] = [];
+  heroImage = 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80';
+  currentSlideIndex = 0;
+  categories: Category[] = [];
+  flashDeals: Product[] = [];
+  recentProducts: Product[] = [];
+  newProducts: Product[] = [];
+  recommendedProducts: Product[] = [];
+  blogs: Blog[] = [];
 
-  featuredProducts: ProductCardModel[] = [];
-  categorySliderIndex = 0;
-  categoriesVisibleCount = 4;
-  featuredSliderIndex = 0;
-  featuredVisibleCount = 4;
+  // Our Story section
+  ourStory: any = null;
+  newArrivals: any = null;
 
+  // AI Matching
+  uploadedImage: string | null = null;
+  isMatching = false;
+  matchResults: any[] = [];
+  aiMatchVisible = false;
+
+  // AI-Powered Bangle Match
   selectedDressImage: File | null = null;
   selectedDressImagePreview: string | null = null;
-  isMatching = false;
   matchError = '';
-  matchedProducts: MatchedProductView[] = [];
-  detectedDetails: MatchResultPayload | null = null;
+  matchedProducts: any[] = [];
+  detectedDetails: any = null;
   generatedBangleImageUrl: string | null = null;
+
+  // Newsletter
+  newsletterEmail = '';
+  isSubscribing = false;
+  newsletterMessage = '';
 
   constructor(
     private readonly http: HttpClient,
@@ -122,61 +103,232 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.updateCategorySliderLayout(typeof window !== 'undefined' ? window.innerWidth : 1280);
-    this.loadHeroSliderImages();
-    this.loadFeaturedProducts();
+    this.loadHeroSlides();
+    this.loadCategories();
+    this.loadFlashDeals();
+    this.loadRecentProducts();
+    this.loadNewProducts();
+    this.loadRecommendedProducts();
+    this.loadBlogs();
+    this.loadOurStory();
+    this.loadNewArrivals();
+    this.startCountdownTimer();
   }
 
-  @HostListener('window:resize', ['$event'])
-  onWindowResize(event: UIEvent): void {
-    const target = event.target as Window | null;
-    this.updateCategorySliderLayout(target?.innerWidth || 1280);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  private loadFeaturedProducts(): void {
-    const url = `${this.productApiBaseUrl}/featured?limit=${this.featuredProductsLimit}`;
+  // ========== DATA LOADING ==========
 
-    this.http.get<CatalogProduct[]>(url).subscribe({
-      next: (products) => {
-        const safeProducts = Array.isArray(products) ? products : [];
-        this.featuredProducts = safeProducts.map((product) => {
-          const primaryImage = product.images?.find((img) => img.is_primary_image)?.image_url;
-
-          return {
-            id: product.id,
-            name: product.name,
-            image: primaryImage || product.image_url || this.heroImage,
-            price: Number(product.price) || 0,
-            rating: 5,
-            reviews: 40 + (product.id % 160)
-          };
-        });
-      },
-      error: () => {
-        this.featuredProducts = [];
-      }
-    });
-  }
-
-  private loadHeroSliderImages(): void {
-    this.http.get<SliderPublicResponse>(`${this.sliderApiBaseUrl}/public`).subscribe({
+  private loadHeroSlides(): void {
+    // Use the /public endpoint which returns active slider items
+    this.http.get<any>(`${API_ENDPOINTS.slider}/public`).subscribe({
       next: (response) => {
-        const images = Array.isArray(response?.images) ? response.images : [];
-        this.heroSlides = images
-          .filter((item) => typeof item.image_url === 'string' && item.image_url.trim().length > 0)
-          .map((item) => ({
-            image_url: item.image_url,
-            title: item.title || '',
-            subtitle: item.subtitle || '',
-            cta_url: item.cta_url || ''
-          }));
-        this.heroSliderImages = this.heroSlides.map((s) => s.image_url);
+        console.log('Hero Slider Response:', response);
+        // Handle both response structures: images array or items array
+        const items = response?.images || response?.items || response || [];
+        
+        if (Array.isArray(items) && items.length > 0) {
+          // Filter active items
+          const activeSlides = items.filter((slide: any) => slide.is_active !== false);
+          
+          if (activeSlides.length > 0) {
+            this.heroSlides = activeSlides.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+            this.heroSliderImages = this.heroSlides.map((slide: any) => slide.image_url);
+            this.heroImage = this.heroSlides[0].image_url;
+            console.log('Loaded', this.heroSlides.length, 'Hero Slides from API:', this.heroSlides);
+          } else {
+            console.log('No active sliders found, using defaults');
+            this.loadDefaultSlides();
+          }
+        } else {
+          console.log('Invalid response structure, using defaults');
+          this.loadDefaultSlides();
+        }
+        this.currentSlideIndex = 0;
       },
-      error: () => {
-        this.heroSlides = [];
-        this.heroSliderImages = [];
+      error: (error) => {
+        console.error('Failed to load hero sliders:', error);
+        console.log('Falling back to default slides');
+        this.loadDefaultSlides();
       }
     });
+  }
+
+  private loadDefaultSlides(): void {
+    this.heroSlides = [
+      {
+        id: 0,
+        image_url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80',
+        title: 'NEW ARRIVAL',
+        subtitle: 'Exquisite Handmade Bangles Collection',
+        cta_url: '/shop',
+        sort_order: 1,
+        is_active: true
+      }
+    ];
+    this.heroSliderImages = [this.heroSlides[0].image_url];
+    this.heroImage = this.heroSlides[0].image_url;
+    console.log('Using default hero slides');
+  }
+
+  private loadCategories(): void {
+    this.http.get<any>(`${this.categoryApiBaseUrl}/home`).subscribe({
+      next: (response) => {
+        const cats = response?.categories || [];
+        this.categories = cats.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          image: cat.image_url || 'https://via.placeholder.com/200',
+          productCount: cat.product_count || 0
+        }));
+      },
+      error: () => {
+        this.categories = [];
+      }
+    });
+  }
+
+  private loadFlashDeals(): void {
+    this.http.get<any>(`${this.productApiBaseUrl}?is_sale=true&limit=4`).subscribe({
+      next: (response) => {
+        const products = Array.isArray(response) ? response : response?.products || [];
+        this.flashDeals = products.slice(0, 4).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          image: p.image_url || 'https://via.placeholder.com/200',
+          price: p.price || 0,
+          rating: p.rating || 0,
+          reviews: p.reviews || 0,
+          isOnSale: true,
+          originalPrice: p.original_price || p.price * 1.2,
+          countdown: this.calculateCountdown()
+        }));
+      },
+      error: () => {
+        this.flashDeals = [];
+      }
+    });
+  }
+
+  private loadRecentProducts(): void {
+    this.http.get<any>(`${this.productApiBaseUrl}?limit=4`).subscribe({
+      next: (response) => {
+        const products = Array.isArray(response) ? response : response?.products || [];
+        this.recentProducts = products.slice(0, 4).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          image: p.image_url || 'https://via.placeholder.com/200',
+          price: p.price || 0,
+          rating: p.rating || 0,
+          reviews: p.reviews || 0
+        }));
+      },
+      error: () => {
+        this.recentProducts = [];
+      }
+    });
+  }
+
+  private loadNewProducts(): void {
+    this.http.get<any>(`${this.productApiBaseUrl}?limit=4&offset=4`).subscribe({
+      next: (response) => {
+        const products = Array.isArray(response) ? response : response?.products || [];
+        this.newProducts = products.slice(0, 4).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          image: p.image_url || 'https://via.placeholder.com/200',
+          price: p.price || 0,
+          rating: p.rating || 0,
+          reviews: p.reviews || 0,
+          isOnSale: Math.random() > 0.6
+        }));
+      },
+      error: () => {
+        this.newProducts = [];
+      }
+    });
+  }
+
+  private loadRecommendedProducts(): void {
+    this.http.get<any>(`${this.productApiBaseUrl}?limit=4&offset=8`).subscribe({
+      next: (response) => {
+        const products = Array.isArray(response) ? response : response?.products || [];
+        this.recommendedProducts = products.slice(0, 4).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          image: p.image_url || 'https://via.placeholder.com/200',
+          price: p.price || 0,
+          rating: p.rating || 0,
+          reviews: p.reviews || 0,
+          isOnSale: Math.random() > 0.7
+        }));
+      },
+      error: () => {
+        this.recommendedProducts = [];
+      }
+    });
+  }
+
+  private loadBlogs(): void {
+    // Mock blog data - replace with actual API call when backend is ready
+    this.blogs = [
+      {
+        id: 1,
+        title: 'Sample Post With Format Link',
+        image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=400&q=80',
+        category: 'FURNITURE',
+        author: 'admin',
+        date: 'May 10, 2024',
+        excerpt: 'Phasellus ac sem eu mauris sodales tristique sed non liqua...'
+      },
+      {
+        id: 2,
+        title: 'Post With Gallery',
+        image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=400&q=80',
+        category: 'BUSINESS',
+        author: 'admin',
+        date: 'May 9, 2024',
+        excerpt: 'Phasellus ac sem eu mauris sodales tristique sed non liqua...'
+      }
+    ];
+  }
+
+  private loadOurStory(): void {
+    // Mock our story data - replace with actual API call when backend is ready
+    this.ourStory = {
+      top_label: 'OUR STORY',
+      main_title: 'Timeless Tradition, Artfully Designed',
+      description: 'Each bangle is lovingly handcrafted by skilled artisans, blending age-old techniques with contemporary elegance.',
+      button_text: 'LEARN MORE',
+      button_link: '/about',
+      image_url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=500&q=80'
+    };
+  }
+
+  private loadNewArrivals(): void {
+    // Mock new arrivals data - replace with actual API call when backend is ready
+    this.newArrivals = {
+      top_label: 'NEW ARRIVALS',
+      main_title: 'Celebrate Craftsmanship',
+      description: 'Discover the latest additions to our handmade collection',
+      button_text: 'VIEW ALL BANGLES',
+      button_link: '/shop',
+      image_url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=500&q=80'
+    };
+  }
+
+  // ========== ACTIONS ==========
+
+  addToCart(product: any): void {
+    this.cartService.addToCart(product);
+  }
+
+  openQuickView(product: any): void {
+    // TODO: Implement quick view modal or drawer
+    console.log('Opening quick view for product:', product);
   }
 
   onDressImageSelected(event: Event): void {
@@ -205,10 +357,12 @@ export class HomeComponent implements OnInit {
     }
 
     this.selectedDressImage = file;
-    if (this.selectedDressImagePreview) {
-      URL.revokeObjectURL(this.selectedDressImagePreview);
-    }
-    this.selectedDressImagePreview = URL.createObjectURL(file);
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.selectedDressImagePreview = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   findMatchingBangles(): void {
@@ -226,7 +380,7 @@ export class HomeComponent implements OnInit {
     const formData = new FormData();
     formData.append('image_file', this.selectedDressImage);
 
-    this.http.post<MatchResult[] | MatchBanglesResponse>(`${this.productApiBaseUrl}/match-bangles`, formData).subscribe({
+    this.http.post<any>(`${this.productApiBaseUrl}/match-bangles`, formData).subscribe({
       next: (response) => {
         const safeMatches = Array.isArray(response) ? response : (response?.matches || []);
         const generatedImageBase64 = Array.isArray(response) ? null : (response?.generated_image_base64 || null);
@@ -256,38 +410,40 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  private loadMatchedProductCards(matches: MatchResult[]): void {
-    this.http.get<CatalogProduct[]>(this.productApiBaseUrl).subscribe({
-      next: (products) => {
-        const safeProducts = Array.isArray(products) ? products : [];
-        const byId = new Map<number, CatalogProduct>(safeProducts.map((product) => [product.id, product]));
+  private loadMatchedProductCards(matches: any[]): void {
+    const productIds = matches.map((m: any) => m.product_id || m.id).filter(Boolean);
 
-        this.matchedProducts = matches
-          .map((match) => {
-            const product = byId.get(match.id);
-            if (!product) {
-              return null;
-            }
+    if (!productIds.length) {
+      this.isMatching = false;
+      return;
+    }
 
-            const primaryImage = product.images?.find((img) => img.is_primary_image)?.image_url;
+    this.http.get<any>(`${this.productApiBaseUrl}`).subscribe({
+      next: (allProducts) => {
+        const products = Array.isArray(allProducts) ? allProducts : allProducts?.data || [];
+        const productsMap = new Map(products.map((p: any) => [p.id, p]));
+
+        this.matchedProducts = productIds
+          .map((id: any) => {
+            const product: any = productsMap.get(id);
+            if (!product) return null;
+
             return {
-              id: product.id,
-              name: product.name,
-              price: product.price,
-              imageUrl: primaryImage || product.image_url,
-              similarity: match.similarity
+              id: product.id || 0,
+              name: product.name || '',
+              price: product.price || 0,
+              imageUrl: (product.image_url || (product.images && product.images[0]?.image_url) || 'assets/placeholder.png') as string,
+              rating: product.rating || 0,
+              reviews: product.reviews || 0
             };
           })
-          .filter((item): item is MatchedProductView => Boolean(item));
+          .filter(Boolean);
 
         this.isMatching = false;
-        if (!this.matchedProducts.length) {
-          this.matchError = 'Matches found in vector DB, but products could not be loaded from catalog.';
-        }
       },
       error: () => {
         this.isMatching = false;
-        this.matchError = 'Matching succeeded, but loading product details failed.';
+        this.matchError = 'Failed to load product details.';
       }
     });
   }
@@ -296,28 +452,18 @@ export class HomeComponent implements OnInit {
     return Math.max(0, Math.min(100, Math.round((value || 0) * 100)));
   }
 
-  addToCart(product: ProductCardModel): void {
-    this.cartService.addToCart({
-      id: product.id,
-      name: product.name,
-      image: product.image,
-      price: product.price
-    });
+  trackByMatchedId(index: number, product: any): number {
+    return product.id || index;
   }
 
-  addToWishlist(product: ProductCardModel): void {
-    if (this.wishlistService.isInWishlist(product.id)) {
-      this.wishlistService.removeFromWishlist(product.id);
-      return;
-    }
-
+  addToWishlist(product: any): void {
     this.wishlistService.addToWishlist({
-      id: product.id,
-      name: product.name,
-      image: product.image,
-      price: product.price,
-      rating: product.rating,
-      reviews: product.reviews
+      id: product.id || 0,
+      name: product.name || '',
+      image: product.imageUrl || product.image || '',
+      price: product.price || 0,
+      rating: product.rating || 0,
+      reviews: product.reviews || 0
     });
   }
 
@@ -325,98 +471,111 @@ export class HomeComponent implements OnInit {
     return this.wishlistService.isInWishlist(productId);
   }
 
-  get canSlideCategoriesPrev(): boolean {
-    return this.categorySliderIndex > 0;
+  onImageSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.uploadedImage = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
-  get canSlideCategoriesNext(): boolean {
-    return this.categorySliderIndex < this.maxCategorySliderIndex;
-  }
-
-  get categorySliderOffsetPercent(): number {
-    return this.categorySliderIndex * (100 / this.categoriesVisibleCount);
-  }
-
-  get canSlideFeaturedPrev(): boolean {
-    return this.featuredSliderIndex > 0;
-  }
-
-  get canSlideFeaturedNext(): boolean {
-    return this.featuredSliderIndex < this.maxFeaturedSliderIndex;
-  }
-
-  get featuredSliderOffsetPercent(): number {
-    return this.featuredSliderIndex * (100 / this.featuredVisibleCount);
-  }
-
-  trackByName(_: number, item: CategoryCardModel): string {
-    return item.name;
-  }
-
-  trackById(_: number, item: ProductCardModel): number {
-    return item.id;
-  }
-
-  trackByMatchedId(_: number, item: MatchedProductView): number {
-    return item.id;
-  }
-
-  slideCategoriesPrev(): void {
-    if (!this.canSlideCategoriesPrev) {
+  performAIMatch(): void {
+    if (!this.uploadedImage) {
       return;
     }
 
-    this.categorySliderIndex -= 1;
+    this.isMatching = true;
+    // TODO: Call backend API for AI matching
+    setTimeout(() => {
+      this.matchResults = [
+        {
+          id: 1,
+          name: 'Elegant Pearl Bangle',
+          image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=300&q=80',
+          similarity: 92
+        },
+        {
+          id: 2,
+          name: 'Golden Wave Bangle',
+          image: 'https://images.unsplash.com/photo-1515562141207-6461a4b9b7fd?auto=format&fit=crop&w=300&q=80',
+          similarity: 85
+        },
+        {
+          id: 3,
+          name: 'Crystal Luxury Bangle',
+          image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=300&q=80',
+          similarity: 78
+        },
+        {
+          id: 4,
+          name: 'Artistic Pattern Bangle',
+          image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=300&q=80',
+          similarity: 72
+        }
+      ];
+      this.isMatching = false;
+    }, 2000);
   }
 
-  slideCategoriesNext(): void {
-    if (!this.canSlideCategoriesNext) {
+  toggleAIMatch(): void {
+    this.aiMatchVisible = !this.aiMatchVisible;
+    this.uploadedImage = null;
+    this.matchResults = [];
+  }
+
+  subscribeNewsletter(): void {
+    if (!this.newsletterEmail || !this.validateEmail(this.newsletterEmail)) {
+      this.newsletterMessage = 'Please enter a valid email address';
       return;
     }
 
-    this.categorySliderIndex += 1;
+    this.isSubscribing = true;
+    // TODO: Call backend API
+    setTimeout(() => {
+      this.newsletterMessage = 'Thank you for subscribing!';
+      this.newsletterEmail = '';
+      this.isSubscribing = false;
+      
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        this.newsletterMessage = '';
+      }, 3000);
+    }, 500);
   }
 
-  slideFeaturedPrev(): void {
-    if (!this.canSlideFeaturedPrev) {
-      return;
-    }
-
-    this.featuredSliderIndex -= 1;
+  private validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
-  slideFeaturedNext(): void {
-    if (!this.canSlideFeaturedNext) {
-      return;
-    }
+  // ========== COUNTDOWN TIMER ==========
 
-    this.featuredSliderIndex += 1;
+  private startCountdownTimer(): void {
+    this.countdownInterval$.subscribe(() => {
+      this.flashDeals = this.flashDeals.map(deal => ({
+        ...deal,
+        countdown: this.calculateCountdown()
+      }));
+    });
   }
 
-  private get maxCategorySliderIndex(): number {
-    return Math.max(0, this.categories.length - this.categoriesVisibleCount);
-  }
+  private calculateCountdown() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
 
-  private get maxFeaturedSliderIndex(): number {
-    return Math.max(0, this.featuredProducts.length - this.featuredVisibleCount);
-  }
+    const diffMs = tomorrow.getTime() - now.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
 
-  private updateCategorySliderLayout(viewportWidth: number): void {
-    if (viewportWidth <= 620) {
-      this.categoriesVisibleCount = 1;
-      this.featuredVisibleCount = 1;
-    } else if (viewportWidth <= 820) {
-      this.categoriesVisibleCount = 2;
-      this.featuredVisibleCount = 2;
-    } else if (viewportWidth <= 1180) {
-      this.categoriesVisibleCount = 3;
-      this.featuredVisibleCount = 3;
-    } else {
-      this.categoriesVisibleCount = 4;
-      this.featuredVisibleCount = 4;
-    }
+    const days = Math.floor(diffSecs / (24 * 60 * 60));
+    const hours = Math.floor((diffSecs % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((diffSecs % (60 * 60)) / 60);
+    const seconds = Math.floor(diffSecs % 60);
 
-    this.categorySliderIndex = Math.min(this.categorySliderIndex, this.maxCategorySliderIndex);
-    this.featuredSliderIndex = Math.min(this.featuredSliderIndex, this.maxFeaturedSliderIndex);
+    return { days, hours, minutes, seconds };
   }
 }

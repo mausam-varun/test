@@ -165,15 +165,30 @@ async function listQueueJobs(state = 'failed', limit = 20, fromDlq = false) {
   }));
 }
 
-async function retryQueueJob(jobId, fromDlq = false) {
+async function retryQueueJob(jobId, fromDlq = false, aiProvider = null) {
   const queue = fromDlq ? getAiIndexDlq() : getAiIndexQueue();
   const job = await queue.getJob(jobId);
   if (!job) {
     throw new Error('Job not found');
   }
 
+  const selectedProvider = aiProvider ? String(aiProvider).trim().toLowerCase() : '';
+  if (selectedProvider && typeof job.updateData === 'function') {
+    await job.updateData({
+      ...(job.data || {}),
+      metadata: {
+        ...(job.data?.metadata || {}),
+        ai_provider: selectedProvider === 'gemini' ? 'gemini' : 'openai'
+      }
+    });
+  }
+
   await job.retry();
-  return { id: job.id, message: 'Job retried' };
+  return {
+    id: job.id,
+    ai_provider: selectedProvider === 'gemini' ? 'gemini' : 'openai',
+    message: selectedProvider ? `Job retried with ${selectedProvider === 'gemini' ? 'Gemini' : 'OpenAI'}` : 'Job retried'
+  };
 }
 
 async function removeQueueJob(jobId, fromDlq = false) {

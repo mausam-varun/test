@@ -137,14 +137,29 @@ async function processProductForSimilarity({ productId, imageUrl, metadata }) {
         product_id: productId,
         image_url: imageUrl,
         metadata: {
+          title: String(metadata?.title || '').trim(),
+          description: String(metadata?.description || '').trim(),
           colors: Array.isArray(metadata?.colors) ? metadata.colors : [],
+          primary_color: String(metadata?.primary_color || '').trim(),
+          secondary_colors: Array.isArray(metadata?.secondary_colors) ? metadata.secondary_colors : [],
           color_hex: Array.isArray(metadata?.color_hex) ? metadata.color_hex : [],
           category: metadata?.category || 'bangles',
           size: metadata?.size || '',
           design: Array.isArray(metadata?.design) ? metadata.design : [],
           pattern: Array.isArray(metadata?.pattern) ? metadata.pattern : [],
           style: Array.isArray(metadata?.style) ? metadata.style : [],
-          material: Array.isArray(metadata?.material) ? metadata.material : []
+          material: Array.isArray(metadata?.material) ? metadata.material : [],
+          occasion: Array.isArray(metadata?.occasion) ? metadata.occasion : [],
+          craft_type: Array.isArray(metadata?.craft_type) ? metadata.craft_type : [],
+          usage: Array.isArray(metadata?.usage) ? metadata.usage : [],
+          target_gender: String(metadata?.target_gender || 'women').trim() || 'women',
+          complementary_dress_colors: Array.isArray(metadata?.complementary_dress_colors) ? metadata.complementary_dress_colors : [],
+          matching_notes: String(metadata?.matching_notes || '').trim(),
+          semantic_query: String(metadata?.semantic_query || '').trim(),
+          price: Number.isFinite(Number(metadata?.price)) ? Number(metadata.price) : null,
+          image_url: String(metadata?.image_url || imageUrl || '').trim(),
+          spec_view: String(metadata?.spec_view || '').trim(),
+          intent_view: String(metadata?.intent_view || '').trim()
         }
       })
     },
@@ -169,7 +184,32 @@ async function deleteProductFromSimilarity(productId) {
   );
 }
 
-async function matchBanglesFromAI({ imageUrl, imageFileBuffer, design, style }) {
+async function resolveColorCodes(inputColors = []) {
+  assertFetchAvailable();
+
+  const colorList = Array.isArray(inputColors)
+    ? inputColors.map((item) => normalizeColorName(item)).filter(Boolean)
+    : parseColorList(inputColors);
+
+  if (!colorList.length) {
+    return [];
+  }
+
+  const { baseUrl, timeoutMs } = getServiceConfig();
+  return requestAiService(
+    `${baseUrl}/resolve-color-codes`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ colors: colorList })
+    },
+    timeoutMs
+  );
+}
+
+async function matchBanglesFromAI({ imageUrl, imageFileBuffer, design, style, metadata = null }) {
   if (!imageUrl && !imageFileBuffer) {
     throw new Error('imageUrl or imageFileBuffer is required');
   }
@@ -177,7 +217,6 @@ async function matchBanglesFromAI({ imageUrl, imageFileBuffer, design, style }) 
   assertFetchAvailable();
 
   const { baseUrl, timeoutMs } = getServiceConfig();
-  // Matching can take longer for larger uploads and model inference.
   const matchTimeoutMs = Math.max(timeoutMs, 30000);
   const formData = new FormData();
 
@@ -198,7 +237,11 @@ async function matchBanglesFromAI({ imageUrl, imageFileBuffer, design, style }) 
     formData.append('style', style);
   }
 
-  return requestAiService(
+  if (metadata && typeof metadata === 'object') {
+    formData.append('query_metadata', JSON.stringify(metadata));
+  }
+
+  const res = await requestAiService(
     `${baseUrl}/match-bangles`,
     {
       method: 'POST',
@@ -206,10 +249,13 @@ async function matchBanglesFromAI({ imageUrl, imageFileBuffer, design, style }) 
     },
     matchTimeoutMs
   );
+  console.log('res',res);
+  return res 
 }
 
 module.exports = {
   deleteProductFromSimilarity,
   processProductForSimilarity,
-  matchBanglesFromAI
+  matchBanglesFromAI,
+  resolveColorCodes
 };

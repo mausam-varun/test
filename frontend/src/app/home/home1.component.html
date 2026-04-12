@@ -1,0 +1,222 @@
+<main class="home-page">
+  <section class="home-wrap">
+    <app-hero
+      [slides]="heroSlides"
+      [imageUrls]="heroSliderImages"
+      [imageUrl]="heroImage"
+      imageAlt="Luxury handcrafted bangle stack and earrings">
+    </app-hero>
+
+    <section class="section-block ai-match">
+      <h2 class="section-title">Find Your Perfect Bangles Match ✨</h2>
+      <p class="ai-match__subtitle">Upload your outfit - we'll suggest matching bangles instantly</p>
+
+      <div class="ai-match__panel ai-box">
+        <div class="upload-box">
+          <div class="upload-box__icon" aria-hidden="true">📷</div>
+          <p class="upload-box__title">Drag & drop your image here</p>
+
+          <input
+            #dressImageInput
+            id="dressImage"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onDressImageSelected($event)">
+
+          <button type="button" class="upload-btn" (click)="dressImageInput.click()" [disabled]="isMatching">
+            {{ isMatching ? 'Matching...' : 'Upload Image' }}
+          </button>
+
+          <button
+            type="button"
+            class="match-init-btn"
+            (click)="findMatchingBangles()"
+            [disabled]="isMatching || !selectedDressImage">
+            {{ isMatching ? 'Matching...' : 'Match Product' }}
+          </button>
+
+          <p class="upload-box__hint">✨ 92% users found their perfect match</p>
+        </div>
+
+        <p *ngIf="matchError" class="ai-match__error">{{ matchError }}</p>
+
+        <div class="ai-match__details" *ngIf="selectedDressImagePreview || detectedDetails">
+          <article *ngIf="selectedDressImagePreview">
+            <h3>Uploaded Image</h3>
+            <img [src]="selectedDressImagePreview" alt="Uploaded dress" class="ai-match__preview">
+          </article>
+
+          <article *ngIf="detectedDetails">
+            <h3>Detected Details</h3>
+            <p><strong>Category:</strong> {{ detectedDetails.category || 'bangles' }}</p>
+            <p><strong>Primary Color:</strong> {{ detectedDetails.primary_color || (detectedDetails.colors || [])[0] || 'N/A' }}</p>
+            <p><strong>Colors:</strong> {{ (detectedDetails.colors || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Design:</strong> {{ (detectedDetails.design || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Pattern:</strong> {{ (detectedDetails.pattern || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Style:</strong> {{ (detectedDetails.style || []).join(', ') || 'N/A' }}</p>
+            <p><strong>Material:</strong> {{ (detectedDetails.material || []).join(', ') || 'N/A' }}</p>
+          </article>
+        </div>
+
+        <div class="ai-match__generated" *ngIf="generatedBangleImageUrl">
+          <h3>AI Generated Matching Bangle Design</h3>
+          <img [src]="generatedBangleImageUrl" alt="AI generated matching bangles">
+        </div>
+
+        <div class="ai-match__grid" *ngIf="matchedProducts.length">
+          <article class="ai-match__card" *ngFor="let product of matchedProducts; let i = index; trackBy: trackByMatchedId">
+            <div class="match-rank" [attr.data-rank]="i + 1">{{ i + 1 }}</div>
+            <a class="ai-match__link" [routerLink]="['/product', product.id]" aria-label="View product details">
+              <img [src]="product.imageUrl" [alt]="product.name" (error)="onMatchedImageError(product)">
+              <span class="matching-badge">
+                <span class="badge-percentage">{{ product.matching_percentage || Math.round((product.similarity || 0) * 100) }}%</span>
+                <span class="badge-label">Match</span>
+              </span>
+              <div class="match-quality-bar">
+                <div class="match-quality-fill" [style.width.%]="product.matching_percentage || Math.round((product.similarity || 0) * 100)"></div>
+              </div>
+            </a>
+            <div>
+              <a class="ai-match__title-link" [routerLink]="['/product', product.id]">
+                <h4>{{ product.name }}</h4>
+              </a>
+              <p class="price">{{ product.price | displayCurrency:2 }}</p>
+              <p class="rating">★★★★★</p>
+              <button type="button" class="match-btn" [routerLink]="['/product', product.id]">View Product</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="category-slider__header">
+        <h2 class="section-title"><span class="orn">❦</span> Shop by Category <span class="orn">❦</span></h2>
+
+        <div class="category-slider__nav" aria-label="Category navigation">
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideCategoriesPrev()"
+            [disabled]="!canSlideCategoriesPrev"
+            aria-label="Show previous categories">
+            &#8249;
+          </button>
+
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideCategoriesNext()"
+            [disabled]="!canSlideCategoriesNext"
+            aria-label="Show next categories">
+            &#8250;
+          </button>
+        </div>
+      </div>
+
+      <div class="category-slider">
+        <div
+          class="category-slider__track"
+          [style.transform]="'translateX(-' + categorySliderOffsetPercent + '%)'">
+          <a
+            *ngFor="let category of categories; trackBy: trackByName"
+            class="category-card"
+            [routerLink]="['/shop']"
+            [queryParams]="{ category: category.name }"
+            [style.flex]="'0 0 calc(100% / ' + categoriesVisibleCount + ')'">
+            <div class="category-card__media">
+              <img [src]="category.image" [alt]="category.name">
+            </div>
+
+            <div class="category-card__body">
+              <span class="category-card__eyebrow">Browse</span>
+              <h3>{{ category.name }}</h3>
+              <p class="category-card__description">{{ category.description }}</p>
+              <span class="category-card__cta">Open Collection</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="category-slider__header">
+        <h2 class="section-title"><span class="orn">❦</span> Featured Products <span class="orn">❦</span></h2>
+
+        <div class="category-slider__nav" aria-label="Featured products navigation">
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideFeaturedPrev()"
+            [disabled]="!canSlideFeaturedPrev"
+            aria-label="Show previous featured products">
+            &#8249;
+          </button>
+
+          <button
+            type="button"
+            class="category-slider__nav-btn"
+            (click)="slideFeaturedNext()"
+            [disabled]="!canSlideFeaturedNext"
+            aria-label="Show next featured products">
+            &#8250;
+          </button>
+        </div>
+      </div>
+
+      <div class="featured-slider">
+        <div
+          class="featured-slider__track"
+          [style.transform]="'translateX(-' + featuredSliderOffsetPercent + '%)'">
+          <div
+            *ngFor="let product of featuredProducts; trackBy: trackById"
+            class="featured-slider__item"
+            [style.flex]="'0 0 calc(100% / ' + featuredVisibleCount + ')'">
+            <app-product-card
+              [product]="product"
+              [isWishlisted]="isWishlisted(product.id)"
+              (wishlist)="addToWishlist($event)"
+              (add)="addToCart($event)">
+            </app-product-card>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Arrivals Section -->
+    <section class="section-block new-arrivals">
+      <div class="new-arrivals__content">
+        <div class="new-arrivals__text">
+          <span class="new-arrivals__label">NEW ARRIVALS</span>
+          <h2 class="new-arrivals__title">Celebrate<br>Craftsmanship</h2>
+          <p class="new-arrivals__description">Discover the latest additions to our handmade collection</p>
+          <button type="button" class="new-arrivals__cta">VIEW ALL BANGLES →</button>
+        </div>
+        <div class="new-arrivals__image">
+          <img 
+            src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80" 
+            alt="New handmade bangles collection"
+            class="new-arrivals__img-item">
+        </div>
+      </div>
+    </section>
+
+    <!-- Our Story Section -->
+    <section class="section-block our-story">
+      <div class="our-story__content">
+        <div class="our-story__text">
+          <span class="our-story__label">OUR STORY</span>
+          <h2 class="our-story__title">Timeless Tradition,<br>Artfully Designed</h2>
+          <p class="our-story__description">Each bangle is lovingly handcrafted by skilled artisans, blending age-old techniques with contemporary elegance. A piece of art. A story of heritage.</p>
+          <button type="button" class="our-story__cta">LEARN MORE</button>
+        </div>
+        <div class="our-story__image">
+          <img 
+            src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80" 
+            alt="Handcrafted bangle artistry"
+            class="our-story__img-item">
+        </div>
+      </div>
+    </section>
+  </section>
+</main>

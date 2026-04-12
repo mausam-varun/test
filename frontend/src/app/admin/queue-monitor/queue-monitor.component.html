@@ -12,6 +12,27 @@
     <p class="err" *ngIf="actionError">{{ actionError }}</p>
   </div>
 
+  <section class="card queue-monitor__provider-panel">
+    <div>
+      <h3>AI Model for Matching Details</h3>
+      <p>Select which provider the admin side should use for AI detail generation and matching requests.</p>
+      <p class="queue-monitor__provider-current">
+        Current: <strong>{{ activeAiProvider === 'gemini' ? 'Gemini' : 'OpenAI' }}</strong>
+        <span>({{ aiProviderSource }})</span>
+      </p>
+    </div>
+
+    <div class="queue-monitor__provider-actions">
+      <select [(ngModel)]="selectedAiProvider" [disabled]="isUpdatingAiProvider || loading">
+        <option value="gemini">Gemini</option>
+        <option value="openai">OpenAI</option>
+      </select>
+      <button class="btn" type="button" (click)="updateAiProvider()" [disabled]="isUpdatingAiProvider || selectedAiProvider === activeAiProvider">
+        {{ isUpdatingAiProvider ? 'Saving...' : 'Apply Model' }}
+      </button>
+    </div>
+  </section>
+
   <div class="queue-monitor__cards" *ngIf="stats as s">
     <article class="card">
       <h3>Main Queue</h3>

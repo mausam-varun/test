@@ -42,7 +42,20 @@
 
 			<label>
 				<span>Category</span>
-				<input type="text" [(ngModel)]="productCategory" placeholder="e.g. Women Ethnic" />
+				<select [(ngModel)]="productCategoryId">
+					<option [ngValue]="null">-- Choose category --</option>
+					<option *ngFor="let cat of productCategories" [ngValue]="cat.id">{{ cat.name }}</option>
+				</select>
+			</label>
+
+			<label>
+				<span>Product Type</span>
+				<input type="text" [(ngModel)]="productType" placeholder="e.g. bangle set" />
+			</label>
+
+			<label>
+				<span>Sub Category</span>
+				<input type="text" [(ngModel)]="productSubCategory" placeholder="e.g. silk thread bangles" />
 			</label>
 
 			<p class="full-width" *ngIf="pricePreviewInUsd !== null">
@@ -50,8 +63,18 @@
 			</p>
 
 			<label>
-				<span>Color</span>
-				<input type="text" [(ngModel)]="productColor" placeholder="e.g. red,gold" />
+				<span>Primary Color</span>
+				<input type="text" [(ngModel)]="productPrimaryColor" placeholder="e.g. red" />
+			</label>
+
+			<label>
+				<span>Secondary Colors</span>
+				<input type="text" [(ngModel)]="productColor" placeholder="e.g. gold, maroon" />
+			</label>
+
+			<label>
+				<span>Color Family</span>
+				<input type="text" [(ngModel)]="productColorFamily" placeholder="e.g. warm, festive" />
 			</label>
 
 			<label>
@@ -60,8 +83,8 @@
 			</label>
 
 			<label>
-				<span>Design</span>
-				<input type="text" [(ngModel)]="productDesign" placeholder="e.g. kundan" />
+				<span>Design Elements</span>
+				<input type="text" [(ngModel)]="productDesign" placeholder="e.g. kundan, floral motifs" />
 			</label>
 
 			<label>
@@ -75,13 +98,113 @@
 			</label>
 
 			<label>
-				<span>Material</span>
-				<input type="text" [(ngModel)]="productMaterial" placeholder="e.g. alloy" />
+				<span>Material Estimated</span>
+				<input type="text" [(ngModel)]="productMaterial" placeholder="e.g. alloy, silk thread" />
+			</label>
+
+			<label>
+				<span>Finish</span>
+				<input type="text" [(ngModel)]="productFinish" placeholder="e.g. glossy, matte" />
+			</label>
+
+			<label>
+				<span>Occasion</span>
+				<input type="text" [(ngModel)]="productOccasion" placeholder="e.g. wedding, festive" />
+			</label>
+
+			<label>
+				<span>Embellishments</span>
+				<input type="text" [(ngModel)]="productEmbellishments" placeholder="e.g. stones, beads, zari" />
+			</label>
+
+			<label>
+				<span>Craft Type</span>
+				<input type="text" [(ngModel)]="productCraftType" placeholder="e.g. handcrafted, threadwork" />
+			</label>
+
+			<label>
+				<span>Texture</span>
+				<input type="text" [(ngModel)]="productTexture" placeholder="e.g. smooth, textured" />
+			</label>
+
+			<label>
+				<span>Visual Density</span>
+				<input type="text" [(ngModel)]="productVisualDensity" placeholder="e.g. rich, minimal" />
+			</label>
+
+			<label>
+				<span>Shape</span>
+				<input type="text" [(ngModel)]="productShape" placeholder="e.g. round" />
+			</label>
+
+			<label>
+				<span>Usage</span>
+				<input type="text" [(ngModel)]="productUsage" placeholder="e.g. bridal wear, gifting" />
+			</label>
+
+			<label>
+				<span>Aesthetic Tags</span>
+				<input type="text" [(ngModel)]="productAestheticTags" placeholder="e.g. ethnic, premium, modern" />
 			</label>
 
 			<label class="full-width">
-				<span>Description</span>
-				<textarea rows="4" [(ngModel)]="productDescription" placeholder="Short product details for admin reference"></textarea>
+				<span>Cultural Inference</span>
+				<textarea rows="2" [(ngModel)]="productCulturalInference" placeholder="e.g. Indian festive styling"></textarea>
+			</label>
+
+			<label class="full-width">
+				<span>Quality Inference</span>
+				<textarea rows="2" [(ngModel)]="productQualityInference" placeholder="e.g. premium handcrafted finish"></textarea>
+			</label>
+
+			<label class="full-width">
+				<div class="description-label-row">
+					<span>Description</span>
+					<select [(ngModel)]="selectedAiProvider" [disabled]="isGeneratingDescription || isSubmitting">
+						<option value="openai">OpenAI</option>
+						<option value="gemini">Gemini</option>
+					</select>
+					<button
+						class="btn-generate-description"
+						type="button"
+						[disabled]="isGeneratingDescription || isSubmitting || selectedImages.length === 0"
+						(click)="generateDescription()"
+					>
+						{{ isGeneratingDescription ? 'Generating...' : '✨ Generate AI Content' }}
+					</button>
+				</div>
+				<div class="description-editor-shell">
+					<div class="description-toolbar">
+						<button type="button" class="toolbar-btn" (click)="formatDescription('bold')"><strong>B</strong></button>
+						<button type="button" class="toolbar-btn" (click)="formatDescription('italic')"><em>I</em></button>
+						<button type="button" class="toolbar-btn" (click)="formatDescription('insertUnorderedList')">• List</button>
+						<button type="button" class="toolbar-btn" (click)="formatDescription('insertOrderedList')">1. List</button>
+						<button type="button" class="toolbar-btn" (click)="clearDescriptionFormatting()">Clear</button>
+					</div>
+					<div
+						class="description-editor"
+						contenteditable="true"
+						[attr.data-placeholder]="'Short product details for admin reference or click AI Generate'"
+						[innerHTML]="productDescription"
+						(input)="onDescriptionEditorInput($event)"
+					></div>
+				</div>
+				<small class="description-help">Upload at least one image first — AI uses the selected primary image to generate the title, description, tags, and SEO text.</small>
+			</label>
+
+			<label>
+				<span>SEO Title</span>
+				<input type="text" [(ngModel)]="productSeoTitle" placeholder="Search-friendly title for this product" />
+			</label>
+
+			<label>
+				<span>Tags / Keywords</span>
+				<input type="text" [(ngModel)]="productTags" placeholder="e.g. bridal, festive, kundan, ethnic" />
+			</label>
+
+			<label class="full-width">
+				<span>SEO Meta Description</span>
+				<textarea rows="3" [(ngModel)]="productSeoMetaDescription" placeholder="Short search result summary for SEO"></textarea>
 			</label>
 
 			<div class="full-width file-picker-section">
@@ -139,6 +262,7 @@
 			{{ aiIndexingMessage }}
 		</p>
 	</div>
+
 
 	<div class="card list-card">
 		<div class="list-header">

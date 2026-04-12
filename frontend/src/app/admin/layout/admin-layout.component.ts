@@ -53,9 +53,24 @@ export class AdminLayoutComponent implements OnInit {
       icon: 'M4 19h16M4 12h10M4 5h16M16 12l4-3v6l-4-3z'
     },
     {
+      label: 'Home Category Control',
+      route: '/admin/home-category-control',
+      icon: 'M4 6h16v12H4zM8 10h8M8 14h5'
+    },
+    {
       label: 'AI Queue',
       route: '/admin/ai-queue',
       icon: 'M3 6h18M3 12h18M3 18h12M17 16l4 2-4 2v-4z'
+    },
+    {
+      label: 'Reviews',
+      route: '/admin/reviews',
+      icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'
+    },
+    {
+      label: 'Frontend Settings',
+      route: '/admin/settings',
+      icon: 'M12 9v2m0 4v2m0 4v2m0-16v2M8.34 3.66l1.41 1.41m2.83 2.83l1.41 1.41m2.83 2.83l1.41 1.41M3.66 8.34l1.41-1.41m2.83-2.83l1.41-1.41m2.83-2.83l1.41-1.41'
     }
   ];
 

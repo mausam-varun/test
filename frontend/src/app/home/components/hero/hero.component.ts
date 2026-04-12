@@ -1,10 +1,13 @@
 import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 
 export interface HeroSlide {
+  id?: number;
   image_url: string;
   title?: string;
   subtitle?: string;
   cta_url?: string;
+  sort_order?: number;
+  is_active?: boolean;
 }
 
 @Component({

@@ -1,13 +1,17 @@
 const express = require('express');
-const { placeOrder } = require('../controllers/orderController');
+const { placeOrder, verifyPayment } = require('../controllers/orderController');
+const { getRatingEligibility } = require('../controllers/reviewController');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const { trackShipment, trackByShipmentId } = require('../services/shiprocketService');
 const { getPool } = require('../services/db');
+const { optionalCustomerAuth, requireCustomerAuth } = require('../middlewares/customerAuth');
 
 const router = express.Router();
 
-router.post('/', placeOrder);
+router.post('/', optionalCustomerAuth, placeOrder);
+router.post('/verify-payment', optionalCustomerAuth, verifyPayment);
+router.get('/:orderId/rating-eligibility', requireCustomerAuth, getRatingEligibility);
 
 // GET /api/orders/:orderNumber/tracking
 // Returns stored Shiprocket tracking data + live shipment status

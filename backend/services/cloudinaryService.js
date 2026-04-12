@@ -3,6 +3,7 @@ const streamifier = require('streamifier');
 const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const sharp = require('sharp');
 
 const hasCloudinaryConfig = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
@@ -27,6 +28,67 @@ function getLocalBaseUrl() {
   return `http://localhost:${port}`;
 }
 
+function getPositiveNumber(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const PRODUCT_IMAGE_MAX_WIDTH = getPositiveNumber(process.env.PRODUCT_IMAGE_MAX_WIDTH, 1600);
+const PRODUCT_IMAGE_MAX_HEIGHT = getPositiveNumber(process.env.PRODUCT_IMAGE_MAX_HEIGHT, 1600);
+const PRODUCT_IMAGE_JPEG_QUALITY = Math.min(100, Math.max(80, getPositiveNumber(process.env.PRODUCT_IMAGE_JPEG_QUALITY, 90)));
+
+async function optimizeImageBuffer(fileBuffer, mimeType = 'image/jpeg') {
+  if (!fileBuffer) {
+    throw new Error('Image buffer is required for upload');
+  }
+
+  const pipeline = sharp(fileBuffer, { failOn: 'none' })
+    .rotate()
+    .resize({
+      width: PRODUCT_IMAGE_MAX_WIDTH,
+      height: PRODUCT_IMAGE_MAX_HEIGHT,
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .withMetadata();
+
+  if (mimeType === 'image/png') {
+    const { data, info } = await pipeline
+      .png({
+        compressionLevel: 9,
+        adaptiveFiltering: true,
+        effort: 10,
+        palette: false
+      })
+      .toBuffer({ resolveWithObject: true });
+
+    return {
+      buffer: data,
+      mimeType: 'image/png',
+      width: info.width,
+      height: info.height,
+      bytes: info.size || data.length
+    };
+  }
+
+  const { data, info } = await pipeline
+    .jpeg({
+      quality: PRODUCT_IMAGE_JPEG_QUALITY,
+      mozjpeg: true,
+      progressive: true,
+      chromaSubsampling: '4:4:4'
+    })
+    .toBuffer({ resolveWithObject: true });
+
+  return {
+    buffer: data,
+    mimeType: 'image/jpeg',
+    width: info.width,
+    height: info.height,
+    bytes: info.size || data.length
+  };
+}
+
 async function saveImageLocally(fileBuffer, mimeType = 'image/jpeg') {
   const uploadsDir = getUploadsDir();
   await fs.mkdir(uploadsDir, { recursive: true });
@@ -41,15 +103,21 @@ async function saveImageLocally(fileBuffer, mimeType = 'image/jpeg') {
 }
 
 async function uploadImage(fileBuffer, mimeType) {
+  const optimizedImage = await optimizeImageBuffer(fileBuffer, mimeType);
+
   if (!hasCloudinaryConfig) {
-    return saveImageLocally(fileBuffer, mimeType);
+    return saveImageLocally(optimizedImage.buffer, optimizedImage.mimeType);
   }
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: process.env.CLOUDINARY_FOLDER || 'divara-craft/products',
-        resource_type: 'image'
+        resource_type: 'image',
+        transformation: [
+          { width: PRODUCT_IMAGE_MAX_WIDTH, height: PRODUCT_IMAGE_MAX_HEIGHT, crop: 'limit' },
+          { quality: 'auto:best', fetch_format: 'auto' }
+        ]
       },
       (error, result) => {
         if (error) {
@@ -59,7 +127,7 @@ async function uploadImage(fileBuffer, mimeType) {
       }
     );
 
-    streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    streamifier.createReadStream(optimizedImage.buffer).pipe(uploadStream);
   });
 }
 
@@ -116,5 +184,6 @@ async function deleteImageByUrl(imageUrl) {
 
 module.exports = {
   uploadImage,
-  deleteImageByUrl
+  deleteImageByUrl,
+  optimizeImageBuffer
 };

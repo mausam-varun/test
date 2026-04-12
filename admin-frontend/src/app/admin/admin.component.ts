@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { HomeSectionsService } from '../services/home-sections.service';
 
 interface Product {
   id: number;
@@ -10,6 +11,21 @@ interface Product {
   image_url: string;
 }
 
+interface ThemeSettings {
+  primaryGradientStart: string;
+  primaryGradientEnd: string;
+  primaryPurple: string;
+  deepPurple: string;
+  pink: string;
+  gold: string;
+  textMain: string;
+  textSecondary: string;
+  textBody: string;
+  textLight: string;
+  borderLight: string;
+  bgLight: string;
+}
+
 type ProductCurrency = 'USD' | 'INR';
 
 @Component({
@@ -18,8 +34,9 @@ type ProductCurrency = 'USD' | 'INR';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
-  private readonly apiBaseUrl = 'http://localhost:5001/api/products';
-  private readonly authApiUrl = 'http://localhost:5001/api/auth';
+  private readonly apiBaseUrl = 'http://localhost:5002/api/products';
+  private readonly authApiUrl = 'http://localhost:5002/api/auth';
+  private readonly settingsApiUrl = 'http://localhost:5002/api/settings';
 
   productName = '';
   productPrice: number | null = null;
@@ -41,10 +58,30 @@ export class AdminComponent implements OnInit {
   isSubmitting = false;
   isLoadingProducts = false;
   isSavingCurrency = false;
+  isSavingTheme = false;
   successMessage = '';
   errorMessage = '';
   currencyMessage = '';
+  themeMessage = '';
   adminId: number | null = null;
+  adminToken: string | null = null;
+
+  // Theme settings
+  showThemePanel = false;
+  themeSettings: ThemeSettings = {
+    primaryGradientStart: '#D946EF',
+    primaryGradientEnd: '#9333EA',
+    primaryPurple: '#9333EA',
+    deepPurple: '#7E22CE',
+    pink: '#D946EF',
+    gold: '#C9A45C',
+    textMain: '#111827',
+    textSecondary: '#1F2937',
+    textBody: '#6B7280',
+    textLight: '#9CA3AF',
+    borderLight: '#E5E7EB',
+    bgLight: '#F9FAFB'
+  };
 
   products: Product[] = [];
 
@@ -53,12 +90,50 @@ export class AdminComponent implements OnInit {
     { value: 'INR', label: 'INR (Rs.)' }
   ];
 
-  constructor(private readonly http: HttpClient) {}
+  readonly themeColorLabels: { [key in keyof ThemeSettings]: string } = {
+    primaryGradientStart: 'Primary Gradient Start',
+    primaryGradientEnd: 'Primary Gradient End',
+    primaryPurple: 'Primary Purple',
+    deepPurple: 'Deep Purple',
+    pink: 'Pink Accent',
+    gold: 'Gold Accent',
+    textMain: 'Main Text Color',
+    textSecondary: 'Secondary Text Color',
+    textBody: 'Body Text Color',
+    textLight: 'Light Text Color',
+    borderLight: 'Border Color',
+    bgLight: 'Light Background'
+  };
+
+  get themeColorKeys(): (keyof ThemeSettings)[] {
+    return Object.keys(this.themeSettings) as (keyof ThemeSettings)[];
+  }
+
+  // New Arrivals Section Properties
+  showNewArrivalsPanel = false;
+  newArrivalsTopLabel = 'NEW ARRIVALS';
+  newArrivalsTitle = 'Celebrate Craftsmanship';
+  newArrivalsDescription = 'Discover the latest additions to our handmade collection';
+  newArrivalsButtonText = 'VIEW ALL BANGLES';
+  newArrivalsButtonLink = '/shop';
+  newArrivalsImageFile: File | null = null;
+  newArrivalsImageName = '';
+  newArrivalsImage = '';
+  isSavingNewArrivals = false;
+  newArrivalsMessage = '';
+  newArrivalsError = '';
+
+  constructor(
+    private readonly http: HttpClient,
+    private homeSectionsService: HomeSectionsService
+  ) {}
 
   ngOnInit(): void {
     this.adminId = this.getAdminIdFromSession();
+    this.adminToken = this.getAdminTokenFromSession();
     this.loadAdminCurrencyPreference();
     this.loadProducts();
+    this.loadThemeSettings();
   }
 
   onHeaderCurrencyChange(): void {
@@ -228,4 +303,141 @@ export class AdminComponent implements OnInit {
     });
   }
 
+  private getAdminTokenFromSession(): string | null {
+    try {
+      const raw = localStorage.getItem('admin_token');
+      return raw ? String(raw).trim() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  loadThemeSettings(): void {
+    this.http.get<{ theme: ThemeSettings }>(`${this.settingsApiUrl}/theme/public`).subscribe({
+      next: (response) => {
+        if (response?.theme) {
+          this.themeSettings = { ...this.themeSettings, ...response.theme };
+        }
+      },
+      error: () => {
+        this.themeMessage = 'Could not load current theme settings';
+      }
+    });
+  }
+
+  saveThemeSettings(): void {
+    if (!this.adminToken) {
+      this.themeMessage = 'Admin token not found. Please log in again.';
+      return;
+    }
+
+    this.isSavingTheme = true;
+    this.themeMessage = '';
+
+    this.http.put<{ theme: ThemeSettings; message: string }>(
+      `${this.settingsApiUrl}/theme`,
+      { theme: this.themeSettings },
+      { headers: { 'Authorization': `Bearer ${this.adminToken}` } }
+    ).subscribe({
+      next: (response) => {
+        this.isSavingTheme = false;
+        this.themeMessage = response.message || 'Theme saved successfully and applied to frontend!';
+        this.themeSettings = response.theme;
+      },
+      error: (error: { error?: { error?: string } }) => {
+        this.isSavingTheme = false;
+        this.themeMessage = error?.error?.error || 'Could not save theme settings';
+      }
+    });
+  }
+
+  resetTheme(): void {
+    this.themeSettings = {
+      primaryGradientStart: '#D946EF',
+      primaryGradientEnd: '#9333EA',
+      primaryPurple: '#9333EA',
+      deepPurple: '#7E22CE',
+      pink: '#D946EF',
+      gold: '#C9A45C',
+      textMain: '#111827',
+      textSecondary: '#1F2937',
+      textBody: '#6B7280',
+      textLight: '#9CA3AF',
+      borderLight: '#E5E7EB',
+      bgLight: '#F9FAFB'
+    };
+    this.themeMessage = 'Theme reset to default. Click "Save Theme" to apply.';
+  }
+
+  toggleThemePanel(): void {
+    this.showThemePanel = !this.showThemePanel;
+  }
+
+  toggleNewArrivalsPanel(): void {
+    this.showNewArrivalsPanel = !this.showNewArrivalsPanel;
+  }
+
+  onNewArrivalsImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.newArrivalsImageFile = input.files[0];
+      this.newArrivalsImageName = this.newArrivalsImageFile.name;
+    }
+  }
+
+  saveNewArrivals(): void {
+    if (!this.newArrivalsTitle.trim()) {
+      this.newArrivalsError = 'Title is required';
+      return;
+    }
+
+    this.isSavingNewArrivals = true;
+    this.newArrivalsError = '';
+    this.newArrivalsMessage = '';
+
+    const data = {
+      top_label: this.newArrivalsTopLabel,
+      main_title: this.newArrivalsTitle,
+      description: this.newArrivalsDescription,
+      button_text: this.newArrivalsButtonText,
+      button_link: this.newArrivalsButtonLink,
+      is_active: true
+    };
+
+    this.homeSectionsService.updateNewArrivals(data, this.newArrivalsImageFile || undefined).subscribe({
+      next: (response) => {
+        this.isSavingNewArrivals = false;
+        this.newArrivalsMessage = response.message || 'New Arrivals section updated successfully!';
+        if (response.data && response.data.image_url) {
+          this.newArrivalsImage = response.data.image_url;
+        }
+        this.newArrivalsImageFile = null;
+        this.newArrivalsImageName = '';
+      },
+      error: (error: any) => {
+        this.isSavingNewArrivals = false;
+        this.newArrivalsError = error?.error?.message || error?.error?.error || 'Failed to update New Arrivals section';
+      }
+    });
+  }
+
+  loadNewArrivals(): void {
+    this.homeSectionsService.getNewArrivals().subscribe({
+      next: (section) => {
+        if (section) {
+          this.newArrivalsTopLabel = section.top_label || 'NEW ARRIVALS';
+          this.newArrivalsTitle = section.main_title || 'Celebrate Craftsmanship';
+          this.newArrivalsDescription = section.description || '';
+          this.newArrivalsButtonText = section.button_text || 'VIEW ALL BANGLES';
+          this.newArrivalsButtonLink = section.button_link || '/shop';
+          this.newArrivalsImage = section.image_url || '';
+        }
+      },
+      error: (error) => {
+        console.error('Error loading New Arrivals:', error);
+      }
+    });
+  }
+
 }
+

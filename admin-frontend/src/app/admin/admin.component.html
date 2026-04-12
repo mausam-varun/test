@@ -4,19 +4,87 @@
 			<h1>Product Upload</h1>
 			<p>Add new items to your store inventory.</p>
 		</div>
-		<div class="admin-currency-control">
-			<label for="admin-currency-select">Currency</label>
-			<select
-				id="admin-currency-select"
-				[(ngModel)]="selectedCurrency"
-				[disabled]="isSavingCurrency"
-				(change)="onHeaderCurrencyChange()"
-			>
-				<option *ngFor="let option of currencyOptions" [value]="option.value">{{ option.label }}</option>
-			</select>
-			<small *ngIf="currencyMessage">{{ currencyMessage }}</small>
+		<div class="admin-controls-group">
+			<div class="admin-currency-control">
+				<label for="admin-currency-select">Currency</label>
+				<select
+					id="admin-currency-select"
+					[(ngModel)]="selectedCurrency"
+					[disabled]="isSavingCurrency"
+					(change)="onHeaderCurrencyChange()"
+				>
+					<option *ngFor="let option of currencyOptions" [value]="option.value">{{ option.label }}</option>
+				</select>
+				<small *ngIf="currencyMessage">{{ currencyMessage }}</small>
+			</div>
+			<div class="admin-theme-control">
+				<button type="button" class="btn-theme" (click)="toggleThemePanel()" title="Manage brand colors">
+					🎨 Brand Colors
+				</button>
+			</div>
 		</div>
 	</header>
+
+	<!-- Theme Settings Panel -->
+	<div class="admin-theme-panel" *ngIf="showThemePanel">
+		<div class="theme-panel-header">
+			<h2>Brand Theme Colors</h2>
+			<p>Customize your brand colors. Changes apply immediately to the customer frontend.</p>
+		</div>
+
+		<div class="theme-colors-grid">
+			<div class="theme-color-item" *ngFor="let key of themeColorKeys">
+				<label [for]="'color-' + key">
+					{{ themeColorLabels[key] }}
+				</label>
+				<div class="color-input-group">
+					<input
+						[id]="'color-' + key"
+						type="color"
+						[(ngModel)]="themeSettings[key]"
+						class="color-picker"
+					/>
+					<input
+						type="text"
+						[(ngModel)]="themeSettings[key]"
+						placeholder="#000000"
+						class="color-hex"
+						(change)="$event.preventDefault()"
+					/>
+				</div>
+			</div>
+		</div>
+
+		<div class="theme-panel-actions">
+			<button
+				type="button"
+				class="btn-save"
+				[disabled]="isSavingTheme"
+				(click)="saveThemeSettings()"
+			>
+				{{ isSavingTheme ? 'Saving...' : '✓ Save Theme' }}
+			</button>
+			<button
+				type="button"
+				class="btn-reset"
+				[disabled]="isSavingTheme"
+				(click)="resetTheme()"
+			>
+				↺ Reset to Default
+			</button>
+			<button
+				type="button"
+				class="btn-close"
+				(click)="toggleThemePanel()"
+			>
+				✕ Close
+			</button>
+		</div>
+
+		<p class="theme-message" *ngIf="themeMessage" [class.error]="themeMessage.includes('error')">
+			{{ themeMessage }}
+		</p>
+	</div>
 
 	<div class="card upload-card">
 		<h2>Upload New Product</h2>
@@ -126,5 +194,126 @@
 				</tbody>
 			</table>
 		</div>
+	</div>
+</section>
+
+<!-- NEW ARRIVALS SECTION CONTROL -->
+<section class="admin-section">
+	<div class="section-header">
+		<h2>📸 Home Category Control - New Arrivals</h2>
+		<button 
+			type="button" 
+			class="toggle-btn"
+			(click)="toggleNewArrivalsPanel()"
+			[attr.aria-expanded]="showNewArrivalsPanel">
+			{{ showNewArrivalsPanel ? '▼ Hide' : '▶ Show' }}
+		</button>
+	</div>
+
+	<div class="admin-new-arrivals-panel" *ngIf="showNewArrivalsPanel">
+		<!-- Success Message -->
+		<div *ngIf="newArrivalsMessage" class="message success-message">
+			{{ newArrivalsMessage }}
+		</div>
+
+		<!-- Error Message -->
+		<div *ngIf="newArrivalsError" class="message error-message">
+			{{ newArrivalsError }}
+		</div>
+
+		<form (ngSubmit)="saveNewArrivals()" class="new-arrivals-form">
+			<!-- Image Upload -->
+			<div class="form-group">
+				<label for="na-image">Banner Image</label>
+				<input 
+					type="file" 
+					id="na-image" 
+					accept="image/*"
+					(change)="onNewArrivalsImageSelected($event)"
+					class="file-input">
+				<span class="file-name" *ngIf="newArrivalsImageName">{{ newArrivalsImageName }}</span>
+				<div *ngIf="newArrivalsImage" class="image-preview">
+					<img [src]="newArrivalsImage" alt="New Arrivals Preview" />
+				</div>
+			</div>
+
+			<!-- Top Label -->
+			<div class="form-group">
+				<label for="na-label">Top Label</label>
+				<input 
+					type="text" 
+					id="na-label"
+					[(ngModel)]="newArrivalsTopLabel"
+					name="newArrivalsTopLabel"
+					placeholder="e.g., NEW ARRIVALS"
+					class="form-input">
+			</div>
+
+			<!-- Main Title -->
+			<div class="form-group">
+				<label for="na-title">Main Title *</label>
+				<input 
+					type="text" 
+					id="na-title"
+					[(ngModel)]="newArrivalsTitle"
+					name="newArrivalsTitle"
+					placeholder="e.g., Celebrate Craftsmanship"
+					class="form-input"
+					required>
+			</div>
+
+			<!-- Description -->
+			<div class="form-group">
+				<label for="na-desc">Description</label>
+				<textarea 
+					id="na-desc"
+					[(ngModel)]="newArrivalsDescription"
+					name="newArrivalsDescription"
+					placeholder="Discover the latest additions to our handmade collection"
+					class="form-textarea"
+					rows="3"></textarea>
+			</div>
+
+			<!-- Button Text -->
+			<div class="form-group">
+				<label for="na-btn-text">Button Text</label>
+				<input 
+					type="text" 
+					id="na-btn-text"
+					[(ngModel)]="newArrivalsButtonText"
+					name="newArrivalsButtonText"
+					placeholder="e.g., VIEW ALL BANGLES"
+					class="form-input">
+			</div>
+
+			<!-- Button Link -->
+			<div class="form-group">
+				<label for="na-btn-link">Button Link</label>
+				<input 
+					type="text" 
+					id="na-btn-link"
+					[(ngModel)]="newArrivalsButtonLink"
+					name="newArrivalsButtonLink"
+					placeholder="e.g., /shop or /collections/new-arrivals"
+					class="form-input">
+			</div>
+
+			<!-- Gradient Info -->
+			<div class="info-box">
+				<strong>ℹ️ Gradient Colors:</strong>
+				<p>The gradient overlay is applied via CSS. No gradient manipulation needed here.</p>
+				<p><strong>Color Scheme:</strong> Purple (#9333EA) → Pink (#D946EF) with fade to transparent</p>
+			</div>
+
+			<!-- Submit Button -->
+			<div class="form-actions">
+				<button 
+					type="submit" 
+					class="save-btn"
+					[disabled]="isSavingNewArrivals">
+					{{ isSavingNewArrivals ? '⏳ Saving...' : '💾 Save New Arrivals' }}
+				</button>
+			</div>
+		</form>
 	</div>
 </section>

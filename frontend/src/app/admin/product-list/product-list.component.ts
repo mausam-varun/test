@@ -268,6 +268,10 @@ export class AdminProductListComponent implements OnInit {
     this.router.navigate(['/admin/add-product']);
   }
 
+  goToEditProduct(productId: number): void {
+    this.router.navigate(['/admin/add-product'], { queryParams: { id: productId } });
+  }
+
   clearFilters(): void {
     this.searchText = '';
     this.selectedCategory = '';

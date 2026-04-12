@@ -1,4 +1,5 @@
 const { getPool } = require('./db');
+const { resolveColorCodes } = require('./aiProductService');
 
 let productSchemaConfigPromise;
 
@@ -16,6 +17,80 @@ function normalizeImages(rows = []) {
     image_url: row.image_url,
     is_primary_image: Boolean(row.is_primary ?? row.is_primary_image)
   }));
+}
+
+function parseDelimitedValues(value) {
+  if (!value) {
+    return [];
+  }
+
+  const input = Array.isArray(value) ? value.join(',') : String(value);
+  return [...new Set(
+    input
+      .split(/[,\n|/]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+  )];
+}
+
+function buildColorDetails(colorsInput, colorHexInput) {
+  const colorNames = parseDelimitedValues(colorsInput);
+  const colorHexValues = parseDelimitedValues(colorHexInput);
+
+  return colorNames.map((name, index) => ({
+    name,
+    hex: colorHexValues[index] || null,
+    sort_order: index
+  }));
+}
+
+function buildProductAttributeEntries(analysisRaw = {}, fallbackMetadata = {}) {
+  const raw = analysisRaw && typeof analysisRaw === 'object' ? analysisRaw : {};
+  const fallbackColors = parseDelimitedValues(fallbackMetadata.colors || '');
+
+  const attributeMap = {
+    product_type: raw.product_type || '',
+    category: raw.category || fallbackMetadata.category || '',
+    sub_category: raw.sub_category || '',
+    primary_color: raw.primary_color || fallbackColors[0] || '',
+    secondary_colors: Array.isArray(raw.secondary_colors) ? raw.secondary_colors : fallbackColors.slice(1),
+    color_family: Array.isArray(raw.color_family) ? raw.color_family : [],
+    material_estimated: Array.isArray(raw.material_estimated) ? raw.material_estimated : parseDelimitedValues(fallbackMetadata.materials || fallbackMetadata.material || ''),
+    finish: raw.finish || '',
+    style: Array.isArray(raw.style) ? raw.style : parseDelimitedValues(fallbackMetadata.styles || fallbackMetadata.style || ''),
+    occasion: Array.isArray(raw.occasion) ? raw.occasion : [],
+    pattern: Array.isArray(raw.pattern) ? raw.pattern : parseDelimitedValues(fallbackMetadata.patterns || fallbackMetadata.pattern || ''),
+    design_elements: Array.isArray(raw.design_elements) ? raw.design_elements : parseDelimitedValues(fallbackMetadata.designs || fallbackMetadata.design || ''),
+    embellishments: Array.isArray(raw.embellishments) ? raw.embellishments : [],
+    craft_type: Array.isArray(raw.craft_type) ? raw.craft_type : [],
+    texture: raw.texture || '',
+    visual_density: raw.visual_density || '',
+    shape: raw.shape || '',
+    usage: Array.isArray(raw.usage) ? raw.usage : [],
+    aesthetic_tags: Array.isArray(raw.aesthetic_tags) ? raw.aesthetic_tags : [],
+    cultural_inference: raw.cultural_inference || '',
+    quality_inference: raw.quality_inference || '',
+    target_gender: raw.target_gender || fallbackMetadata.target_gender || 'Women',
+    complementary_dress_colors: Array.isArray(raw.complementary_dress_colors) ? raw.complementary_dress_colors : [],
+    matching_notes: raw.ecommerce?.matching_notes || raw.matching_notes || ''
+  };
+
+  const entries = [];
+  for (const [attributeKey, attributeValue] of Object.entries(attributeMap)) {
+    if (Array.isArray(attributeValue)) {
+      for (const item of attributeValue.map((value) => String(value || '').trim()).filter(Boolean)) {
+        entries.push({ attribute_key: attributeKey, attribute_value: item.slice(0, 255) });
+      }
+      continue;
+    }
+
+    const normalized = String(attributeValue || '').trim();
+    if (normalized) {
+      entries.push({ attribute_key: attributeKey, attribute_value: normalized.slice(0, 255) });
+    }
+  }
+
+  return entries;
 }
 
 async function getProductSchemaConfig() {
@@ -76,15 +151,310 @@ async function fetchImagesByProductIds(productIds) {
   return grouped;
 }
 
-function buildProductWithImages(product, images = []) {
+async function fetchColorsByProductIds(productIds) {
+  if (!productIds.length) {
+    return new Map();
+  }
+
+  const db = getPool();
+  const placeholders = productIds.map(() => '?').join(',');
+  const [rows] = await db.query(
+    `SELECT id, product_id, color_id, color_name, color_code, color_hex, is_primary_color, sort_order
+     FROM product_colors
+     WHERE product_id IN (${placeholders})
+     ORDER BY product_id ASC, is_primary_color DESC, sort_order ASC, id ASC`,
+    productIds
+  );
+
+  const grouped = new Map();
+  for (const row of rows) {
+    if (!grouped.has(row.product_id)) {
+      grouped.set(row.product_id, []);
+    }
+    grouped.get(row.product_id).push({
+      id: row.id,
+      color_id: row.color_id ?? null,
+      name: String(row.color_name || '').trim(),
+      code: row.color_code || row.color_hex || null,
+      hex: row.color_hex || row.color_code || null,
+      is_primary_color: Boolean(row.is_primary_color)
+    });
+  }
+
+  return grouped;
+}
+
+async function fetchAttributesByProductIds(productIds) {
+  if (!productIds.length) {
+    return new Map();
+  }
+
+  const db = getPool();
+  const placeholders = productIds.map(() => '?').join(',');
+  const [rows] = await db.query(
+    `SELECT product_id, attribute_key, attribute_value
+     FROM product_attributes
+     WHERE product_id IN (${placeholders})
+     ORDER BY product_id ASC, id ASC`,
+    productIds
+  );
+
+  const arrayKeys = new Set([
+    'secondary_colors',
+    'color_family',
+    'material_estimated',
+    'style',
+    'occasion',
+    'pattern',
+    'design_elements',
+    'embellishments',
+    'craft_type',
+    'usage',
+    'aesthetic_tags'
+  ]);
+
+  const grouped = new Map();
+  for (const row of rows) {
+    if (!grouped.has(row.product_id)) {
+      grouped.set(row.product_id, {});
+    }
+
+    const bucket = grouped.get(row.product_id);
+    const key = String(row.attribute_key || '').trim();
+    const value = String(row.attribute_value || '').trim();
+
+    if (!key || !value) {
+      continue;
+    }
+
+    if (arrayKeys.has(key)) {
+      bucket[key] = Array.isArray(bucket[key]) ? bucket[key] : [];
+      if (!bucket[key].includes(value)) {
+        bucket[key].push(value);
+      }
+      continue;
+    }
+
+    if (!bucket[key]) {
+      bucket[key] = value;
+    }
+  }
+
+  return grouped;
+}
+
+async function upsertMasterColor(db, colorName, colorCode = null) {
+  const normalizedName = String(colorName || '').trim().toLowerCase();
+  if (!normalizedName) {
+    return null;
+  }
+
+  await db.execute(
+    `INSERT INTO colors (color_name, color_code)
+     VALUES (?, ?)
+     ON DUPLICATE KEY UPDATE
+       color_code = COALESCE(NULLIF(VALUES(color_code), ''), color_code)`,
+    [normalizedName, colorCode || null]
+  );
+
+  const [rows] = await db.execute(
+    `SELECT id, color_name, color_code
+     FROM colors
+     WHERE LOWER(color_name) = LOWER(?)
+     LIMIT 1`,
+    [normalizedName]
+  );
+
+  return rows[0] || null;
+}
+
+async function replaceProductColors(db, productId, colorsInput, colorHexInput) {
+  const colorDetails = buildColorDetails(colorsInput, colorHexInput);
+
+  await db.execute('DELETE FROM product_colors WHERE product_id = ?', [productId]);
+
+  if (!colorDetails.length) {
+    return;
+  }
+
+  let resolvedColors = [];
+  try {
+    resolvedColors = await resolveColorCodes(colorDetails.map((color) => color.name));
+  } catch (error) {
+    console.warn('Color code resolution failed, using provided color values only:', error.message);
+  }
+
+  const resolvedMap = new Map(
+    (resolvedColors || []).map((item) => [String(item.color_name || '').trim().toLowerCase(), item])
+  );
+
+  for (const [index, color] of colorDetails.entries()) {
+    const resolved = resolvedMap.get(String(color.name || '').trim().toLowerCase()) || {};
+    const finalName = String(resolved.color_name || color.name || '').trim();
+    const finalCode = String(color.hex || resolved.color_code || '').trim() || null;
+    const masterColor = await upsertMasterColor(db, finalName, finalCode);
+
+    await db.execute(
+      `INSERT INTO product_colors (product_id, color_id, color_name, color_code, color_hex, is_primary_color, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        productId,
+        masterColor?.id || null,
+        masterColor?.color_name || finalName,
+        masterColor?.color_code || finalCode,
+        masterColor?.color_code || finalCode,
+        index === 0 ? 1 : 0,
+        index
+      ]
+    );
+  }
+}
+
+async function replaceProductAttributes(db, productId, analysisRaw = {}, fallbackMetadata = {}) {
+  const entries = buildProductAttributeEntries(analysisRaw, fallbackMetadata);
+
+  await db.execute('DELETE FROM product_attributes WHERE product_id = ?', [productId]);
+
+  if (!entries.length) {
+    return;
+  }
+
+  for (const entry of entries) {
+    await db.execute(
+      `INSERT INTO product_attributes (product_id, attribute_key, attribute_value)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE attribute_value = VALUES(attribute_value)`,
+      [productId, entry.attribute_key, entry.attribute_value]
+    );
+  }
+}
+
+async function syncProductAttributesById(productId, analysisRaw = {}, fallbackMetadata = {}) {
+  const db = getPool();
+  await replaceProductAttributes(db, productId, analysisRaw, fallbackMetadata);
+}
+
+function buildProductWithImages(product, images = [], colorDetails = [], attributes = {}) {
   const normalizedImages = normalizeImages(images);
   const primaryImage = normalizedImages.find((image) => image.is_primary_image) || normalizedImages[0] || null;
+  const normalizedColors = Array.isArray(colorDetails) ? colorDetails.filter((color) => color?.name) : [];
 
   return {
     ...product,
     image_url: primaryImage ? primaryImage.image_url : (product.image_url || null),
     primary_image_id: primaryImage ? primaryImage.id : null,
-    images: normalizedImages
+    images: normalizedImages,
+    colors: normalizedColors.map((color) => color.name),
+    color_details: normalizedColors,
+    color_hex: normalizedColors.map((color) => color.code || color.hex).filter(Boolean),
+    attributes
+  };
+}
+
+async function fetchReviewAggregatesByProductIds(productIds) {
+  if (!productIds.length) {
+    return new Map();
+  }
+
+  const db = getPool();
+  const placeholders = productIds.map(() => '?').join(',');
+
+  const [aggregateRows] = await db.query(
+    `SELECT oi.product_id,
+            ROUND(AVG(pr.overall_rating), 1) AS average_rating,
+            COUNT(pr.id) AS review_count,
+            SUM(CASE WHEN pr.overall_rating = 5 THEN 1 ELSE 0 END) AS star_5_count,
+            SUM(CASE WHEN pr.overall_rating = 4 THEN 1 ELSE 0 END) AS star_4_count,
+            SUM(CASE WHEN pr.overall_rating = 3 THEN 1 ELSE 0 END) AS star_3_count,
+            SUM(CASE WHEN pr.overall_rating = 2 THEN 1 ELSE 0 END) AS star_2_count,
+            SUM(CASE WHEN pr.overall_rating = 1 THEN 1 ELSE 0 END) AS star_1_count
+     FROM order_items oi
+     INNER JOIN product_reviews pr ON pr.order_id = oi.order_id
+     WHERE oi.product_id IN (${placeholders})
+     GROUP BY oi.product_id`,
+    productIds
+  );
+
+  const [reviewRows] = await db.query(
+    `SELECT *
+     FROM (
+       SELECT oi.product_id,
+              pr.id,
+              pr.overall_rating,
+              pr.emotion,
+              pr.review_text,
+              pr.images,
+              pr.created_at,
+              o.customer_name,
+              ROW_NUMBER() OVER (PARTITION BY oi.product_id ORDER BY pr.created_at DESC, pr.id DESC) AS row_num
+       FROM order_items oi
+       INNER JOIN product_reviews pr ON pr.order_id = oi.order_id
+       INNER JOIN orders o ON o.id = pr.order_id
+       WHERE oi.product_id IN (${placeholders})
+     ) ranked_reviews
+     WHERE row_num <= 3
+     ORDER BY product_id ASC, created_at DESC`,
+    productIds
+  );
+
+  const reviewMap = new Map();
+  for (const row of reviewRows) {
+    if (!reviewMap.has(row.product_id)) {
+      reviewMap.set(row.product_id, []);
+    }
+
+    let parsedImages = [];
+    try {
+      const value = typeof row.images === 'string' ? JSON.parse(row.images) : row.images;
+      parsedImages = Array.isArray(value) ? value : [];
+    } catch {
+      parsedImages = [];
+    }
+
+    reviewMap.get(row.product_id).push({
+      id: row.id,
+      rating: Number(row.overall_rating) || 0,
+      emotion: row.emotion || '',
+      review_text: row.review_text || '',
+      customer_name: row.customer_name || 'Verified Customer',
+      created_at: row.created_at,
+      images: parsedImages
+    });
+  }
+
+  return new Map(
+    aggregateRows.map((row) => [
+      row.product_id,
+      {
+        rating: Number(row.average_rating) || 0,
+        reviews: Number(row.review_count) || 0,
+        breakdown: {
+          5: Number(row.star_5_count) || 0,
+          4: Number(row.star_4_count) || 0,
+          3: Number(row.star_3_count) || 0,
+          2: Number(row.star_2_count) || 0,
+          1: Number(row.star_1_count) || 0
+        },
+        recentReviews: reviewMap.get(row.product_id) || []
+      }
+    ])
+  );
+}
+
+function attachReviewAggregates(product, aggregatesByProductId) {
+  const aggregate = aggregatesByProductId.get(product.id) || {
+    rating: 0,
+    reviews: 0,
+    breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+    recentReviews: []
+  };
+
+  return {
+    ...product,
+    rating: aggregate.rating,
+    reviews: aggregate.reviews,
+    review_breakdown: aggregate.breakdown,
+    recent_reviews: aggregate.recentReviews
   };
 }
 
@@ -153,7 +523,19 @@ async function buildUniqueProductSlug(db, title) {
   return `${base}-${Date.now()}`;
 }
 
-async function createProduct({ name, price, category, description, images }) {
+async function createProduct({
+  name,
+  price,
+  category,
+  description,
+  images,
+  seoTitle = '',
+  seoMetaDescription = '',
+  tags = '',
+  colors = '',
+  colorHexes = '',
+  productCategoryId = null
+}) {
   const db = getPool();
   const schema = await getProductSchemaConfig();
   let result;
@@ -164,28 +546,29 @@ async function createProduct({ name, price, category, description, images }) {
     if (schema.hasProductSlug) {
       const slug = await buildUniqueProductSlug(db, name);
       [result] = await db.execute(
-        `INSERT INTO products (title, slug, description, base_price, stock, category_id, is_active)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [name, slug, description, price, 0, categoryId, 1]
+        `INSERT INTO products (title, slug, description, seo_title, seo_meta_description, tags, base_price, stock, category_id, is_active, product_category_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, slug, description, seoTitle || null, seoMetaDescription || null, tags || null, price, 0, categoryId, 1, productCategoryId || null]
       );
     } else {
       [result] = await db.execute(
-        `INSERT INTO products (title, description, base_price, stock, category_id, is_active)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [name, description, price, 0, categoryId, 1]
+        `INSERT INTO products (title, description, seo_title, seo_meta_description, tags, base_price, stock, category_id, is_active, product_category_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, description, seoTitle || null, seoMetaDescription || null, tags || null, price, 0, categoryId, 1, productCategoryId || null]
       );
     }
   } else {
     const primaryImage = images.find((image) => image.is_primary_image) || images[0] || null;
     [result] = await db.execute(
-      `INSERT INTO products (name, price, category, description, image_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      [name, price, category || '', description, primaryImage ? primaryImage.image_url : null]
+      `INSERT INTO products (name, price, category, description, seo_title, seo_meta_description, tags, image_url, product_category_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, price, category || '', description, seoTitle || null, seoMetaDescription || null, tags || null, primaryImage ? primaryImage.image_url : null, productCategoryId || null]
     );
   }
 
   const productId = result.insertId;
   await insertProductImages(db, productId, images, schema);
+  await replaceProductColors(db, productId, colors, colorHexes);
   return fetchProductById(productId);
 }
 
@@ -199,6 +582,10 @@ async function fetchAllProducts() {
               p.base_price AS price,
               COALESCE(c.name, '') AS category,
               p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
               NULL AS image_url
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
@@ -208,14 +595,33 @@ async function fetchAllProducts() {
               p.price,
               p.category,
               p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
               p.image_url
        FROM products p
        ORDER BY p.id DESC`;
 
   const [rows] = await db.query(query);
 
-  const imagesByProductId = await fetchImagesByProductIds(rows.map((row) => row.id));
-  return rows.map((row) => buildProductWithImages(row, imagesByProductId.get(row.id) || []));
+  const productIds = rows.map((row) => row.id);
+  const imagesByProductId = await fetchImagesByProductIds(productIds);
+  const colorsByProductId = await fetchColorsByProductIds(productIds);
+  const attributesByProductId = await fetchAttributesByProductIds(productIds);
+  const reviewAggregatesByProductId = await fetchReviewAggregatesByProductIds(productIds);
+
+  return rows.map((row) =>
+    attachReviewAggregates(
+      buildProductWithImages(
+        row,
+        imagesByProductId.get(row.id) || [],
+        colorsByProductId.get(row.id) || [],
+        attributesByProductId.get(row.id) || {}
+      ),
+      reviewAggregatesByProductId
+    )
+  );
 }
 
 async function fetchFeaturedProducts(limit = 8) {
@@ -229,6 +635,9 @@ async function fetchFeaturedProducts(limit = 8) {
               p.base_price AS price,
               COALESCE(c.name, '') AS category,
               p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
               (
                 SELECT pi.image_url
                 FROM product_images pi
@@ -245,6 +654,9 @@ async function fetchFeaturedProducts(limit = 8) {
               p.price,
               p.category,
               p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
               COALESCE(
                 (
                   SELECT pi.image_url
@@ -262,14 +674,28 @@ async function fetchFeaturedProducts(limit = 8) {
   const queryWithLimit = `${query.replace('LIMIT ?', `LIMIT ${safeLimit}`)}`;
   const [rows] = await db.query(queryWithLimit);
 
-  return rows.map((row) => ({
-    ...row,
-    image_url: row.image_url || null,
-    primary_image_id: null,
-    images: row.image_url
-      ? [{ image_url: row.image_url, is_primary_image: true }]
-      : []
-  }));
+  const productIds = rows.map((row) => row.id);
+  const colorsByProductId = await fetchColorsByProductIds(productIds);
+  const attributesByProductId = await fetchAttributesByProductIds(productIds);
+  const reviewAggregatesByProductId = await fetchReviewAggregatesByProductIds(productIds);
+
+  return rows.map((row) =>
+    attachReviewAggregates(
+      {
+        ...row,
+        image_url: row.image_url || null,
+        primary_image_id: null,
+        images: row.image_url
+          ? [{ image_url: row.image_url, is_primary_image: true }]
+          : [],
+        colors: (colorsByProductId.get(row.id) || []).map((color) => color.name),
+        color_details: colorsByProductId.get(row.id) || [],
+        color_hex: (colorsByProductId.get(row.id) || []).map((color) => color.code || color.hex).filter(Boolean),
+        attributes: attributesByProductId.get(row.id) || {}
+      },
+      reviewAggregatesByProductId
+    )
+  );
 }
 
 async function fetchProductById(id) {
@@ -282,6 +708,10 @@ async function fetchProductById(id) {
               p.base_price AS price,
               COALESCE(c.name, '') AS category,
               p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
               NULL AS image_url
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
@@ -291,6 +721,10 @@ async function fetchProductById(id) {
               p.price,
               p.category,
               p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
               p.image_url
        FROM products p
        WHERE p.id = ?`;
@@ -303,12 +737,30 @@ async function fetchProductById(id) {
   }
 
   const imagesByProductId = await fetchImagesByProductIds([id]);
-  return buildProductWithImages(product, imagesByProductId.get(id) || []);
+  const colorsByProductId = await fetchColorsByProductIds([id]);
+  const attributesByProductId = await fetchAttributesByProductIds([id]);
+  const reviewAggregatesByProductId = await fetchReviewAggregatesByProductIds([id]);
+
+  return attachReviewAggregates(
+    buildProductWithImages(
+      product,
+      imagesByProductId.get(id) || [],
+      colorsByProductId.get(id) || [],
+      attributesByProductId.get(id) || {}
+    ),
+    reviewAggregatesByProductId
+  );
 }
 
 async function updateProductById(id, updates, replacementImages = null) {
   const db = getPool();
   const schema = await getProductSchemaConfig();
+  const hasColorUpdate = Object.prototype.hasOwnProperty.call(updates, 'colors') || Object.prototype.hasOwnProperty.call(updates, 'color_hex');
+  const nextColors = updates.colors;
+  const nextColorHexes = updates.color_hex;
+
+  delete updates.colors;
+  delete updates.color_hex;
 
   if (schema.productMode === 'normalized') {
     if (updates.name !== undefined) {
@@ -343,6 +795,10 @@ async function updateProductById(id, updates, replacementImages = null) {
       const primaryImage = replacementImages.find((image) => image.is_primary_image) || replacementImages[0] || null;
       await db.execute('UPDATE products SET image_url = ? WHERE id = ?', [primaryImage ? primaryImage.image_url : null, id]);
     }
+  }
+
+  if (hasColorUpdate) {
+    await replaceProductColors(db, id, nextColors, nextColorHexes);
   }
 
   return fetchProductById(id);
@@ -381,6 +837,80 @@ async function deleteProductById(id) {
   await db.execute('DELETE FROM products WHERE id = ?', [id]);
 }
 
+async function searchProducts(searchQuery, limit = 10) {
+  const db = getPool();
+  const schema = await getProductSchemaConfig();
+  
+  const searchTerm = `%${searchQuery}%`;
+  
+  const query = schema.productMode === 'normalized'
+    ? `SELECT p.id,
+              p.title AS name,
+              p.base_price AS price,
+              COALESCE(c.name, '') AS category,
+              p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
+              NULL AS image_url
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       WHERE p.title LIKE ? 
+          OR p.description LIKE ?
+          OR c.name LIKE ?
+       ORDER BY (CASE 
+                  WHEN p.title LIKE ? THEN 0
+                  WHEN p.description LIKE ? THEN 1
+                  ELSE 2
+                END), p.id DESC
+       LIMIT ?`
+    : `SELECT p.id,
+              p.name,
+              p.price,
+              p.category,
+              p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
+              p.image_url
+       FROM products p
+       WHERE p.name LIKE ? 
+          OR p.description LIKE ?
+          OR p.category LIKE ?
+       ORDER BY (CASE 
+                  WHEN p.name LIKE ? THEN 0
+                  WHEN p.description LIKE ? THEN 1
+                  ELSE 2
+                END), p.id DESC
+       LIMIT ?`;
+
+  const params = [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, limit];
+  const [rows] = await db.query(query, params);
+
+  if (!rows.length) {
+    return [];
+  }
+
+  const productIds = rows.map((row) => row.id);
+  const imagesByProductId = await fetchImagesByProductIds(productIds);
+  const colorsByProductId = await fetchColorsByProductIds(productIds);
+  const attributesByProductId = await fetchAttributesByProductIds(productIds);
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    price: row.price,
+    category: row.category,
+    description: row.description,
+    image_url: row.image_url,
+    images: imagesByProductId.get(row.id) || [],
+    color_details: colorsByProductId.get(row.id) || [],
+    attributes: attributesByProductId.get(row.id) || {}
+  }));
+}
+
 module.exports = {
   createProduct,
   fetchAllProducts,
@@ -388,5 +918,7 @@ module.exports = {
   fetchProductById,
   updateProductById,
   setPrimaryImage,
-  deleteProductById
+  deleteProductById,
+  syncProductAttributesById,
+  searchProducts
 };

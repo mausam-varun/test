@@ -12,7 +12,7 @@
  * 6. Copy the Client ID and paste below
  */
 
-const LOCAL_API_ORIGIN = 'http://localhost:5001';
+const LOCAL_API_ORIGIN = 'http://localhost:5002';
 
 function resolveApiOrigin(): string {
   if (typeof window === 'undefined') {
@@ -42,8 +42,15 @@ export const APP_CONFIG = {
 export const API_ENDPOINTS = {
   products: `${APP_CONFIG.API_URL}/products`,
   slider: `${APP_CONFIG.API_URL}/slider`,
+  categories: `${APP_CONFIG.API_URL}/categories`,
+  productCategories: `${APP_CONFIG.API_URL}/product-categories`,
   orders: `${APP_CONFIG.API_URL}/orders`,
+  reviews: `${APP_CONFIG.API_URL}/reviews`,
+  pendingReview: `${APP_CONFIG.API_URL}/reviews/pending`,
+  reviewUploads: `${APP_CONFIG.API_URL}/reviews/uploads`,
+  homeSections: `${APP_CONFIG.API_URL}/home-sections`,
   orderTracking: (orderNumber: string) => `${APP_CONFIG.API_URL}/orders/${encodeURIComponent(orderNumber)}/tracking`,
+  orderRatingEligibility: (orderId: number | string) => `${APP_CONFIG.API_URL}/orders/${encodeURIComponent(String(orderId))}/rating-eligibility`,
   adminAiQueue: `${APP_CONFIG.API_URL}/admin/ai-queue`
 };
 

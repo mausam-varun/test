@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '../config/app-config';
 
@@ -49,6 +49,24 @@ export interface PlacedOrder {
 export interface PlaceOrderResponse {
   message: string;
   order: PlacedOrder;
+  razorpay?: {
+    razorpay_order_id: string;
+    amount: number;
+    currency: string;
+    key_id: string;
+  };
+}
+
+export interface VerifyPaymentPayload {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export interface VerifyPaymentResponse {
+  message: string;
+  order_number: string;
+  payment_status: string;
 }
 
 export interface OrderTrackingResponse {
@@ -74,10 +92,25 @@ export class OrderService {
   constructor(private readonly http: HttpClient) {}
 
   placeOrder(payload: PlaceOrderPayload): Observable<PlaceOrderResponse> {
-    return this.http.post<PlaceOrderResponse>(this.apiBaseUrl, payload);
+    return this.http.post<PlaceOrderResponse>(this.apiBaseUrl, payload, this.getAuthOptions());
+  }
+
+  verifyPayment(payload: VerifyPaymentPayload): Observable<VerifyPaymentResponse> {
+    return this.http.post<VerifyPaymentResponse>(`${this.apiBaseUrl}/verify-payment`, payload, this.getAuthOptions());
   }
 
   getOrderTracking(orderNumber: string): Observable<OrderTrackingResponse> {
     return this.http.get<OrderTrackingResponse>(API_ENDPOINTS.orderTracking(orderNumber));
+  }
+
+  private getAuthOptions(): { headers?: HttpHeaders } {
+    try {
+      const token = localStorage.getItem('user_token') || '';
+      return token
+        ? { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+        : {};
+    } catch {
+      return {};
+    }
   }
 }

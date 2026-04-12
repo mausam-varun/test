@@ -1,0 +1,122 @@
+<section class="home-category-control">
+  <header class="page-head">
+    <div>
+      <h2>Home Category Control</h2>
+      <p>Manage which category cards appear on the homepage and add or remove their images.</p>
+    </div>
+    <button type="button" class="primary" (click)="saveSettings()" [disabled]="isSaving || isLoading">
+      Save Changes
+    </button>
+  </header>
+
+  <div class="messages">
+    <p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </div>
+
+  <article class="card controls-card">
+    <div class="display-count-row">
+      <label for="homeCategoryDisplayCount">
+        Visible category cards on homepage
+        <select id="homeCategoryDisplayCount" [(ngModel)]="displayCount">
+          <option *ngFor="let option of displayCountOptions" [ngValue]="option">{{ option }}</option>
+        </select>
+      </label>
+
+      <button type="button" (click)="addCategory()" [disabled]="isSaving">Add Category Card</button>
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>Category Cards</h3>
+
+    <p *ngIf="isLoading" class="muted">Loading home categories...</p>
+
+    <div class="category-list" *ngIf="!isLoading && categories.length; else emptyState">
+      <article class="category-item" *ngFor="let category of categories; let i = index">
+        <div class="image-panel">
+          <img [src]="getCategoryImage(category)" [alt]="category.name || 'Category image'">
+          <p class="image-note">
+            {{ category.localImageFileName || (category.image_url ? 'Custom image set' : 'Using fallback image') }}
+          </p>
+
+          <label class="file-picker">
+            <span>Select image</span>
+            <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onImageSelected(category, $event)">
+          </label>
+
+          <div class="image-actions">
+            <button
+              type="button"
+              (click)="uploadImage(category)"
+              [disabled]="isSaving || category.isUploadingImage || !category.localImageFile || !category.id"
+            >
+              Upload Image
+            </button>
+            <button
+              type="button"
+              class="secondary"
+              (click)="clearSelectedUpload(category)"
+              [disabled]="isSaving || category.isUploadingImage || !category.localImageFile"
+            >
+              Clear Selected
+            </button>
+            <button
+              type="button"
+              class="danger"
+              (click)="removeImage(category)"
+              [disabled]="isSaving || category.isUploadingImage"
+            >
+              Remove Image
+            </button>
+          </div>
+
+          <p class="hint">Tip: upload a file for saved categories, or paste an image URL and save changes.</p>
+        </div>
+
+        <div class="item-fields">
+          <div class="item-head">
+            <div>
+              <h4>Card {{ i + 1 }}</h4>
+              <p>{{ category.product_count || 0 }} linked products</p>
+            </div>
+
+            <div class="reorder-actions">
+              <button type="button" class="icon-btn" (click)="moveCategory(i, -1)" [disabled]="i === 0 || isSaving">↑</button>
+              <button type="button" class="icon-btn" (click)="moveCategory(i, 1)" [disabled]="i === categories.length - 1 || isSaving">↓</button>
+            </div>
+          </div>
+
+          <label>
+            Category Name
+            <input type="text" [(ngModel)]="category.name" placeholder="e.g. Bangles">
+          </label>
+
+          <label>
+            Description
+            <textarea rows="3" [(ngModel)]="category.description" placeholder="Short homepage description"></textarea>
+          </label>
+
+          <label>
+            Image URL
+            <input type="url" [(ngModel)]="category.image_url" placeholder="https://...">
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="category.is_home_visible">
+            Show this category on the homepage
+          </label>
+
+          <div class="meta-row">
+            <span class="badge" *ngIf="!category.id">New category</span>
+            <span class="badge subtle" *ngIf="category.id">Category ID #{{ category.id }}</span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #emptyState>
+      <p class="muted">No category cards found yet. Add one to get started.</p>
+    </ng-template>
+  </article>
+</section>

@@ -34,8 +34,8 @@
       <div class="collapse-icon">–</div>
       <ul class="category-list">
         <li *ngFor="let category of categories" class="category-item">
-          <a (click)="onCategoryClick(category)" class="category-link">
-            {{ category.name }}
+          <a (click)="onCategoryClick(category)" class="category-link" [class.active]="category.selected">
+            <span class="category-name">{{ category.name }}</span>
             <span class="category-count">{{ category.count }}</span>
           </a>
         </li>
@@ -46,23 +46,124 @@
     <div class="filter-section">
       <h3 class="filter-title">Price Range</h3>
       <div class="price-slider-container">
-        <input 
-          type="range" 
-          [min]="minPrice" 
-          [max]="maxPrice" 
-          [(ngModel)]="priceRange[0]"
-          (change)="onPriceRangeChange()"
-          class="price-slider">
-        <input 
-          type="range" 
-          [min]="minPrice" 
-          [max]="maxPrice" 
-          [(ngModel)]="priceRange[1]"
-          (change)="onPriceRangeChange()"
-          class="price-slider">
+        <div class="price-slider-labels">
+          <div>
+            <span>Min</span>
+            <strong>{{ priceRange[0] | displayCurrency:0 }}</strong>
+          </div>
+          <div>
+            <span>Max</span>
+            <strong>{{ priceRange[1] | displayCurrency:0 }}</strong>
+          </div>
+        </div>
+
+        <div class="price-range-stack">
+          <div class="price-range-track"></div>
+          <div
+            class="price-range-fill"
+            [style.left.%]="priceRangeStartPercent"
+            [style.width.%]="priceRangeFillWidthPercent">
+          </div>
+
+          <input
+            type="range"
+            [min]="minPrice"
+            [max]="maxPrice"
+            [(ngModel)]="priceRange[0]"
+            (input)="onPriceRangeChange('min')"
+            (change)="onPriceRangeChange('min')"
+            class="price-slider price-slider--min"
+            aria-label="Minimum price">
+
+          <input
+            type="range"
+            [min]="minPrice"
+            [max]="maxPrice"
+            [(ngModel)]="priceRange[1]"
+            (input)="onPriceRangeChange('max')"
+            (change)="onPriceRangeChange('max')"
+            class="price-slider price-slider--max"
+            aria-label="Maximum price">
+        </div>
       </div>
       <div class="price-display">
+        <span class="price-display-chip">Selected Range</span>
         {{ priceRange[0] | displayCurrency:0 }} - {{ priceRange[1] | displayCurrency:0 }}
+      </div>
+    </div>
+
+    <!-- Primary Color -->
+    <div class="filter-section" *ngIf="primaryColors.length">
+      <h3 class="filter-title">Primary Color</h3>
+      <div class="collapse-icon">–</div>
+      <div class="material-list">
+        <label *ngFor="let color of primaryColors" class="material-checkbox">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="color.checked"
+            (change)="onAttributeFilterChange()">
+          <span>{{ color.name }} ({{ color.count }})</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Secondary Color -->
+    <div class="filter-section" *ngIf="secondaryColors.length">
+      <h3 class="filter-title">Secondary Color</h3>
+      <div class="collapse-icon">–</div>
+      <div class="material-list">
+        <label *ngFor="let color of secondaryColors" class="material-checkbox">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="color.checked"
+            (change)="onAttributeFilterChange()">
+          <span>{{ color.name }} ({{ color.count }})</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Style -->
+    <div class="filter-section" *ngIf="styleFilters.length">
+      <h3 class="filter-title">Style</h3>
+      <div class="collapse-icon">–</div>
+      <div class="material-list">
+        <label *ngFor="let style of styleFilters" class="material-checkbox">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="style.checked"
+            (change)="onAttributeFilterChange()">
+          <span>{{ style.name }} ({{ style.count }})</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Pattern -->
+    <div class="filter-section" *ngIf="patternFilters.length">
+      <h3 class="filter-title">Pattern</h3>
+      <div class="collapse-icon">–</div>
+      <div class="material-list">
+        <label *ngFor="let pattern of patternFilters" class="material-checkbox">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="pattern.checked"
+            (change)="onAttributeFilterChange()">
+          <span>{{ pattern.name }} ({{ pattern.count }})</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Craft Type -->
+    <div class="filter-section" *ngIf="craftTypeFilters.length">
+      <h3 class="filter-title">Craft Type</h3>
+      <div class="collapse-icon">–</div>
+      <div class="material-list">
+        <label *ngFor="let craft of craftTypeFilters" class="material-checkbox">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="craft.checked"
+            (change)="onAttributeFilterChange()">
+          <span>{{ craft.name }} ({{ craft.count }})</span>
+        </label>
       </div>
     </div>
 
@@ -104,6 +205,18 @@
         <p>No products match the current filters.</p>
       </div>
 
+      <!-- Sort By -->
+      <div class="sort-section-top" *ngIf="!isLoading && !errorMessage && filteredProducts.length">
+        <label for="sort-top">Sort by</label>
+        <select id="sort-top" class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange(sortBy)">
+          <option value="popularity">Popularity</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="newest">Newest</option>
+          <option value="rating">Rating</option>
+        </select>
+      </div>
+
       <div class="products-grid">
         <div *ngFor="let product of getPaginatedProducts(); trackBy: trackByProductId" class="product-card">
           <a class="product-image-link" [routerLink]="['/product', product.id]">
@@ -124,8 +237,6 @@
           <p class="product-price">{{ product.price | displayCurrency:2 }}</p>
 
           <div class="product-actions">
-            <a class="btn-view-details" [routerLink]="['/product', product.id]">View Details</a>
-
             <button class="btn-add-to-cart" *ngIf="!recentlyAddedProductIds.has(product.id)" (click)="addToCart(product)">
               Add to Cart →
             </button>
@@ -178,18 +289,6 @@
           [disabled]="currentPage === totalPages">
           →
         </button>
-      </div>
-
-      <!-- Sort By -->
-      <div class="sort-section" *ngIf="!isLoading && !errorMessage && filteredProducts.length">
-        <label for="sort">Sort by</label>
-        <select id="sort" class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange(sortBy)">
-          <option value="popularity">Popularity</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="newest">Newest</option>
-          <option value="rating">Rating</option>
-        </select>
       </div>
     </div>
   </main>

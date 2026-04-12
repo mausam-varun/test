@@ -11,3 +11,5 @@ sentence-transformers==3.4.1
 torch==2.6.0
 transformers==4.50.3
 python-multipart==0.0.20
+webcolors==24.11.1
+rembg==2.0.57

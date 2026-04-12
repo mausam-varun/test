@@ -4,6 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Legacy colors (backward compatibility) */
   --primary: #1f3a5f;
   --accent: #c9a34e;
   --bg: #f5f1e9;
@@ -15,6 +16,26 @@
   --radius: 12px;
   --button-radius: 8px;
   --soft-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  /* Dynamic Theme Colors (customizable by admin) */
+  --theme-primary-gradient-start: #D946EF;
+  --theme-primary-gradient-end: #9333EA;
+  --theme-primary-purple: #9333EA;
+  --theme-deep-purple: #7E22CE;
+  --theme-pink: #D946EF;
+  --theme-gold: #C9A45C;
+  --theme-text-main: #111827;
+  --theme-text-secondary: #1F2937;
+  --theme-text-body: #6B7280;
+  --theme-text-light: #9CA3AF;
+  --theme-border-light: #E5E7EB;
+  --theme-bg-light: #F9FAFB;
+  
+  /* Button Colors */
+  --button-add-to-cart: var(--theme-primary-purple);
+  --button-add-to-cart-hover: var(--theme-deep-purple);
+  --button-wishlist-hover: #fecaca;
+  --menu-hover: var(--theme-bg-light);
 }
 
 /* Global Resets */
@@ -26,25 +47,37 @@
 
 html, body {
   font-family: 'Poppins', 'Segoe UI', sans-serif;
-  color: var(--body);
+  font-size: 15px;
+  font-weight: 400;
+  color: #777777;
   background-color: var(--bg);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', Georgia, serif;
-  color: var(--heading);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  color: #222222;
+  letter-spacing: 0.5px;
 }
 
 /* Remove default link styling */
 a {
-  color: inherit;
+  color: #000000;
   text-decoration: none;
+  transition: 0.3s ease;
+
+  &:hover {
+    color: #E8174B;
+  }
 }
 
 /* Default button styling override */
 button {
   font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   cursor: pointer;
 }
 

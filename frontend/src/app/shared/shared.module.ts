@@ -6,6 +6,7 @@ import { NgxIntlTelInputModule } from 'ngx-intl-tel-input';
 import { AuthSignupPopupComponent } from './auth-signup-popup/auth-signup-popup.component';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
+import { RatingPopupComponent } from './rating-popup/rating-popup.component';
 import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
 
 @NgModule({
@@ -13,6 +14,7 @@ import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
     HeaderComponent,
     FooterComponent,
     AuthSignupPopupComponent,
+    RatingPopupComponent,
     DisplayCurrencyPipe
   ],
   imports: [
@@ -25,6 +27,7 @@ import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
     HeaderComponent,
     FooterComponent,
     AuthSignupPopupComponent,
+    RatingPopupComponent,
     DisplayCurrencyPipe
   ]
 })

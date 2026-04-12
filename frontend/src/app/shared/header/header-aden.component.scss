@@ -1,0 +1,422 @@
+// ========== VARIABLES ==========
+$color-primary: #E8174B;
+$color-dark: #2C2C2C;
+$color-text: #333;
+$color-text-light: #666;
+$color-border: #E0E0E0;
+$color-white: #FFFFFF;
+$color-light: #F5F5F5;
+
+// ========== TOP NAVBAR ==========
+
+.navbar-top {
+  background: $color-white;
+  border-bottom: 1px solid $color-border;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-top .navbar-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+// Logo
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+
+  .logo-img {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+  }
+}
+
+// Search Bar
+.navbar-search {
+  display: flex;
+  gap: 0;
+  max-width: 500px;
+
+  .search-input {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border: 1px solid $color-border;
+    border-right: none;
+    font-size: 0.9rem;
+    color: $color-text;
+    background: $color-light;
+
+    &::placeholder {
+      color: #999;
+    }
+
+    &:focus {
+      outline: none;
+      background: $color-white;
+      border-color: $color-primary;
+    }
+  }
+
+  .search-btn {
+    padding: 0.85rem 1.5rem;
+    background: $color-primary;
+    color: $color-white;
+    border: 1px solid $color-primary;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background: #D1124A;
+      border-color: #D1124A;
+      transform: scale(1.01);
+    }
+  }
+}
+
+// Top Icons
+.navbar-icons {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+
+  .icon-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: $color-text;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 1.8;
+    }
+
+    .badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: $color-primary;
+      color: $color-white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border: 2px solid $color-white;
+    }
+
+    &:hover {
+      color: $color-primary;
+      background: $color-light;
+    }
+  }
+}
+
+// ========== MENU NAVIGATION ==========
+
+.navbar-menu {
+  background: $color-white;
+  border-bottom: 1px solid $color-border;
+  padding: 0 2rem;
+  position: sticky;
+  top: 55px;
+  z-index: 999;
+}
+
+.navbar-menu .navbar-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  gap: 2rem;
+}
+
+// Nav Menu Items
+.nav-menu-items {
+  display: flex;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  .nav-item {
+    position: relative;
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1.1rem 1.1rem;
+      color: $color-text;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+
+      &:hover {
+        color: $color-primary;
+        border-bottom-color: $color-primary;
+      }
+
+      &.active {
+        color: $color-primary;
+        border-bottom-color: $color-primary;
+        font-weight: 600;
+      }
+
+      .badge {
+        background: #22C55E;
+        color: $color-white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .shop-badge {
+        background: #22C55E;
+      }
+    }
+
+    &.dropdown .nav-link {
+      position: relative;
+
+      &::after {
+        content: '▾';
+        font-size: 0.7rem;
+        margin-left: 0.25rem;
+      }
+    }
+  }
+}
+
+// Right Navigation
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+
+  .hotline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: $color-text;
+    text-decoration: none;
+
+    .phone-icon {
+      width: 24px;
+      height: 24px;
+      stroke: $color-primary;
+      stroke-width: 2;
+    }
+
+    .hotline-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+
+      .label {
+        font-size: 0.75rem;
+        color: $color-text-light;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      .number {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: $color-dark;
+      }
+    }
+  }
+}
+
+// ========== RESPONSIVE ==========
+
+@media (max-width: 1024px) {
+  .navbar-search {
+    max-width: 300px;
+  }
+
+  .navbar-menu .navbar-container {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-top .navbar-container {
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+
+  .navbar-search {
+    grid-column: 1 / -1;
+    order: 3;
+    max-width: 100%;
+
+    .search-input {
+      font-size: 0.85rem;
+    }
+
+    .search-btn {
+      font-size: 0.8rem;
+      padding: 0.75rem 1rem;
+
+      svg {
+        display: none;
+      }
+    }
+  }
+
+  .navbar-icons {
+    gap: 1rem;
+
+    .icon-link {
+      width: 28px;
+      height: 28px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .navbar-menu {
+    padding: 0 1rem;
+  }
+
+  .nav-menu-items {
+    flex-wrap: wrap;
+    gap: 0;
+
+    .nav-item .nav-link {
+      padding: 0.9rem 0.8rem;
+      font-size: 0.85rem;
+    }
+  }
+
+  .nav-right {
+    width: 100%;
+    order: 4;
+    margin-left: 0;
+
+    .hotline {
+      width: 100%;
+
+      .hotline-info {
+        flex: 1;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-top {
+    padding: 0.75rem 1rem;
+  }
+
+  .navbar-top .navbar-container {
+    grid-template-columns: auto 1fr;
+  }
+
+  .navbar-search {
+    grid-column: 1 / -1;
+
+    .search-input,
+    .search-btn {
+      padding: 0.65rem 0.75rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  .navbar-logo .logo-img {
+    height: 35px;
+  }
+
+  .navbar-icons {
+    gap: 0.75rem;
+
+    .icon-link {
+      width: 24px;
+      height: 24px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .badge {
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+      }
+    }
+  }
+
+  .navbar-menu {
+    padding: 0 0.75rem;
+  }
+
+  .nav-menu-items {
+    .nav-item .nav-link {
+      padding: 0.75rem 0.55rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  .nav-right {
+    .hotline {
+      flex-direction: column;
+      gap: 0.3rem;
+
+      .phone-icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      .hotline-info {
+        .number {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+}

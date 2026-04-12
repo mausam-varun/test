@@ -86,7 +86,7 @@
           <!-- Name + description -->
           <td class="col-name">
             <span class="product-name">{{ product.name }}</span>
-            <span class="product-desc" *ngIf="product.description">{{ product.description }}</span>
+            <div class="product-desc" *ngIf="product.description" [innerHTML]="product.description"></div>
           </td>
 
           <!-- Category -->
@@ -131,6 +131,7 @@
           <!-- Actions -->
           <td class="col-actions">
             <ng-container *ngIf="confirmDeleteId !== product.id">
+              <button class="btn-edit" (click)="goToEditProduct(product.id)">Edit</button>
               <button class="btn-delete" (click)="requestDelete(product.id)">Delete</button>
             </ng-container>
             <ng-container *ngIf="confirmDeleteId === product.id">

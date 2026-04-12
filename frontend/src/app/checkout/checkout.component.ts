@@ -125,6 +125,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       }))
     }).subscribe({
       next: (response) => {
+        if (response.razorpay) {
+          this.openRazorpayCheckout(response);
+          return;
+        }
+
         this.isSubmitting = false;
         this.submitSuccessMessage = response.message || 'Order placed successfully.';
         this.placedOrderNumber = response.order?.order_number || '';
@@ -136,6 +141,60 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.submitErrorMessage = error?.error?.message || 'Failed to place order. Please try again.';
       }
     });
+  }
+
+  private openRazorpayCheckout(response: any): void {
+    const razorpay = response.razorpay;
+    const order = response.order;
+
+    const options: any = {
+      key: razorpay.key_id,
+      amount: razorpay.amount,
+      currency: razorpay.currency,
+      name: 'Divara Craft',
+      description: `Order ${order.order_number}`,
+      order_id: razorpay.razorpay_order_id,
+      prefill: {
+        name: this.fullName.trim(),
+        email: String(this.authSessionService.getCurrentUser()?.email || this.email).trim(),
+        contact: this.phone.trim()
+      },
+      theme: {
+        color: '#8B5E3C'
+      },
+      handler: (paymentResponse: any) => {
+        this.orderService.verifyPayment({
+          razorpay_order_id: paymentResponse.razorpay_order_id,
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_signature: paymentResponse.razorpay_signature
+        }).subscribe({
+          next: (verifyResult) => {
+            this.isSubmitting = false;
+            this.submitSuccessMessage = verifyResult.message || 'Payment successful! Order confirmed.';
+            this.placedOrderNumber = verifyResult.order_number || order.order_number || '';
+            this.cartService.clearCart();
+            this.saveCheckoutDraft();
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.submitErrorMessage = err?.error?.message || 'Payment verification failed. Contact support.';
+          }
+        });
+      },
+      modal: {
+        ondismiss: () => {
+          this.isSubmitting = false;
+          this.submitErrorMessage = 'Payment was cancelled. Your order is saved — you can retry payment.';
+        }
+      }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.on('payment.failed', (failResponse: any) => {
+      this.isSubmitting = false;
+      this.submitErrorMessage = failResponse.error?.description || 'Payment failed. Please try again.';
+    });
+    rzp.open();
   }
 
   private getValidationError(): string | null {

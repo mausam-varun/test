@@ -1,0 +1,291 @@
+<section class="settings-page">
+
+  <!-- Page Header -->
+  <div class="settings-top-bar">
+    <div class="settings-top-left">
+      <h1>Frontend Settings</h1>
+      <p>Control which sections appear on your store homepage and customize your theme colors</p>
+    </div>
+  </div>
+
+  <!-- Feedback Messages -->
+  <p class="msg success" *ngIf="successMessage">✓ {{ successMessage }}</p>
+  <p class="msg error" *ngIf="errorMessage">✗ {{ errorMessage }}</p>
+
+  <!-- Loading State -->
+  <div class="settings-loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <span>Loading settings…</span>
+  </div>
+
+  <!-- Settings Content -->
+  <div class="settings-content" *ngIf="!isLoading">
+
+    <!-- Section 1: Visibility Controls -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h2>Homepage Sections Visibility</h2>
+        <p class="card-description">Toggle sections on or off to control what appears on your storefront</p>
+      </div>
+
+      <div class="card-body">
+        <div class="section-toggle-list">
+
+          <!-- Hero Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Hero / Banner</h3>
+              <p class="section-description">Large banner with promotional slides and featured images</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.hero" (change)="toggleSection('hero')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- AI Match Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">AI Bangles Match</h3>
+              <p class="section-description">Image upload tool to find matching bangles using AI</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.aiMatch" (change)="toggleSection('aiMatch')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Categories Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Shop by Category</h3>
+              <p class="section-description">Display product category cards and quick filters</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.categories" (change)="toggleSection('categories')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Featured Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Featured Products</h3>
+              <p class="section-description">Showcase your best-selling or handpicked products</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.featured" (change)="toggleSection('featured')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Testimonials Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Testimonials / Reviews</h3>
+              <p class="section-description">Customer reviews and testimonials carousel</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.testimonials" (change)="toggleSection('testimonials')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Newsletter Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Newsletter Signup</h3>
+              <p class="section-description">Email subscription form and newsletter promotion</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.newsletter" (change)="toggleSection('newsletter')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Theme Colors -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h2>Theme Colors</h2>
+        <p class="card-description">Customize your brand colors across the store</p>
+      </div>
+
+      <div class="card-body">
+        <div class="color-grid">
+
+          <!-- Primary Color -->
+          <div class="color-picker-item">
+            <label for="primary-color" class="color-label">
+              <span class="label-text">Primary Color</span>
+              <small>Used for primary actions and accents</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="primary-color"
+                type="color"
+                [(ngModel)]="theme.primaryColor"
+                (ngModelChange)="onThemeColorChange('primaryColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.primaryColor }}</span>
+            </div>
+          </div>
+
+          <!-- Secondary Color -->
+          <div class="color-picker-item">
+            <label for="secondary-color" class="color-label">
+              <span class="label-text">Secondary Color</span>
+              <small>Used for text, borders, and backgrounds</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="secondary-color"
+                type="color"
+                [(ngModel)]="theme.secondaryColor"
+                (ngModelChange)="onThemeColorChange('secondaryColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.secondaryColor }}</span>
+            </div>
+          </div>
+
+          <!-- Accent Color -->
+          <div class="color-picker-item">
+            <label for="accent-color" class="color-label">
+              <span class="label-text">Accent Color</span>
+              <small>Used for highlights and special elements</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="accent-color"
+                type="color"
+                [(ngModel)]="theme.accentColor"
+                (ngModelChange)="onThemeColorChange('accentColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.accentColor }}</span>
+            </div>
+          </div>
+
+          <!-- Add to Cart Button Color -->
+          <div class="color-picker-item">
+            <label for="add-to-cart-color" class="color-label">
+              <span class="label-text">Add to Cart Button</span>
+              <small>Button background color</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="add-to-cart-color"
+                type="color"
+                [(ngModel)]="theme.addToCartButtonColor"
+                (ngModelChange)="onThemeColorChange('addToCartButtonColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.addToCartButtonColor }}</span>
+            </div>
+          </div>
+
+          <!-- Add to Cart Button Hover Color -->
+          <div class="color-picker-item">
+            <label for="add-to-cart-hover-color" class="color-label">
+              <span class="label-text">Add to Cart Hover</span>
+              <small>Button hover state color</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="add-to-cart-hover-color"
+                type="color"
+                [(ngModel)]="theme.addToCartButtonHoverColor"
+                (ngModelChange)="onThemeColorChange('addToCartButtonHoverColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.addToCartButtonHoverColor }}</span>
+            </div>
+          </div>
+
+          <!-- Wishlist Button Hover Color -->
+          <div class="color-picker-item">
+            <label for="wishlist-hover-color" class="color-label">
+              <span class="label-text">Wishlist Button Hover</span>
+              <small>Wishlist button hover state color</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="wishlist-hover-color"
+                type="color"
+                [(ngModel)]="theme.wishlistButtonHoverColor"
+                (ngModelChange)="onThemeColorChange('wishlistButtonHoverColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.wishlistButtonHoverColor }}</span>
+            </div>
+          </div>
+
+          <!-- Header Menu Hover Color -->
+          <div class="color-picker-item">
+            <label for="header-hover-color" class="color-label">
+              <span class="label-text">Header Menu Hover</span>
+              <small>Navigation menu hover state color</small>
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                id="header-hover-color"
+                type="color"
+                [(ngModel)]="theme.headerMenuHoverColor"
+                (ngModelChange)="onThemeColorChange('headerMenuHoverColor')"
+                class="color-input"
+              />
+              <span class="color-value">{{ theme.headerMenuHoverColor }}</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Color Preview -->
+        <div class="color-preview">
+          <h3>Color Preview</h3>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <div class="preview-box" [style.backgroundColor]="theme.primaryColor"></div>
+              <span>Primary</span>
+            </div>
+            <div class="preview-item">
+              <div class="preview-box" [style.backgroundColor]="theme.secondaryColor"></div>
+              <span>Secondary</span>
+            </div>
+            <div class="preview-item">
+              <div class="preview-box" [style.backgroundColor]="theme.accentColor"></div>
+              <span>Accent</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="settings-actions">
+      <button
+        class="btn btn-primary"
+        (click)="saveSettings()"
+        [disabled]="isSaving"
+      >
+        <span *ngIf="!isSaving">💾 Save Settings</span>
+        <span *ngIf="isSaving">Saving...</span>
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        (click)="resetToDefaults()"
+        [disabled]="isSaving"
+      >
+        ↺ Reset to Defaults
+      </button>
+    </div>
+
+  </div>
+
+</section>

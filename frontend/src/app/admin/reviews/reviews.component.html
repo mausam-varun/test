@@ -1,0 +1,119 @@
+<section class="reviews-page">
+  <div class="reviews-header">
+    <div>
+      <h1>Customer Reviews</h1>
+      <p>Track delivered-order feedback, low ratings, and support follow-ups.</p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="loadReviews()" [disabled]="isLoading">
+      {{ isLoading ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </div>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Total reviews</span>
+      <strong>{{ summary.totalReviews }}</strong>
+    </article>
+    <article class="summary-card accent">
+      <span>Average rating</span>
+      <strong>{{ summary.averageRating | number:'1.1-1' }}/5</strong>
+    </article>
+    <article class="summary-card warning">
+      <span>Low ratings</span>
+      <strong>{{ summary.lowRatings }}</strong>
+    </article>
+    <article class="summary-card support">
+      <span>Support follow-ups</span>
+      <strong>{{ summary.supportFollowUps }}</strong>
+    </article>
+  </div>
+
+  <div class="reviews-card">
+    <div class="filters-bar">
+      <input
+        type="text"
+        placeholder="Search by order, customer, emotion, or review text"
+        [(ngModel)]="searchTerm"
+      />
+
+      <select [(ngModel)]="selectedRatingFilter" (change)="onFilterChange()">
+        <option value="all">All ratings</option>
+        <option value="5">5 stars</option>
+        <option value="4">4 stars</option>
+        <option value="3">3 stars</option>
+        <option value="2">2 stars</option>
+        <option value="1">1 star</option>
+      </select>
+
+      <label class="support-toggle">
+        <input type="checkbox" [(ngModel)]="supportOnly" (change)="onFilterChange()" />
+        <span>Support only</span>
+      </label>
+    </div>
+
+    <p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <span>Loading review insights…</span>
+    </div>
+
+    <div class="empty-state" *ngIf="!isLoading && filteredReviews.length === 0">
+      <p>No reviews found for the selected filters.</p>
+    </div>
+
+    <div class="review-list" *ngIf="!isLoading && filteredReviews.length > 0">
+      <article class="review-item" *ngFor="let review of filteredReviews">
+        <div class="review-item__top">
+          <div>
+            <h3>{{ review.order_number }}</h3>
+            <p>{{ review.customer_name }} · {{ review.customer_email }}</p>
+          </div>
+          <div class="rating-pill" [class.low]="review.overall_rating <= 2">
+            <span>{{ buildStars(review.overall_rating) }}</span>
+            <strong>{{ review.overall_rating }}/5</strong>
+          </div>
+        </div>
+
+        <div class="review-meta">
+          <span><strong>Emotion:</strong> {{ review.emotion }}</span>
+          <span><strong>Delivered:</strong> {{ formatDate(review.delivered_at) }}</span>
+          <span><strong>Reviewed:</strong> {{ formatDate(review.created_at) }}</span>
+          <span><strong>Total:</strong> {{ review.total_amount | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="detail-grid" *ngIf="review.overall_rating >= 3">
+          <span>Material: <strong>{{ review.material_quality || '—' }}/5</strong></span>
+          <span>Design: <strong>{{ review.design_rating || '—' }}/5</strong></span>
+          <span>Craftsmanship: <strong>{{ review.craftsmanship || '—' }}/5</strong></span>
+          <span>Comfort: <strong>{{ review.comfort || '—' }}/5</strong></span>
+          <span>Value: <strong>{{ review.value_for_money || '—' }}/5</strong></span>
+        </div>
+
+        <p class="review-text" *ngIf="review.review_text">{{ review.review_text }}</p>
+
+        <div class="image-grid" *ngIf="review.images.length">
+          <a *ngFor="let image of review.images" [href]="image" target="_blank" rel="noopener">
+            <img [src]="image" alt="Customer review upload" />
+          </a>
+        </div>
+
+        <div class="review-actions">
+          <span class="support-badge" [class.active]="review.support_follow_up_required">
+            {{ review.support_follow_up_required ? 'Needs support follow-up' : 'Follow-up resolved' }}
+          </span>
+
+          <button
+            type="button"
+            class="btn-support"
+            [class.resolve]="review.support_follow_up_required"
+            (click)="toggleSupport(review)"
+            [disabled]="updatingReviewId === review.id">
+            {{ updatingReviewId === review.id ? 'Updating…' : (review.support_follow_up_required ? 'Mark resolved' : 'Send to support') }}
+          </button>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

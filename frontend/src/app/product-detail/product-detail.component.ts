@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CartService } from '../services/cart.service';
-import { ProductCatalogService, CatalogProduct, CatalogProductImage } from '../services/product-catalog.service';
+import { ProductCatalogService, CatalogProduct, CatalogProductImage, CatalogRecentReview } from '../services/product-catalog.service';
 import { WishlistService } from '../services/wishlist.service';
 
 @Component({
@@ -62,12 +62,39 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return Math.round(this.product?.rating || 0);
   }
 
+  get hasReviews(): boolean {
+    return Number(this.product?.reviews) > 0;
+  }
+
   get currentImage(): string {
     return this.selectedImageUrl || this.product?.image_url || '';
   }
 
   get isWishlisted(): boolean {
     return this.product ? this.wishlistService.isInWishlist(this.product.id) : false;
+  }
+
+  get recentReviews(): CatalogRecentReview[] {
+    return this.product?.recent_reviews || [];
+  }
+
+  get reviewBreakdownEntries(): Array<{ stars: number; count: number; percent: number }> {
+    const totalReviews = Math.max(1, Number(this.product?.reviews) || 0);
+    const breakdown = this.product?.review_breakdown || {};
+
+    return [5, 4, 3, 2, 1].map((stars) => {
+      const count = Number(breakdown[stars]) || 0;
+      return {
+        stars,
+        count,
+        percent: this.hasReviews ? Math.round((count / totalReviews) * 100) : 0
+      };
+    });
+  }
+
+  buildReviewStars(value: number): string {
+    const safeValue = Math.max(0, Math.min(5, Math.round(Number(value) || 0)));
+    return '★'.repeat(safeValue) + '☆'.repeat(5 - safeValue);
   }
 
   selectImage(imageUrl: string): void {

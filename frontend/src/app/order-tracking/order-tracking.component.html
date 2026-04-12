@@ -1,6 +1,9 @@
 <section class="tracking-page">
   <div class="tracking-container">
     <h1 class="page-title">Track Your Order</h1>
+    <p class="page-subtitle">
+      Enter your order number to view live shipping updates, courier details, and delivery progress in one place.
+    </p>
 
     <!-- Search bar -->
     <div class="search-bar">
@@ -23,6 +26,14 @@
     <!-- Error -->
     <div class="error-box" *ngIf="errorMessage && !isLoading">
       <span class="error-icon">&#9888;</span> {{ errorMessage }}
+    </div>
+
+    <div class="empty-state" *ngIf="!tracking && !isLoading && !errorMessage">
+      <h2>Need a quick order update?</h2>
+      <p>
+        Use the order number from your confirmation email to check shipment progress, AWB details, and delivery milestones.
+      </p>
+      <span class="empty-state__hint">Example format: <strong>DC00000001</strong></span>
     </div>
 
     <!-- Tracking result -->

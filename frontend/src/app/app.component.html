@@ -1,4 +1,12 @@
 <app-header *ngIf="!isAdminRoute"></app-header>
 <router-outlet></router-outlet>
 <app-auth-signup-popup *ngIf="!isAdminRoute"></app-auth-signup-popup>
+<app-rating-popup *ngIf="!isAdminRoute"></app-rating-popup>
+<button
+  *ngIf="showRatingTestButton && !isAdminRoute"
+  type="button"
+  class="dev-rating-trigger"
+  (click)="openRatingTestPopup()">
+  ⭐ Test Rating Popup
+</button>
 <app-footer *ngIf="!isAdminRoute"></app-footer>

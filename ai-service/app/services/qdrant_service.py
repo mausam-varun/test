@@ -44,23 +44,37 @@ class QdrantService:
         self,
         query_vector: list[float],
         category: str = 'bangles',
-        limit: int = 20
+        limit: int = 20,
+        occasion_filters: list[str] | None = None
     ) -> list[dict]:
         if not self.client.collection_exists(collection_name=self.collection_name):
             return []
+
+        must_conditions = [
+            qmodels.FieldCondition(
+                key='category',
+                match=qmodels.MatchValue(value=category)
+            )
+        ]
+
+        normalized_occasions = [
+            str(item).strip()
+            for item in (occasion_filters or [])
+            if str(item).strip()
+        ]
+        if normalized_occasions:
+            must_conditions.append(
+                qmodels.FieldCondition(
+                    key='occasion',
+                    match=qmodels.MatchAny(any=normalized_occasions)
+                )
+            )
 
         search_result = self.client.search(
             collection_name=self.collection_name,
             query_vector=query_vector,
             limit=limit,
-            query_filter=qmodels.Filter(
-                must=[
-                    qmodels.FieldCondition(
-                        key='category',
-                        match=qmodels.MatchValue(value=category)
-                    )
-                ]
-            ),
+            query_filter=qmodels.Filter(must=must_conditions),
             with_payload=True,
             with_vectors=False
         )

@@ -266,10 +266,14 @@
   font-size: 0.77rem;
   color: #94a3b8;
   margin-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.45;
   max-width: 280px;
+  max-height: 2.2em;
+  overflow: hidden;
+}
+
+.product-desc :is(p, ul, ol) {
+  margin: 0;
 }
 
 /* Category badge */
@@ -535,6 +539,19 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.btn-edit {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #bfdbfe; }
 }
 
 .btn-delete {

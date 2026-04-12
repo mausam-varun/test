@@ -1,117 +1,227 @@
-<header class="navbar">
+<header class="navbar-top" [class.scrolled]="isScrolled">
   <div class="navbar-container">
-    <a class="logo" routerLink="/" aria-label="Divara Craft home">
-      <img src="assets/divara_final.jpg" alt="Divara Craft" class="logo-img">
+    <!-- Logo -->
+    <a class="navbar-logo" routerLink="/" aria-label="Divara Craft home">
+      <img src="assets/new_divara_logo.png" alt="Logo" class="logo-img">
     </a>
 
-    <nav class="nav-links" aria-label="Primary navigation">
-      <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-      <a class="nav-link" routerLink="/shop" routerLinkActive="active">Shop</a>
-      <a class="nav-link" routerLink="/about" routerLinkActive="active">About</a>
-      <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact</a>
-    </nav>
-
-    <div class="nav-tools">
-      <button type="button" class="account-link" title="Sign Up" (click)="openSignupPopup()" *ngIf="!isAuthenticated">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
+    <!-- Search Bar -->
+    <div class="navbar-search">
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search products..." 
+        (keyup)="onSearchInput($event)"
+        (keyup.enter)="onSearch()"
+        [(ngModel)]="searchQuery"
+        (focus)="showSearchDropdown = searchResults.length > 0 || isSearching">
+      <button class="search-btn" (click)="onSearch()" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
         </svg>
-        <span>Sign Up</span>
+        SEARCH
       </button>
 
-      <!-- Wishlist Icon -->
-      <a class="action-link wishlist" routerLink="/wishlist" aria-label="Wishlist" [class.wishlist-bump]="isWishlistBumping" (click)="onWishlistIconClick()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-        <span class="wishlist-crackers" aria-hidden="true">
-          <span
-            class="wishlist-cracker"
-            *ngFor="let particle of wishlistBurstParticles"
-            [style.--tx.px]="particle.x"
-            [style.--ty.px]="particle.y"
-            [style.--size.px]="particle.size"
-            [style.animationDelay.s]="particle.delay">
-          </span>
-        </span>
-        <span class="wishlist-count" *ngIf="wishlistCount > 0" [class.wishlist-count-bump]="isWishlistBumping">{{ wishlistCount }}</span>
-      </a>
+      <!-- Search Results Dropdown -->
+      <div class="search-dropdown" *ngIf="showSearchDropdown && (searchResults.length > 0 || isSearching)">
+        <div class="search-dropdown-loader" *ngIf="isSearching">
+          <div class="spinner"></div>
+          <span>Searching...</span>
+        </div>
 
-      <!-- Cart Icon -->
-      <a class="action-link cart" routerLink="/checkout" aria-label="Cart" [class.cart-bump]="isCartBumping">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-          <circle cx="9" cy="21" r="1"></circle>
-          <circle cx="20" cy="21" r="1"></circle>
-          <path d="M1 1h4l2.68 13.39A2 2 0 0 0 9.63 16h9.72a2 2 0 0 0 1.95-1.61L23 6H6"></path>
-        </svg>
-        <span class="cart-crackers" aria-hidden="true">
-          <span
-            class="cart-cracker"
-            *ngFor="let particle of cartBurstParticles"
-            [style.--tx.px]="particle.x"
-            [style.--ty.px]="particle.y"
-            [style.--size.px]="particle.size"
-            [style.animationDelay.s]="particle.delay">
-          </span>
-        </span>
-        <span class="cart-count" [class.cart-count-bump]="isCartBumping">{{ cartCount }}</span>
-      </a>
+        <div class="search-results" *ngIf="!isSearching && searchResults.length > 0">
+          <div class="search-result-item" *ngFor="let product of searchResults">
+            <!-- Product Image -->
+            <div class="result-image" (mousedown)="viewProduct(product)">
+              <img [src]="getProductImage(product)" [alt]="product.name" />
+            </div>
 
-      <!-- Profile Dropdown (Authenticated Users Only) -->
-      <div class="profile-menu" *ngIf="isAuthenticated">
-        <button
-          type="button"
-          class="profile-button"
-          title="User profile menu"
-          (click)="toggleProfileMenu($event)"
-          aria-haspopup="menu"
-          [attr.aria-expanded]="isProfileMenuOpen">
-          <div class="profile-avatar">
-            <img *ngIf="userAvatarUrl" [src]="userAvatarUrl" alt="Profile" class="profile-avatar-img">
-            <span *ngIf="!userAvatarUrl">{{ userInitials }}</span>
+            <!-- Product Info -->
+            <div class="result-info" (mousedown)="viewProduct(product)">
+              <h4 class="result-title">{{ product.name }}</h4>
+              <p class="result-price">₹{{ product.price | number: '1.0-0' }}</p>
+              <p class="result-category">{{ product.category }}</p>
+            </div>
+
+            <!-- Action Icons -->
+            <div class="result-actions">
+              <button 
+                class="action-btn cart-btn" 
+                (mousedown)="addToCart(product, $event)"
+                (click)="$event.preventDefault()"
+                aria-label="Add to cart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39A2 2 0 0 0 9.63 16h9.72a2 2 0 0 0 1.95-1.61L23 6H6"></path>
+                </svg>
+              </button>
+              <button 
+                class="action-btn wishlist-btn" 
+                (mousedown)="addToWishlist(product, $event)"
+                (click)="$event.preventDefault()"
+                aria-label="Add to wishlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </button>
+            </div>
           </div>
-        </button>
+        </div>
 
-        <!-- Dropdown Menu -->
-        <div class="profile-dropdown" *ngIf="isProfileMenuOpen" role="menu">
-          <a routerLink="/" class="dropdown-item mobile-only-menu-item" (click)="closeProfileMenu()" role="menuitem">
-            <span>Home</span>
-          </a>
-          <a routerLink="/shop" class="dropdown-item mobile-only-menu-item" (click)="closeProfileMenu()" role="menuitem">
-            <span>Shop</span>
-          </a>
-          <a routerLink="/about" class="dropdown-item mobile-only-menu-item" (click)="closeProfileMenu()" role="menuitem">
-            <span>About</span>
-          </a>
-          <a routerLink="/contact" class="dropdown-item mobile-only-menu-item" (click)="closeProfileMenu()" role="menuitem">
-            <span>Contact</span>
-          </a>
-          <button
-            type="button"
-            class="dropdown-item"
-            (click)="editProfile($event)"
-            role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-            <span>Edit Profile</span>
-          </button>
-          <button
-            type="button"
-            class="dropdown-item"
-            (click)="logout($event)"
-            role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            <span>Logout</span>
-          </button>
+        <div class="search-empty" *ngIf="!isSearching && searchQuery.trim().length > 0 && searchResults.length === 0">
+          <p>No products found for "{{ searchQuery }}"</p>
         </div>
       </div>
     </div>
+
+    <!-- Top Icons & Hamburger -->
+    <div class="navbar-right">
+      <!-- Hamburger Menu Toggle -->
+      <button class="menu-toggle-header" (click)="toggleMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="navbar-icons">
+        <a href="#" class="icon-link notification" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="badge">0</span>
+        </a>
+        <a [routerLink]="'/wishlist'" class="icon-link wishlist" aria-label="Wishlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="badge">{{ wishlistCount || 0 }}</span>
+        </a>
+        <a [routerLink]="'/checkout'" class="icon-link cart" aria-label="Cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39A2 2 0 0 0 9.63 16h9.72a2 2 0 0 0 1.95-1.61L23 6H6"></path>
+          </svg>
+          <span class="badge">{{ cartCount || 0 }}</span>
+        </a>
+      </div>
+    </div>
   </div>
+
+  <!-- Second Row Navigation -->
+  <nav class="navbar-menu" [class.active]="isMenuOpen" [class.scrolled]="isScrolled">
+    <div class="navbar-container">
+      <button class="menu-toggle" (click)="toggleMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav-menu-items" [class.open]="isMenuOpen">
+        <li class="nav-item">
+          <a class="nav-link active" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
+            Home
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link">
+            Shop
+            <span class="badge shop-badge">NEW</span>
+          </a>
+          <div class="dropdown-menu">
+            <div class="dropdown-column">
+              <h4 class="dropdown-title">SHOP LAYOUT</h4>
+              <ul class="dropdown-list">
+                <li><a href="/shop?layout=left" class="dropdown-link">Shop Left Sidebar</a></li>
+                <li><a href="/shop?layout=right" class="dropdown-link">Shop Right Sidebar</a></li>
+                <li><a href="/shop?layout=full" class="dropdown-link">Shop Full Width</a></li>
+                <li><a href="/shop?layout=both" class="dropdown-link">Shop Both Sidebars</a></li>
+              </ul>
+            </div>
+            <div class="dropdown-column">
+              <h4 class="dropdown-title">SHOP PAGES</h4>
+              <ul class="dropdown-list">
+                <li><a href="/account" class="dropdown-link">My Account</a></li>
+                <li><a href="/wishlist" class="dropdown-link">My Wishlist</a></li>
+                <li><a href="/cart" class="dropdown-link">My Cart</a></li>
+                <li><a href="/checkout" class="dropdown-link">My Checkout</a></li>
+              </ul>
+            </div>
+            <div class="dropdown-column">
+              <h4 class="dropdown-title">PRODUCT TYPES</h4>
+              <ul class="dropdown-list">
+                <li><a href="/products?type=simple" class="dropdown-link">Simple Product</a></li>
+                <li><a href="/products?type=variable" class="dropdown-link">Variable Product</a></li>
+                <li><a href="/products?type=affiliate" class="dropdown-link">Affiliate Product</a></li>
+                <li><a href="/products?type=grouped" class="dropdown-link">Grouped Product</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/about" routerLinkActive="active" (click)="closeMenu()">
+            Blog
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link" (click)="closeMenu()">Pages</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-column">
+              <h4 class="dropdown-title">INFO PAGES</h4>
+              <ul class="dropdown-list">
+                <li><a href="/about" class="dropdown-link">About Us</a></li>
+                <li><a href="/contact" class="dropdown-link">Contact Us</a></li>
+                <li><a href="/faq" class="dropdown-link">FAQ</a></li>
+                <li><a href="/terms" class="dropdown-link">Terms & Conditions</a></li>
+              </ul>
+            </div>
+            <div class="dropdown-column">
+              <h4 class="dropdown-title">USER PAGES</h4>
+              <ul class="dropdown-list">
+                <li><a href="/login" class="dropdown-link">Login</a></li>
+                <li><a href="/register" class="dropdown-link">Register</a></li>
+                <li><a href="/account" class="dropdown-link">My Account</a></li>
+                <li><a href="/orders" class="dropdown-link">Order History</a></li>
+              </ul>
+            </div>
+            <div class="dropdown-column">
+              <h4 class="dropdown-title">EXTRA</h4>
+              <ul class="dropdown-list">
+                <li><a href="/404" class="dropdown-link">404 Page</a></li>
+                <li><a href="/coming-soon" class="dropdown-link">Coming Soon</a></li>
+                <li><a href="/maintenance" class="dropdown-link">Maintenance</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/about" routerLinkActive="active" (click)="closeMenu()">
+            About Us
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contact" routerLinkActive="active" (click)="closeMenu()">
+            Contact Us
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link" (click)="closeMenu()">Vendor Zone</a>
+        </li>
+      </ul>
+      <!-- <div class="nav-right">
+        <span class="hotline">
+          <svg class="phone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+          <div class="hotline-info">
+            <span class="label">Hotline</span>
+            <span class="number">706-676-8237</span>
+          </div>
+        </span>
+      </div> -->
+    </div>
+  </nav>
 </header>

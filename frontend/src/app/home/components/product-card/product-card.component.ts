@@ -30,6 +30,8 @@ export class ProductCardComponent implements OnInit, OnDestroy {
   @Output() add = new EventEmitter<ProductCardModel>();
   @Output() wishlist = new EventEmitter<ProductCardModel>();
 
+  readonly starIndices = [1, 2, 3, 4, 5];
+
   isAdded = false;
   quantity = 0;
   isWishlistClickAnimating = false;
@@ -41,6 +43,14 @@ export class ProductCardComponent implements OnInit, OnDestroy {
   private nextParticleId = 1;
 
   constructor(private cartService: CartService) {}
+
+  get hasReviews(): boolean {
+    return Number(this.product?.reviews) > 0;
+  }
+
+  get roundedRating(): number {
+    return Math.round(Number(this.product?.rating) || 0);
+  }
 
   ngOnInit(): void {
     this.syncQuantityFromCart();

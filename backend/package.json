@@ -9,6 +9,7 @@
     "worker:ai-index": "node workers/aiIndexWorker.js"
   },
   "dependencies": {
+    "@google/genai": "^1.18.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "bullmq": "^5.71.1",
@@ -25,6 +26,7 @@
     "nodemailer": "^8.0.4",
     "openai": "^4.104.0",
     "pdfkit": "^0.18.0",
+    "razorpay": "^2.9.6",
     "sharp": "^0.33.5",
     "streamifier": "^0.1.1"
   },

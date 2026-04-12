@@ -4,6 +4,7 @@ const { createOrder } = require('../services/orderService');
 const { sendOrderConfirmationEmail } = require('../services/emailService');
 const { generateInvoicePdfBuffer } = require('../services/invoiceService');
 const { createShiprocketOrder } = require('../services/shiprocketService');
+const { createRazorpayOrder, verifyAndCapturePayment } = require('../services/razorpayService');
 const { getPool } = require('../services/db');
 
 function isValidEmail(email) {
@@ -68,6 +69,7 @@ exports.placeOrder = asyncHandler(async (req, res) => {
   let order;
   try {
     order = await createOrder({
+      userId: req?.user?.id || null,
       customerName: trimmedFullName,
       customerEmail: trimmedEmail,
       customerPhone: trimmedPhone,
@@ -90,6 +92,21 @@ exports.placeOrder = asyncHandler(async (req, res) => {
     }
 
     throw error;
+  }
+
+  // For online payments, create Razorpay order and return it for frontend to process
+  if (order.payment_method === 'online') {
+    try {
+      const razorpayData = await createRazorpayOrder(order);
+      return res.status(201).json({
+        message: 'Order created. Complete payment to confirm.',
+        order,
+        razorpay: razorpayData
+      });
+    } catch (err) {
+      console.error('[Razorpay] Failed to create Razorpay order:', err.message);
+      throw new AppError('Payment gateway error. Please try again.', 502);
+    }
   }
 
   res.status(201).json({
@@ -135,4 +152,69 @@ exports.placeOrder = asyncHandler(async (req, res) => {
       console.error('[Shiprocket] Failed to create Shiprocket order (non-fatal):', err.message);
     }
   })();
+});
+
+exports.verifyPayment = asyncHandler(async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    throw new AppError('razorpay_order_id, razorpay_payment_id, and razorpay_signature are required', 400);
+  }
+
+  const result = await verifyAndCapturePayment({
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature
+  });
+
+  const db = getPool();
+  const [rows] = await db.execute(
+    `SELECT * FROM orders WHERE id = ? LIMIT 1`,
+    [result.order_id]
+  );
+  const order = rows[0];
+
+  res.status(200).json({
+    message: 'Payment verified successfully.',
+    order_number: result.order_number,
+    payment_status: 'paid'
+  });
+
+  // Non-blocking post-payment tasks: email + Shiprocket
+  if (!result.already_paid && order) {
+    (async () => {
+      try {
+        const invoiceBuffer = await generateInvoicePdfBuffer({ order });
+        const invoiceFilename = `invoice-${String(order.order_number || order.id).replace(/[^A-Za-z0-9_-]/g, '')}.pdf`;
+        await sendOrderConfirmationEmail({ order, invoiceBuffer, invoiceFilename });
+      } catch (err) {
+        console.error('[OrderEmail] Failed to send confirmation email after payment:', err.message);
+      }
+
+      try {
+        const shiprocket = await createShiprocketOrder(order);
+        await db.execute(
+          `UPDATE orders
+           SET shiprocket_order_id    = ?,
+               shiprocket_shipment_id = ?,
+               awb_code               = ?,
+               courier_name           = ?,
+               tracking_url           = ?,
+               order_status           = 'processing'
+           WHERE id = ?`,
+          [
+            shiprocket.shiprocket_order_id || null,
+            String(shiprocket.shiprocket_shipment_id || ''),
+            shiprocket.awb_code || null,
+            shiprocket.courier_name || null,
+            shiprocket.tracking_url || null,
+            order.id
+          ]
+        );
+        console.log(`[Shiprocket] Order ${order.order_number} processed after payment. AWB: ${shiprocket.awb_code || 'pending'}`);
+      } catch (err) {
+        console.error('[Shiprocket] Failed to create Shiprocket order after payment (non-fatal):', err.message);
+      }
+    })();
+  }
 });

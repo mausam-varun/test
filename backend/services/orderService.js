@@ -85,6 +85,7 @@ async function fetchProductsForOrder(connection, productIds) {
 }
 
 async function createOrder({
+  userId,
   customerName,
   customerEmail,
   customerPhone,
@@ -162,9 +163,10 @@ async function createOrder({
          payment_method,
          order_status
        )
-       VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderNumber,
+        userId ? Number(userId) : null,
         customerName,
         customerEmail,
         customerPhone,

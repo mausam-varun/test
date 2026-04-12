@@ -15,9 +15,15 @@
           <a class="wishlist-item__title-link" [routerLink]="['/product', item.id]">
             <h3>{{ item.name }}</h3>
           </a>
-          <p class="wishlist-item__rating">
-            <span class="stars">★★★★★</span>
-            <span>({{ item.reviews }})</span>
+          <p class="wishlist-item__rating" [class.is-unrated]="item.reviews === 0">
+            <ng-container *ngIf="item.reviews > 0; else unratedWishlistItem">
+              <span class="stars">★</span>
+              <span>{{ item.rating | number:'1.1-1' }}</span>
+              <span>({{ item.reviews }})</span>
+            </ng-container>
+            <ng-template #unratedWishlistItem>
+              <span>No reviews yet</span>
+            </ng-template>
           </p>
           <p class="wishlist-item__price">{{ item.price | displayCurrency:2 }}</p>
         </div>
