@@ -22,6 +22,11 @@
 					🎨 Brand Colors
 				</button>
 			</div>
+			<div class="admin-multiplier-control">
+				<button type="button" class="btn-multiplier" (click)="togglePriceMultiplierPanel()" title="Set price multiplier for frontend display">
+					💰 Price Multiplier
+				</button>
+			</div>
 		</div>
 	</header>
 
@@ -83,6 +88,71 @@
 
 		<p class="theme-message" *ngIf="themeMessage" [class.error]="themeMessage.includes('error')">
 			{{ themeMessage }}
+		</p>
+	</div>
+
+	<!-- Price Multiplier Panel -->
+	<div class="admin-multiplier-panel" *ngIf="showPriceMultiplierPanel">
+		<div class="multiplier-panel-header">
+			<h2>💰 Frontend Price Multiplier</h2>
+			<p>Set a multiplier to adjust displayed prices on the customer frontend. Database prices remain in USD.</p>
+		</div>
+
+		<div class="multiplier-settings">
+			<div class="multiplier-info">
+				<p><strong>Current Setting:</strong> {{ priceMultiplier }}x multiplier</p>
+				<p><strong>Example:</strong> $10 product will display as {{ getMultiplierPreview(10) }}</p>
+				<p class="timezone-note">ℹ️ System timezone is auto-detected for INR conversion. Multiplier applies to USD prices.</p>
+			</div>
+
+			<div class="multiplier-buttons">
+				<button 
+					*ngFor="let mult of multiplierOptions"
+					type="button"
+					class="multiplier-btn"
+					[class.active]="priceMultiplier === mult"
+					(click)="priceMultiplier = mult"
+					[disabled]="isSavingMultiplier"
+				>
+					{{ mult }}x
+				</button>
+			</div>
+
+			<div class="multiplier-slider-group">
+				<label for="multiplier-slider">Adjust Multiplier:</label>
+				<input 
+					id="multiplier-slider"
+					type="range" 
+					min="1" 
+					max="6" 
+					[(ngModel)]="priceMultiplier"
+					[disabled]="isSavingMultiplier"
+					class="multiplier-slider"
+				/>
+				<span class="slider-value">{{ priceMultiplier }}x</span>
+			</div>
+		</div>
+
+		<div class="multiplier-panel-actions">
+			<button
+				type="button"
+				class="btn-save"
+				[disabled]="isSavingMultiplier"
+				(click)="savePriceMultiplier()"
+			>
+				{{ isSavingMultiplier ? 'Saving...' : '✓ Apply Multiplier' }}
+			</button>
+			<button
+				type="button"
+				class="btn-close"
+				(click)="togglePriceMultiplierPanel()"
+			>
+				✕ Close
+			</button>
+		</div>
+
+		<p class="multiplier-message" *ngIf="priceMultiplierMessage" [class.error]="priceMultiplierMessage.includes('Error')">
+			{{ priceMultiplierMessage }}
 		</p>
 	</div>
 

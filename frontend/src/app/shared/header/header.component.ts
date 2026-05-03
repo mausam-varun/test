@@ -7,6 +7,7 @@ import { AuthSessionService } from '../../services/auth-session.service';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { CurrencyPreferenceService } from '../services/currency-preference.service';
+import { API_ENDPOINTS } from '../../config/app-config';
 
 interface CartBurstParticle {
   id: number;
@@ -14,6 +15,8 @@ interface CartBurstParticle {
   y: number;
   size: number;
   delay: number;
+  posX: number;
+  posY: number;
 }
 
 interface ProductImage {
@@ -58,7 +61,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   searchResults: Product[] = [];
   isSearching: boolean = false;
   showSearchDropdown: boolean = false;
-  private readonly apiBaseUrl = 'http://localhost:5001/api/products';
+  private readonly apiBaseUrl = API_ENDPOINTS.products;
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   private readonly subscriptions = new Subscription();
@@ -125,7 +128,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   onWindowScroll(): void {
     this.isScrolled = window.scrollY > 100;
     if (this.isScrolled && this.isMenuOpen) {
@@ -202,9 +205,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onSearch(): void {
-    // Navigate to product list with search query
     if (this.searchQuery.trim()) {
-      this.router.navigate(['/products'], { queryParams: { search: this.searchQuery } });
+      this.router.navigate(['/shop'], { queryParams: { search: this.searchQuery } });
       this.showSearchDropdown = false;
     }
   }
@@ -222,9 +224,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Clear results if search is empty
     if (!this.searchQuery.trim()) {
       this.searchResults = [];
+      this.showSearchDropdown = false;
       return;
     }
 
+    // Show dropdown immediately (spinner state)
+    this.showSearchDropdown = true;
     // Debounce API calls - wait 300ms before searching
     this.isSearching = true;
     this.searchTimeout = setTimeout(() => {
@@ -245,6 +250,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         next: (products) => {
           this.searchResults = products;
           this.isSearching = false;
+          this.showSearchDropdown = true;
         },
         error: (error) => {
           console.error('Search error:', error);
@@ -276,14 +282,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   viewProduct(product: Product): void {
-    // Don't close dropdown here - let the blur event handle it
-    // Just navigate
-    this.router.navigate(['/products', product.id]);
+    this.showSearchDropdown = false;
+    this.router.navigate(['/product', product.id]);
   }
 
   addToCart(product: Product, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    this.triggerCartBump();
     this.cartService.addToCart({
       id: product.id,
       name: product.name,
@@ -295,6 +301,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   addToWishlist(product: Product, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    this.triggerWishlistBump();
     this.wishlistService.addToWishlist({
       id: product.id,
       name: product.name,
@@ -310,6 +317,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authSessionService.clearSession();
     this.closeProfileMenu();
     this.router.navigate(['/']);
+  }
+
+  openLoginModal(event?: Event): void {
+    event?.stopPropagation();
+    this.closeProfileMenu();
+    this.authPopupService.open();
   }
 
   get userInitials(): string {
@@ -349,6 +362,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private triggerCartBurst(): void {
+    const cartIcon = document.querySelector('.navbar-icons .icon-link.cart') as HTMLElement;
+    if (!cartIcon) return;
+
+    const rect = cartIcon.getBoundingClientRect();
+    const posX = rect.left + rect.width / 2;
+    const posY = rect.top + rect.height / 2;
+
     const particleCount = 10;
     this.cartBurstParticles = Array.from({ length: particleCount }, (_, index) => {
       const angle = (Math.PI * 2 * index) / particleCount;
@@ -358,7 +378,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
         size: 4 + Math.floor(Math.random() * 4),
-        delay: Math.random() * 0.08
+        delay: Math.random() * 0.08,
+        posX,
+        posY
       };
     });
 
@@ -392,6 +414,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private triggerWishlistBurst(): void {
+    const wishlistIcon = document.querySelector('.navbar-icons .icon-link.wishlist') as HTMLElement;
+    if (!wishlistIcon) return;
+
+    const rect = wishlistIcon.getBoundingClientRect();
+    const posX = rect.left + rect.width / 2;
+    const posY = rect.top + rect.height / 2;
+
     const particleCount = 10;
     this.wishlistBurstParticles = Array.from({ length: particleCount }, (_, index) => {
       const angle = (Math.PI * 2 * index) / particleCount;
@@ -401,7 +430,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
         size: 4 + Math.floor(Math.random() * 4),
-        delay: Math.random() * 0.08
+        delay: Math.random() * 0.08,
+        posX,
+        posY
       };
     });
 

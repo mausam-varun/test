@@ -17,6 +17,7 @@ export interface ProductCardModel {
   price: number;
   rating: number;
   reviews: number;
+  stock?: number; // Inventory count
 }
 
 @Component({
@@ -50,6 +51,28 @@ export class ProductCardComponent implements OnInit, OnDestroy {
 
   get roundedRating(): number {
     return Math.round(Number(this.product?.rating) || 0);
+  }
+
+  get stockCount(): number {
+    return Math.max(0, Number(this.product?.stock) || 0);
+  }
+
+  get isOutOfStock(): boolean {
+    return this.stockCount === 0;
+  }
+
+  get isLowStock(): boolean {
+    return this.stockCount > 0 && this.stockCount < 3;
+  }
+
+  get stockStatus(): string {
+    if (this.isOutOfStock) {
+      return 'Out of Stock';
+    }
+    if (this.isLowStock) {
+      return `Only ${this.stockCount} left!`;
+    }
+    return '';
   }
 
   ngOnInit(): void {

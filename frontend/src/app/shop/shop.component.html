@@ -236,9 +236,27 @@
 
           <p class="product-price">{{ product.price | displayCurrency:2 }}</p>
 
+          <!-- Stock Status Display -->
+          <div class="stock-status" *ngIf="isOutOfStock(product.stock) || isLowStock(product.stock)">
+            <span [class.out-of-stock]="isOutOfStock(product.stock)" [class.low-stock]="isLowStock(product.stock)">
+              {{ getStockStatus(product.stock) }}
+            </span>
+          </div>
+
           <div class="product-actions">
-            <button class="btn-add-to-cart" *ngIf="!recentlyAddedProductIds.has(product.id)" (click)="addToCart(product)">
-              Add to Cart →
+            <button 
+              class="btn-add-to-cart" 
+              *ngIf="!recentlyAddedProductIds.has(product.id)" 
+              [disabled]="isOutOfStock(product.stock)"
+              [class.is-out-of-stock]="isOutOfStock(product.stock)"
+              (click)="addToCart(product)"
+              [attr.aria-label]="isOutOfStock(product.stock) ? 'Out of stock' : 'Add to cart'">
+              <ng-container *ngIf="!isOutOfStock(product.stock)">
+                Add to Cart →
+              </ng-container>
+              <ng-container *ngIf="isOutOfStock(product.stock)">
+                Out of Stock
+              </ng-container>
             </button>
             
             <div class="quantity-control" *ngIf="recentlyAddedProductIds.has(product.id)">

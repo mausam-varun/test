@@ -24,6 +24,28 @@
   </article>
 
   <article class="card">
+    <h3>Autoplay Speed</h3>
+    <p class="muted" style="margin-bottom:1rem;">How long each slide is shown before auto-advancing (1–15 seconds). Also controls the zoom animation duration.</p>
+    <div class="display-count-row">
+      <label for="autoplayInterval">Slide duration:</label>
+      <select id="autoplayInterval" [(ngModel)]="autoplayInterval">
+        <option [ngValue]="1000">1 second</option>
+        <option [ngValue]="2000">2 seconds</option>
+        <option [ngValue]="3000">3 seconds</option>
+        <option [ngValue]="4000">4 seconds (default)</option>
+        <option [ngValue]="5000">5 seconds</option>
+        <option [ngValue]="6000">6 seconds</option>
+        <option [ngValue]="7000">7 seconds</option>
+        <option [ngValue]="8000">8 seconds</option>
+        <option [ngValue]="10000">10 seconds</option>
+        <option [ngValue]="12000">12 seconds</option>
+        <option [ngValue]="15000">15 seconds</option>
+      </select>
+      <button type="button" (click)="saveAutoplayInterval()" [disabled]="isSaving">Save</button>
+    </div>
+  </article>
+
+  <article class="card">
     <h3>Add Slider Image</h3>
 
     <div class="form-grid">
@@ -112,5 +134,146 @@
     </div>
 
     <p *ngIf="!isLoading && !sliderItems.length" class="muted">No slider images yet.</p>
+  </article>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HOME 3 — PROMO BANNER MANAGEMENT
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slider-settings h3-section">
+  <header class="page-head">
+    <h2>Home3 Promo Banners</h2>
+    <p>Manage the 3-column promo banner panels shown on the Noura-themed homepage (Home3).</p>
+  </header>
+
+  <div class="messages">
+    <p class="message success" *ngIf="h3SuccessMessage">{{ h3SuccessMessage }}</p>
+    <p class="message error"   *ngIf="h3ErrorMessage">{{ h3ErrorMessage }}</p>
+  </div>
+
+  <!-- Add new banner -->
+  <article class="card">
+    <h3>Add New Banner</h3>
+
+    <div class="form-grid">
+      <label>
+        Eyebrow Label
+        <input type="text" [(ngModel)]="h3NewEyebrow" placeholder="e.g. NOURISH YOUR STYLE">
+      </label>
+
+      <label>
+        Heading <span class="req">*</span>
+        <input type="text" [(ngModel)]="h3NewHeading" placeholder="Main banner heading">
+      </label>
+
+      <label class="full-col">
+        Description
+        <input type="text" [(ngModel)]="h3NewDescription" placeholder="Optional short description">
+      </label>
+
+      <label>
+        View More Link (URL)
+        <input type="text" [(ngModel)]="h3NewViewMoreUrl" placeholder="/shop or https://...">
+      </label>
+
+      <label>
+        Sort Order
+        <input type="number" [(ngModel)]="h3NewSortOrder" min="0">
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="h3NewIsActive">
+        Active
+      </label>
+    </div>
+
+    <div class="upload-row">
+      <label>
+        Image URL
+        <input type="url" [(ngModel)]="h3NewImageUrl" placeholder="https://...">
+      </label>
+
+      <label>
+        Or Upload Image
+        <input type="file" accept="image/png,image/jpeg" (change)="onH3NewImageSelected($event)">
+      </label>
+      <span class="filename" *ngIf="h3NewImageFileName">{{ h3NewImageFileName }}</span>
+    </div>
+
+    <button type="button" class="primary" (click)="addHome3Banner()" [disabled]="h3IsSaving">
+      Add Banner
+    </button>
+  </article>
+
+  <!-- Existing banners -->
+  <article class="card">
+    <h3>Existing Banners</h3>
+
+    <p *ngIf="h3IsLoading" class="muted">Loading banners...</p>
+
+    <div class="h3-banner-item" *ngFor="let banner of home3Banners">
+      <!-- Preview image -->
+      <img [src]="banner.image_url" [alt]="banner.heading" class="h3-preview-img">
+
+      <!-- Fields -->
+      <div class="item-fields">
+        <label>
+          Eyebrow Label
+          <input type="text" [(ngModel)]="banner.eyebrow" [disabled]="h3EditingId !== banner.id">
+        </label>
+
+        <label>
+          Heading
+          <input type="text" [(ngModel)]="banner.heading" [disabled]="h3EditingId !== banner.id">
+        </label>
+
+        <label class="full-col">
+          Description
+          <input type="text" [(ngModel)]="banner.description" [disabled]="h3EditingId !== banner.id"
+                 placeholder="Optional description">
+        </label>
+
+        <label>
+          View More Link
+          <input type="text" [(ngModel)]="banner.view_more_url" [disabled]="h3EditingId !== banner.id"
+                 placeholder="/shop">
+        </label>
+
+        <label>
+          Image URL
+          <input type="url" [(ngModel)]="banner.image_url" [disabled]="h3EditingId !== banner.id">
+        </label>
+
+        <label>
+          Sort Order
+          <input type="number" [(ngModel)]="banner.sort_order" min="0" [disabled]="h3EditingId !== banner.id">
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="banner.is_active" [disabled]="h3EditingId !== banner.id">
+          Active
+        </label>
+
+        <label *ngIf="h3EditingId === banner.id">
+          Replace Image
+          <input type="file" accept="image/png,image/jpeg" (change)="onH3EditImageSelected($event)">
+          <span class="filename" *ngIf="h3EditFileName">{{ h3EditFileName }}</span>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="item-actions">
+        <ng-container *ngIf="h3EditingId !== banner.id">
+          <button type="button" (click)="editHome3Banner(banner)" [disabled]="h3IsSaving">Edit</button>
+          <button type="button" class="danger" (click)="deleteHome3Banner(banner.id!)" [disabled]="h3IsSaving">Delete</button>
+        </ng-container>
+        <ng-container *ngIf="h3EditingId === banner.id">
+          <button type="button" class="success-btn" (click)="saveHome3Banner(banner)" [disabled]="h3IsSaving">Save</button>
+          <button type="button" (click)="cancelH3Edit()" [disabled]="h3IsSaving">Cancel</button>
+        </ng-container>
+      </div>
+    </div>
+
+    <p *ngIf="!h3IsLoading && !home3Banners.length" class="muted">No home3 banners yet.</p>
   </article>
 </section>

@@ -19,6 +19,14 @@ const aiQueueRoutes = require('./routes/aiQueueRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const productCategoryRoutes = require('./routes/productCategoryRoutes');
 const homeSectionsRoutes = require('./routes/homeSectionsRoutes');
+const bannerRoutes = require('./routes/bannerRoutes');
+const home3BannerRoutes = require('./routes/home3BannerRoutes');
+const newProductsBannerRoutes = require('./routes/newProductsBannerRoutes');
+const festiveSeasonBannerRoutes = require('./routes/festiveSeasonBannerRoutes');
+const flashDealsRoutes = require('./routes/flashDealsRoutes');
+const recentlyViewedRoutes = require('./routes/recentlyViewedRoutes');
+const aiMatchingRoutes = require('./routes/aiMatchingRoutes');
+const promoBannerRoutes = require('./routes/promoBannerRoutes');
 const { initializeDatabase } = require('./services/db');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
@@ -47,7 +55,13 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Serve static files from public directory (frontend)
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Register recently viewed routes BEFORE product routes so /api/products/by-ids is handled correctly
+app.use('/api', recentlyViewedRoutes);
 
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
@@ -60,6 +74,13 @@ app.use('/api/admin/ai-queue', aiQueueRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/product-categories', productCategoryRoutes);
 app.use('/api', homeSectionsRoutes);
+app.use('/api', bannerRoutes);
+app.use('/api', home3BannerRoutes);
+app.use('/api', newProductsBannerRoutes);
+app.use('/api', festiveSeasonBannerRoutes);
+app.use('/api', flashDealsRoutes);
+app.use('/api/ai', aiMatchingRoutes);
+app.use('/api', promoBannerRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

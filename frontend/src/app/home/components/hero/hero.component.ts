@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 
 export interface HeroSlide {
   id?: number;
@@ -29,8 +29,20 @@ export class HeroComponent implements OnInit, OnChanges, OnDestroy {
   @Input() imageAlt = 'Handmade jewelry collection';
   @Input() features: string[] = ['Free Shipping on $50+', 'Easy 7-Day Returns', 'Worldwide Delivery'];
 
+  /** Autoplay interval in milliseconds (driven by admin setting) */
+  @Input() set autoplayInterval(ms: number) {
+    this._autoplayInterval = (ms > 0) ? ms : 4000;
+    // Update CSS variable so Ken Burns animation matches slide duration
+    this.el.nativeElement.style.setProperty('--hero-duration', `${this._autoplayInterval / 1000}s`);
+    this.restartAutoplay();
+  }
+
+  private _autoplayInterval = 4000;
+
   currentSlideIndex = 0;
   private autoplayId: ReturnType<typeof setInterval> | null = null;
+
+  constructor(private readonly el: ElementRef) {}
 
   /** Resolved slide objects — uses slides[] first, falls back to imageUrls/imageUrl */
   get resolvedSlides(): HeroSlide[] {
@@ -58,6 +70,7 @@ export class HeroComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.el.nativeElement.style.setProperty('--hero-duration', `${this._autoplayInterval / 1000}s`);
     this.restartAutoplay();
   }
 
@@ -76,23 +89,26 @@ export class HeroComponent implements OnInit, OnChanges, OnDestroy {
     const length = this.resolvedSlides.length;
     if (length <= 1) { return; }
     this.currentSlideIndex = (this.currentSlideIndex - 1 + length) % length;
+    this.restartAutoplay();
   }
 
   nextSlide(): void {
     const length = this.resolvedSlides.length;
     if (length <= 1) { return; }
     this.currentSlideIndex = (this.currentSlideIndex + 1) % length;
+    this.restartAutoplay();
   }
 
   goToSlide(index: number): void {
     if (index < 0 || index >= this.resolvedSlides.length) { return; }
     this.currentSlideIndex = index;
+    this.restartAutoplay();
   }
 
   private restartAutoplay(): void {
     this.stopAutoplay();
     if (this.resolvedSlides.length <= 1) { return; }
-    this.autoplayId = setInterval(() => { this.nextSlide(); }, 4000);
+    this.autoplayId = setInterval(() => { this.nextSlide(); }, this._autoplayInterval);
   }
 
   private stopAutoplay(): void {

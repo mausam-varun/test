@@ -1,4 +1,4 @@
-import { Component, HostListener, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, Inject, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CartService } from '../services/cart.service';
@@ -76,10 +76,18 @@ export class ShopComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly cartService: CartService,
     @Inject(ProductCatalogService) private readonly productCatalogService: ProductCatalogService,
-    private readonly wishlistService: WishlistService
+    private readonly wishlistService: WishlistService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to cart changes to trigger UI updates
+    this.subscriptions.add(
+      this.cartService.cartItems$.subscribe(() => {
+        this.cdr.markForCheck();
+      })
+    );
+
     this.subscriptions.add(
       this.route.queryParamMap.subscribe((params) => {
         this.requestedCategoryName = (params.get('category') || '').trim();
@@ -379,6 +387,25 @@ export class ShopComponent implements OnInit, OnDestroy {
 
   isWishlisted(productId: number): boolean {
     return this.wishlistService.isInWishlist(productId);
+  }
+
+  isOutOfStock(stock: number | undefined): boolean {
+    return !stock || stock === 0;
+  }
+
+  isLowStock(stock: number | undefined): boolean {
+    const stockCount = stock || 0;
+    return stockCount > 0 && stockCount < 3;
+  }
+
+  getStockStatus(stock: number | undefined): string {
+    if (this.isOutOfStock(stock)) {
+      return 'Out of Stock';
+    }
+    if (this.isLowStock(stock)) {
+      return `Only ${stock} left!`;
+    }
+    return '';
   }
 
   onSearch(searchValue: string): void {

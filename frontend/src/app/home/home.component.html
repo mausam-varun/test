@@ -1,36 +1,32 @@
-<!-- MAIN LAYOUT WITH SIDEBAR -->
-<div class="home-main-layout">
-  <!-- LEFT SIDEBAR - CATEGORIES -->
-  <aside class="sidebar-categories">
-    <div class="sidebar-header">
-      <span class="sidebar-icon">≡</span>
-      <h3>Shop By Categories</h3>
+<div class="content-wrapper">
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+      <div class="hero-slider-wrapper">
+        <app-hero
+          [slides]="heroSlides"
+          [imageUrls]="heroSliderImages"
+          [imageUrl]="heroImage"
+          [autoplayInterval]="heroAutoplayInterval"
+          imageAlt="Luxury handcrafted bangle stack and earrings">
+        </app-hero>
+      </div>
+      <div class="hero-promo-banners">
+        <app-promo-banner
+          [title]="promoBanners.bridal.title || 'BRIDAL COLLECTION'"
+          [subtitle]="promoBanners.bridal.subtitle || 'Made for Your Big Moments'"
+          [buttonText]="promoBanners.bridal.button_text || 'EXPLORE NOW →'"
+          [link]="promoBanners.bridal.link || '/shop?category=bridal'"
+          [imageUrl]="promoBanners.bridal.image_url || 'https://images.unsplash.com/photo-1611950710985-7b2b4c4f8d3e?w=600&q=80'">
+        </app-promo-banner>
+        <app-promo-banner
+          [title]="promoBanners.festive.title || 'FESTIVE PICKS'"
+          [subtitle]="promoBanners.festive.subtitle || 'Celebrate in Every Color'"
+          [buttonText]="promoBanners.festive.button_text || 'SHOP NOW →'"
+          [link]="promoBanners.festive.link || '/shop?category=festive'"
+          [imageUrl]="promoBanners.festive.image_url || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=80'">
+        </app-promo-banner>
+      </div>
     </div>
-    <nav class="category-menu">
-      <a href="#" class="category-link" *ngFor="let category of categories">
-        <span class="category-icon">📁</span>
-        {{ category.name }}
-        <span class="arrow">→</span>
-      </a>
-      <a href="#" class="category-link">
-        <span class="category-icon">⋯</span>
-        Others
-        <span class="arrow">→</span>
-      </a>
-    </nav>
-  </aside>
-
-  <!-- RIGHT CONTENT -->
-  <div class="content-wrapper">
-    <!-- HERO COMPONENT -->
-    <app-hero
-      [slides]="heroSlides"
-      [imageUrls]="heroSliderImages"
-      [imageUrl]="heroImage"
-      imageAlt="Luxury handcrafted bangle stack and earrings">
-    </app-hero>
-  </div>
-</div>
 
 <!-- FEATURES SECTION -->
 <section class="features-banner">
@@ -65,121 +61,171 @@
   </div>
 </section>
 
-<!-- PROMOTIONAL CARDS SECTION -->
-<section class="promo-cards">
-  <div class="section-container">
-    <div class="promo-grid">
-      <div class="promo-card" style="background: linear-gradient(135deg, #F5E6D3 0%, #E8D4BF 100%);">
-        <div class="promo-content">
-          <span class="promo-label">SPECIAL PRODUCTS</span>
-          <h2>Keep Your Feet<br>Cool And Comfy</h2>
-          <a href="#" class="promo-cta">Shop Now</a>
-        </div>
-        <div class="promo-image">
-          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=400&q=80" alt="Shoes">
-        </div>
-      </div>
-
-      <div class="promo-card" style="background: linear-gradient(135deg, #FFD9E8 0%, #FFB6D9 100%);">
-        <div class="promo-content">
-          <span class="promo-label">30% OFF THIS WEEK</span>
-          <h2>Sunglasses<br>New Collection</h2>
-          <a href="#" class="promo-cta">Shop Now</a>
-        </div>
-        <div class="promo-image">
-          <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=400&q=80" alt="Sunglasses">
-        </div>
-      </div>
-
-      <div class="promo-card" style="background: linear-gradient(135deg, #B8D9F1 0%, #7DB3E8 100%);">
-        <div class="promo-content">
-          <span class="promo-label">SPECIAL PRODUCTS</span>
-          <h2>Prepare For Your<br>Latest Season</h2>
-          <a href="#" class="promo-cta">Shop Now</a>
-        </div>
-        <div class="promo-image">
-          <img src="https://images.unsplash.com/photo-1529260830369-e490ebb3658b?auto=format&fit=crop&w=400&q=80" alt="Fashion">
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- TOP CATEGORIES SECTION -->
 <section class="top-categories">
   <div class="section-container">
-    <h2 class="section-title">Top Categories <span class="subtitle">Of The Month</span></h2>
-    <div class="categories-grid">
-      <div class="category-item" *ngFor="let cat of categories" [routerLink]="['/shop']" [queryParams]="{ category: cat.id }">
-        <div class="cat-image">
-          <img [src]="cat.image" [alt]="cat.name">
-        </div>
-        <div class="cat-info">
-          <h3>{{ cat.name }}</h3>
-          <p>({{ cat.productCount }}) Products</p>
-        </div>
+
+    <!-- Heading -->
+    <div class="cat-heading">
+      <!-- left leaf -->
+      <svg class="cat-heading__leaf" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+
+      <div class="cat-heading__text">
+        <h2>Our Collections</h2>
+        <p>Handcrafted jewellery for every occasion</p>
       </div>
+
+      <!-- right leaf (mirrored) -->
+      <svg class="cat-heading__leaf cat-heading__leaf--flip" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
     </div>
+
+    <!-- Cards -->
+    <div class="categories-grid">
+      <a
+        *ngFor="let cat of categories; let i = index"
+        [class]="'col-card col-card--' + (i % 4)"
+        [routerLink]="['/shop']"
+        [queryParams]="{ category: cat.id }">
+
+        <!-- top-left icon -->
+        <div class="col-card__icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ng-container [ngSwitch]="i % 4">
+              <!-- Bridal -->
+              <ng-container *ngSwitchCase="0">
+                <circle cx="20" cy="12" r="6" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M8 34c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M20 6 L22 10 L26 10 L23 13 L24 17 L20 14 L16 17 L17 13 L14 10 L18 10 Z" fill="currentColor" opacity="0.3"/>
+              </ng-container>
+              <!-- Navratri -->
+              <ng-container *ngSwitchCase="1">
+                <path d="M20 4 L24 14 L34 14 L26 20 L29 30 L20 24 L11 30 L14 20 L6 14 L16 14 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </ng-container>
+              <!-- Formal -->
+              <ng-container *ngSwitchCase="2">
+                <rect x="8" y="10" width="24" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M14 10 V8 a6 6 0 0 1 12 0 V10" stroke="currentColor" stroke-width="1.8"/>
+                <circle cx="20" cy="19" r="3" fill="currentColor" opacity="0.4"/>
+              </ng-container>
+              <!-- Evergreen -->
+              <ng-container *ngSwitchDefault>
+                <path d="M20 4 Q28 10 28 20 Q28 30 20 36 Q12 30 12 20 Q12 10 20 4Z" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M20 10 Q24 15 24 20 Q24 27 20 32" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+              </ng-container>
+            </ng-container>
+          </svg>
+        </div>
+
+        <!-- top-right mandala -->
+        <div class="col-card__mandala">
+          <svg viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="17" cy="17" r="15" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+            <circle cx="17" cy="17" r="9" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+            <circle cx="17" cy="17" r="3" fill="currentColor" opacity="0.3"/>
+            <line x1="17" y1="2" x2="17" y2="8" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+            <line x1="17" y1="26" x2="17" y2="32" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+            <line x1="2" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+            <line x1="26" y1="17" x2="32" y2="17" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+          </svg>
+        </div>
+
+        <!-- name + description -->
+        <div class="col-card__content">
+          <p class="col-card__name">{{ cat.name }}</p>
+          <p class="col-card__desc">
+            <ng-container [ngSwitch]="i % 4">
+              <ng-container *ngSwitchCase="0">Exquisite pieces for your special day</ng-container>
+              <ng-container *ngSwitchCase="1">Festive bangles &amp; vibrant sets</ng-container>
+              <ng-container *ngSwitchCase="2">Elegant everyday &amp; office wear</ng-container>
+              <ng-container *ngSwitchDefault>Timeless styles for every season</ng-container>
+            </ng-container>
+          </p>
+        </div>
+
+        <!-- bottom-right illustration -->
+        <div class="col-card__illus">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="38" stroke="currentColor" stroke-width="1.5" opacity="0.2"/>
+            <circle cx="50" cy="50" r="25" stroke="currentColor" stroke-width="1.2" opacity="0.3"/>
+            <circle cx="50" cy="50" r="12" fill="currentColor" opacity="0.12"/>
+            <circle cx="50" cy="50" r="5" fill="currentColor" opacity="0.25"/>
+            <line x1="50" y1="12" x2="50" y2="24" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <line x1="50" y1="76" x2="50" y2="88" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <line x1="12" y1="50" x2="24" y2="50" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <line x1="76" y1="50" x2="88" y2="50" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+          </svg>
+        </div>
+
+        <!-- CTA -->
+        <span class="col-card__cta">Explore Now <span>→</span></span>
+
+      </a>
+    </div>
+
   </div>
 </section>
+
+
 
 <!-- TOP FLASH DEALS SECTION -->
-<section class="top-deals">
+<section class="top-deals" *ngIf="sectionVisibility.flashDeals">
   <div class="section-container">
-    <div class="section-header">
-      <h2 class="section-title">Top <span class="highlight">Flash</span> Deals</h2>
-      <div class="tabs">
-        <!-- <a href="#">Women</a>
-        <a href="#">Men</a> -->
+    <div class="cat-heading">
+      <svg class="cat-heading__leaf" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+      <div class="cat-heading__text">
+        <h2>Top Flash Deals</h2>
+        <p>Handpicked offers at unbeatable prices</p>
       </div>
+      <svg class="cat-heading__leaf cat-heading__leaf--flip" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
     </div>
     <div class="deals-grid">
-      <div class="deal-card" *ngFor="let deal of flashDeals">
-        <div class="deal-image-wrapper">
-          <img [src]="deal.image" [alt]="deal.name" class="deal-image">
-          <div class="countdown" *ngIf="deal.countdown">
-            <span>{{ deal.countdown.days | number: '2.0-0' }}</span>
-            <span>{{ deal.countdown.hours | number: '2.0-0' }}</span>
-            <span>{{ deal.countdown.minutes | number: '2.0-0' }}</span>
-            <span>{{ deal.countdown.seconds | number: '2.0-0' }}</span>
+      <div class="dc-card" *ngFor="let deal of flashDeals" (click)="navigateToProduct(deal.id)" role="button" tabindex="0">
+        <div class="dc-card__img-wrap">
+          <span class="dc-card__badge">HANDCRAFTED</span>
+          <button type="button" class="dc-card__wish" [class.is-wishlisted]="isWishlisted(deal.id)" (click)="toggleWishlist(deal); $event.stopPropagation()" aria-label="Add to wishlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <img [src]="deal.image" [alt]="deal.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
+        </div>
+        <div class="dc-card__body">
+          <h3 class="dc-card__name">{{ deal.name }}</h3>
+          <div class="dc-card__divider">⁓</div>
+          <div class="dc-card__price">{{ deal.price | displayCurrency:2 }}</div>
+          <div class="dc-card__qty" *ngIf="isProductAdded(deal.id)">
+            <button type="button" (click)="decrementQuantity(deal.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+            <span>{{ getProductQuantity(deal.id) }}</span>
+            <button type="button" (click)="incrementQuantity(deal.id); $event.stopPropagation()" aria-label="Increase">+</button>
+          </div>
+          <button class="dc-card__atc" *ngIf="!isProductAdded(deal.id)" (click)="addToCart(deal); $event.stopPropagation()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            ADD TO CART
+          </button>
+          <div class="dc-card__trust">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Elegant &amp; Unique</span>
           </div>
         </div>
-        <div class="deal-info">
-          <h3>{{ deal.name }}</h3>
-          <p class="price">${{ deal.price }}</p>
-          <button class="add-cart-btn" (click)="addToCart(deal)">ADD TO CART</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- RECENT PRODUCTS SECTION -->
-<section class="recent-products">
-  <div class="section-container">
-    <div class="section-header">
-      <h2 class="section-title"><span class="highlight">Recent</span> Products</h2>
-      <div class="tabs">
-        <!-- <a href="#">Women</a>
-        <a href="#">Men</a> -->
-      </div>
-    </div>
-    <div class="products-grid">
-      <div class="product-card" *ngFor="let product of recentProducts">
-        <div class="product-badge" *ngIf="product.isOnSale">Sale!</div>
-        <div class="product-image-wrapper">
-          <img [src]="product.image" [alt]="product.name" class="product-image">
-          <div class="product-overlay">
-            <button class="view-btn">Quick View</button>
-          </div>
-        </div>
-        <h3>{{ product.name }}</h3>
-        <p class="product-category">Accessories, Bangles...</p>
-        <div class="product-rating">
-          <span *ngFor="let i of [1,2,3,4,5]" class="star" [class.filled]="i <= product.rating">★</span>
-        </div>
-        <p class="product-price">${{ product.price }}</p>
-        <button class="add-cart-btn" (click)="addToCart(product)">ADD TO CART</button>
       </div>
     </div>
   </div>
@@ -188,67 +234,337 @@
 <!-- NEW PRODUCTS SECTION -->
 <section class="new-products">
   <div class="section-container">
-    <div class="section-header">
-      <h2 class="section-title"><span class="highlight">New</span> Products</h2>
-      <div class="tabs">
-        <a href="#">Men</a>
-        <a href="#">Kid</a>
+
+    <div class="cat-heading">
+      <svg class="cat-heading__leaf" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+      <div class="cat-heading__text">
+        <h2>New Arrivals</h2>
+        <p>The latest additions to our collection</p>
       </div>
+      <svg class="cat-heading__leaf cat-heading__leaf--flip" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
     </div>
-    <div class="products-grid">
-      <div class="product-card" *ngFor="let product of newProducts">
-        <div class="product-badge" *ngIf="product.isOnSale">Sale!</div>
-        <div class="product-image-wrapper">
-          <img [src]="product.image" [alt]="product.name" class="product-image">
-          <div class="product-overlay">
-            <button class="view-btn">Quick View</button>
+    <div class="new-products-wrapper">
+      <!-- Left Banner -->
+      <div class="new-products-banner"
+           [style.backgroundImage]="newProductsBannerImageUrl ? 'url(' + newProductsBannerImageUrl + ')' : null"
+           [class.has-image]="newProductsBannerImageUrl">
+        <!-- Botanical leaf illustration -->
+        <div class="banner-botanical" aria-hidden="true">
+          <svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80 8 C80 8 30 55 30 110" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.45"/>
+            <path d="M80 8 C80 8 125 55 125 110" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.35"/>
+            <path d="M80 8 L80 170" stroke="#C4956A" stroke-width="1" fill="none" opacity="0.25"/>
+            <path d="M80 35 C60 22 38 28 22 18" stroke="#C4956A" stroke-width="1.4" fill="none" opacity="0.55"/>
+            <path d="M80 58 C55 46 32 54 14 43" stroke="#C4956A" stroke-width="1.4" fill="none" opacity="0.5"/>
+            <path d="M80 80 C62 70 44 76 30 66" stroke="#C4956A" stroke-width="1.2" fill="none" opacity="0.4"/>
+            <ellipse cx="42" cy="25" rx="16" ry="7" transform="rotate(-35 42 25)" stroke="#C4956A" stroke-width="1.2" fill="none" opacity="0.45"/>
+            <ellipse cx="24" cy="50" rx="13" ry="6" transform="rotate(-25 24 50)" stroke="#C4956A" stroke-width="1.2" fill="none" opacity="0.4"/>
+            <ellipse cx="35" cy="73" rx="11" ry="5" transform="rotate(-20 35 73)" stroke="#C4956A" stroke-width="1" fill="none" opacity="0.35"/>
+            <ellipse cx="108" cy="22" rx="14" ry="6" transform="rotate(30 108 22)" stroke="#C4956A" stroke-width="1.1" fill="none" opacity="0.35"/>
+          </svg>
+        </div>
+
+        <div class="banner-content">
+          <span class="banner-label">✦ NEW ARRIVALS</span>
+          <h2>Discover Our<br><span>New Collection</span></h2>
+          <div class="banner-ornament">❖</div>
+          <p>Fresh styles, timeless elegance</p>
+          <button class="banner-cta" [routerLink]="['/shop']">SHOP NOW <span class="arrow">›</span></button>
+
+          <div class="banner-trust">
+            <div class="banner-trust__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Premium<br>Quality</span>
+            </div>
+            <div class="banner-trust__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span>Handcrafted<br>with Care</span>
+            </div>
+            <div class="banner-trust__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Elegant<br>&amp; Unique</span>
+            </div>
           </div>
         </div>
-        <h3>{{ product.name }}</h3>
-        <p class="product-category">Accessories, Bangles...</p>
-        <div class="product-rating">
-          <span *ngFor="let i of [1,2,3,4,5]" class="star" [class.filled]="i <= product.rating">★</span>
+      </div>
+
+      <!-- Right Products Grid -->
+      <div class="new-products-grid">
+        <!-- <div class="section-header-top">
+          <h3 class="section-title-small"><span class="highlight">New</span> Products</h3>
+          <div class="tabs">
+            <a href="#" class="active">Men</a>
+            <a href="#">Kid</a>
+          </div>
+        </div> -->
+        <div class="products-grid">
+          <div class="dc-card" *ngFor="let product of newProducts" (click)="navigateToProduct(product.id)" role="button" tabindex="0">
+            <div class="dc-card__img-wrap">
+              <span class="dc-card__badge" [class.sale]="product.isOnSale">{{ product.isOnSale ? 'SALE' : 'HANDCRAFTED' }}</span>
+              <button type="button" class="dc-card__wish" [class.is-wishlisted]="isWishlisted(product.id)" (click)="toggleWishlist(product); $event.stopPropagation()" aria-label="Add to wishlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+              <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
+            </div>
+            <div class="dc-card__body">
+              <h3 class="dc-card__name">{{ product.name }}</h3>
+              <div class="dc-card__divider">⁓</div>
+              <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+              <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+                <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+                <span>{{ getProductQuantity(product.id) }}</span>
+                <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+              </div>
+              <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                ADD TO CART
+              </button>
+              <!-- <div class="dc-card__trust">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Elegant &amp; Unique</span>
+              </div> -->
+            </div>
+          </div>
         </div>
-        <p class="product-price">${{ product.price }}</p>
-        <button class="add-cart-btn" (click)="addToCart(product)">ADD TO CART</button>
       </div>
     </div>
   </div>
 </section>
 
-<!-- RECOMMENDED PRODUCTS SECTION -->
-<section class="recommended-products">
+<!-- FESTIVE SEASON SECTION -->
+<section class="festive-season">
+  
+
   <div class="section-container">
-    <div class="section-header">
-      <h2 class="section-title"><span class="highlight">Recommended</span> Products</h2>
-      <div class="tabs">
-        <!-- <a href="#">Women</a>
-        <a href="#">Kid</a> -->
+    <div class="cat-heading">
+      <svg class="cat-heading__leaf" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+      <div class="cat-heading__text">
+        <h2>Festive</h2>
+        <p>The latest additions to our collection</p>
       </div>
+      <svg class="cat-heading__leaf cat-heading__leaf--flip" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
     </div>
-    <div class="products-grid">
-      <div class="product-card" *ngFor="let product of recommendedProducts">
-        <div class="product-badge" *ngIf="product.isOnSale">Sale!</div>
-        <div class="product-image-wrapper">
-          <img [src]="product.image" [alt]="product.name" class="product-image">
-          <div class="product-overlay">
-            <button class="view-btn">Quick View</button>
+    <div class="festive-season-wrapper">
+      <!-- Left Banner -->
+      <div class="festive-banner"
+           [style.backgroundImage]="festiveBannerImageUrl ? 'url(' + festiveBannerImageUrl + ')' : null"
+           [class.has-image]="festiveBannerImageUrl">
+        <div class="banner-botanical" aria-hidden="true">
+          <svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80 8 C80 8 30 55 30 110" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.45"/>
+            <path d="M80 8 C80 8 125 55 125 110" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.35"/>
+            <path d="M80 8 L80 170" stroke="#C4956A" stroke-width="1" fill="none" opacity="0.25"/>
+          </svg>
+        </div>
+
+        <div class="banner-content">
+          <span class="banner-label">🎉 FESTIVE SEASON</span>
+          <h2>Celebrate in<br><span>Style & Elegance</span></h2>
+          <div class="banner-ornament">❖</div>
+          <p>Exclusive festive collection for your special moments</p>
+          <button class="banner-cta" [routerLink]="['/shop']">SHOP NOW <span class="arrow">›</span></button>
+
+          <div class="banner-trust">
+            <div class="banner-trust__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Premium<br>Quality</span>
+            </div>
+            <div class="banner-trust__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span>Handcrafted<br>with Care</span>
+            </div>
+            <div class="banner-trust__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Elegant<br>&amp; Unique</span>
+            </div>
           </div>
         </div>
-        <h3>{{ product.name }}</h3>
-        <p class="product-category">Accessories, Bangles...</p>
-        <div class="product-rating">
-          <span *ngFor="let i of [1,2,3,4,5]" class="star" [class.filled]="i <= product.rating">★</span>
+      </div>
+
+      <!-- Right Products Grid -->
+      <div class="festive-products-grid">
+        <div class="products-grid">
+          <div class="dc-card" *ngFor="let product of festiveProducts | slice:0:4" (click)="navigateToProduct(product.id)" role="button" tabindex="0">
+            <div class="dc-card__img-wrap">
+              <span class="dc-card__badge" [class.sale]="product.isOnSale">{{ product.isOnSale ? 'SALE' : 'HANDCRAFTED' }}</span>
+              <button type="button" class="dc-card__wish" [class.is-wishlisted]="isWishlisted(product.id)" (click)="toggleWishlist(product); $event.stopPropagation()" aria-label="Add to wishlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+              <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
+            </div>
+            <div class="dc-card__body">
+              <h3 class="dc-card__name">{{ product.name }}</h3>
+              <div class="dc-card__divider">⁓</div>
+              <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+              <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+                <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+                <span>{{ getProductQuantity(product.id) }}</span>
+                <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+              </div>
+              <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                ADD TO CART
+              </button>
+            </div>
+          </div>
         </div>
-        <p class="product-price">${{ product.price }}</p>
-        <button class="add-cart-btn" (click)="addToCart(product)">ADD TO CART</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROMOTIONAL CARDS SECTION -->
+<section class="promo-cards">
+  <div class="section-container">
+    <div class="promo-grid">
+      <div class="promo-card" 
+           *ngFor="let banner of promotionalBanners"
+           [style.background]="banner.background_color">
+        <div class="promo-content">
+          <span class="promo-label">{{ banner.label }}</span>
+          <h2>{{ banner.title }}</h2>
+          <a [href]="banner.cta_link" class="promo-cta">{{ banner.cta_text }}</a>
+        </div>
+        <div class="promo-image">
+          <img [src]="banner.image_url" [alt]="banner.title">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- RECOMMENDED PRODUCTS SECTION -->
+<section class="recommended-products" *ngIf="sectionVisibility.recommendedProducts">
+  <div class="section-container">
+    <div class="cat-heading">
+      <svg class="cat-heading__leaf" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+      <div class="cat-heading__text">
+        <h2>Recommended Products</h2>
+        <p>Curated picks just for you</p>
+      </div>
+      <svg class="cat-heading__leaf cat-heading__leaf--flip" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="products-grid">
+      <div class="dc-card" *ngFor="let product of recommendedProducts" (click)="navigateToProduct(product.id)" role="button" tabindex="0">
+        <div class="dc-card__img-wrap">
+          <span class="dc-card__badge" [class.sale]="product.isOnSale">{{ product.isOnSale ? 'SALE' : 'HANDCRAFTED' }}</span>
+          <button type="button" class="dc-card__wish" [class.is-wishlisted]="isWishlisted(product.id)" (click)="toggleWishlist(product); $event.stopPropagation()" aria-label="Add to wishlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
+        </div>
+        <div class="dc-card__body">
+          <h3 class="dc-card__name">{{ product.name }}</h3>
+          <div class="dc-card__divider">⁓</div>
+          <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+          <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+            <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+            <span>{{ getProductQuantity(product.id) }}</span>
+            <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+          </div>
+          <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            ADD TO CART
+          </button>
+          <div class="dc-card__trust">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Elegant &amp; Unique</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RECENT PRODUCTS SECTION -->
+<section class="recent-products" *ngIf="sectionVisibility.recentlyViewed && recentProducts.length > 0">
+  <div class="section-container">
+    <div class="cat-heading">
+      <svg class="cat-heading__leaf" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+      <div class="cat-heading__text">
+        <h2>Recently Viewed</h2>
+        <p>Pick up where you left off</p>
+      </div>
+      <svg class="cat-heading__leaf cat-heading__leaf--flip" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q30 10 60 20 Q90 30 110 10" stroke="#C4956A" stroke-width="2" fill="none"/>
+        <path d="M20 55 Q45 15 75 25 Q100 35 115 15" stroke="#C4956A" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <circle cx="60" cy="20" r="3" fill="#C4956A" opacity="0.6"/>
+        <circle cx="90" cy="30" r="2" fill="#C4956A" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="products-grid">
+      <div class="dc-card" *ngFor="let product of recentProducts" (click)="navigateToProduct(product.id)" role="button" tabindex="0">
+        <div class="dc-card__img-wrap">
+          <span class="dc-card__badge" [class.sale]="product.isOnSale">{{ product.isOnSale ? 'SALE' : 'HANDCRAFTED' }}</span>
+          <button type="button" class="dc-card__wish" [class.is-wishlisted]="isWishlisted(product.id)" (click)="toggleWishlist(product); $event.stopPropagation()" aria-label="Add to wishlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
+        </div>
+        <div class="dc-card__body">
+          <h3 class="dc-card__name">{{ product.name }}</h3>
+          <div class="dc-card__divider">⁓</div>
+          <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+          <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+            <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+            <span>{{ getProductQuantity(product.id) }}</span>
+            <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+          </div>
+          <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            ADD TO CART
+          </button>
+          <div class="dc-card__trust">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Elegant &amp; Unique</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- LATEST BLOGS SECTION -->
-<section class="latest-blogs">
+<!-- <section class="latest-blogs">
   <div class="section-container">
     <h2 class="section-title"><span class="highlight">Latest</span> Blogs</h2>
     <div class="blogs-grid">
@@ -269,10 +585,10 @@
       </div>
     </div>
   </div>
-</section>
-
+</section> -->
+ 
 <!-- NEWSLETTER SECTION -->
-<section class="newsletter">
+<!-- <section class="newsletter">
   <div class="newsletter-wrapper">
     <div class="newsletter-content">
       <h2>Join Our Newsletter Now</h2>
@@ -302,134 +618,13 @@
       </div>
     </div>
   </div>
-</section>
+</section> -->
 
-<!-- RECENT PRODUCTS SECTION -->
-<section class="recent-products">
-  <div class="section-container">
-    <h2 class="section-title">Recent Products</h2>
-    <div class="products-grid">
-      <div class="product-card" *ngFor="let product of recentProducts">
-        <div class="product-image-wrapper">
-          <img [src]="product.image" [alt]="product.name" class="product-image">
-          <button class="quick-view-btn" (click)="openQuickView(product)">QUICK VIEW</button>
-        </div>
-        <div class="product-info">
-          <h3 class="product-name">{{ product.name }}</h3>
-          <div class="product-rating">
-            <span class="stars" *ngFor="let i of [1,2,3,4,5]" [class.filled]="i <= (product.rating || 0)">★</span>
-            <span class="rating-count">({{ product.reviews || 0 }})</span>
-          </div>
-          <div class="product-price">₹{{ product.price | number:'1.0-2' }}</div>
-          <button class="add-to-cart-btn" (click)="addToCart(product)">ADD TO CART</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TOP FLASH DEALS SECTION -->
-<section class="flash-deals">
-  <div class="section-container">
-    <h2 class="section-title">
-      <span class="deal-badge">🔥 TOP FLASH DEALS 🔥</span>
-    </h2>
-    <div class="deals-grid">
-      <div class="deal-card" *ngFor="let deal of flashDeals">
-        <div class="deal-ribbon" *ngIf="deal.isOnSale">
-          <span>SALE!</span>
-        </div>
-        <div class="product-image-wrapper">
-          <img [src]="deal.image" [alt]="deal.name" class="product-image">
-          <div class="countdown" *ngIf="deal.countdown">
-            <span class="countdown-item">
-              <span class="countdown-number">{{ deal.countdown.days }}</span>
-              <span class="countdown-label">Days</span>
-            </span>
-            <span class="countdown-item">
-              <span class="countdown-number">{{ deal.countdown.hours }}</span>
-              <span class="countdown-label">Hours</span>
-            </span>
-            <span class="countdown-item">
-              <span class="countdown-number">{{ deal.countdown.minutes }}</span>
-              <span class="countdown-label">Minutes</span>
-            </span>
-            <span class="countdown-item">
-              <span class="countdown-number">{{ deal.countdown.seconds }}</span>
-              <span class="countdown-label">Seconds</span>
-            </span>
-          </div>
-          <button class="quick-view-btn" (click)="openQuickView(deal)">QUICK VIEW</button>
-        </div>
-        <div class="product-info">
-          <h3 class="product-name">{{ deal.name }}</h3>
-          <div class="product-rating">
-            <span class="stars" *ngFor="let i of [1,2,3,4,5]" [class.filled]="i <= (deal.rating || 0)">★</span>
-          </div>
-          <div class="product-price">
-            <span class="original-price" *ngIf="deal.originalPrice">₹{{ deal.originalPrice }}</span>
-            <span class="current-price">₹{{ deal.price }}</span>
-          </div>
-          <button class="add-to-cart-btn" (click)="addToCart(deal)">ADD TO CART</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- AI MATCH FEATURE (UNIQUE TO DIVARA CRAFT) -->
-<section class="ai-match-section" [class.expanded]="aiMatchVisible">
-  <div class="ai-match-container">
-    <h2 class="ai-match-title">✨ AI-Powered Bangle Match</h2>
-    <p class="ai-match-subtitle">Upload an image to find your perfect match</p>
-    
-    <div class="ai-match-controls" *ngIf="!aiMatchVisible">
-      <button class="ai-match-toggle" (click)="toggleAIMatch()">TRY AI MATCHING →</button>
-    </div>
-
-    <div class="ai-match-panel" *ngIf="aiMatchVisible">
-      <!-- Upload Box -->
-      <div class="upload-section">
-        <div class="upload-box" (click)="fileInput.click()">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <p class="upload-text">Click to upload or drag and drop</p>
-          <p class="upload-format">PNG, JPG, GIF (max. 10MB)</p>
-        </div>
-        <input #fileInput type="file" accept="image/*" (change)="onImageSelected($event)" style="display: none;">
-      </div>
-
-      <!-- Preview -->
-      <div class="preview-section" *ngIf="uploadedImage">
-        <img [src]="uploadedImage" alt="Uploaded" class="preview-image">
-        <button class="match-btn" (click)="performAIMatch()" [disabled]="isMatching">
-          {{ isMatching ? '⏳ MATCHING...' : '🔍 FIND MATCHES' }}
-        </button>
-      </div>
-
-      <!-- Results -->
-      <div class="match-results" *ngIf="matchResults && matchResults.length > 0">
-        <h3 class="results-title">Your AI-Matched Bangles</h3>
-        <div class="results-grid">
-          <div class="result-card" *ngFor="let result of matchResults">
-            <img [src]="result.image" [alt]="result.name" class="result-image">
-            <h4 class="result-name">{{ result.name }}</h4>
-            <p class="match-percentage">{{ result.similarity }}% Match</p>
-            <button class="view-btn" [routerLink]="['/product', result.id]">VIEW PRODUCT</button>
-          </div>
-        </div>
-      </div>
-
-      <button class="close-ai-btn" (click)="toggleAIMatch()">Close ✕</button>
-    </div>
-  </div>
-</section>
+<!-- AI MATCH FEATURE (SMART BANGLE MATCHER) -->
+<app-smart-bangle-matcher></app-smart-bangle-matcher>
 
 <!-- NEW ARRIVALS SECTION -->
-<section class="new-arrivals">
+<!-- <section class="new-arrivals">
   <div class="new-arrivals__content">
     <div class="new-arrivals__text">
       <span class="new-arrivals__label">{{ newArrivals?.top_label || 'NEW ARRIVALS' }}</span>
@@ -443,10 +638,10 @@
       <img [src]="newArrivals?.image_url || ''" alt="New Arrivals" class="new-arrivals__img-item">
     </div>
   </div>
-</section>
+</section> -->
 
 <!-- OUR STORY SECTION -->
-<section class="our-story" *ngIf="ourStory">
+<!-- <section class="our-story" *ngIf="ourStory">
   <div class="our-story__content">
     <div class="our-story__text">
       <span class="our-story__label">{{ ourStory?.top_label || 'OUR STORY' }}</span>
@@ -460,10 +655,10 @@
       <img [src]="ourStory?.image_url || ''" alt="Our Story" class="our-story__img-item">
     </div>
   </div>
-</section>
+</section> -->
 
 <!-- NEWSLETTER SECTION -->
-<section class="newsletter-section">
+<!-- <section class="newsletter-section">
   <div class="newsletter-content">
     <h2 class="newsletter-title">Join Our Luxury Circle</h2>
     <p class="newsletter-subtitle">Get exclusive early access to new collections and special offers</p>
@@ -481,7 +676,7 @@
     </form>
     <p class="newsletter-note" *ngIf="newsletterMessage">{{ newsletterMessage }}</p>
   </div>
-</section>
+</section> -->
 
 <!-- FEATURES SECTION -->
 <section class="features-section">

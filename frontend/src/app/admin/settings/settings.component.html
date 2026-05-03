@@ -21,6 +21,37 @@
   <!-- Settings Content -->
   <div class="settings-content" *ngIf="!isLoading">
 
+    <!-- Section 0: Homepage Layout Selector -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h2>Homepage Layout</h2>
+        <p class="card-description">Select which homepage design to display on your storefront</p>
+      </div>
+      <div class="card-body">
+        <div class="homepage-layout-selector">
+          <div
+            class="layout-option"
+            *ngFor="let option of homepageLayoutOptions"
+            [class.selected]="activeHomepage === option.value"
+            (click)="setHomepageLayout(option.value)">
+            <div class="layout-option__preview" [style.background]="option.previewBg">
+              <div class="layout-option__bars">
+                <div class="bar bar--hero" [style.background]="option.accentColor"></div>
+                <div class="bar bar--row"></div>
+                <div class="bar bar--row"></div>
+                <div class="bar bar--row bar--short"></div>
+              </div>
+            </div>
+            <div class="layout-option__info">
+              <span class="layout-option__name">{{ option.label }}</span>
+              <span class="layout-option__desc">{{ option.description }}</span>
+            </div>
+            <div class="layout-option__check" *ngIf="activeHomepage === option.value">✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Section 1: Visibility Controls -->
     <div class="settings-card">
       <div class="card-header">
@@ -99,6 +130,42 @@
             </div>
             <label class="toggle-switch">
               <input type="checkbox" [(ngModel)]="sections.newsletter" (change)="toggleSection('newsletter')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Top Flash Deals Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Top Flash Deals</h3>
+              <p class="section-description">Handpicked deals with countdown timers and special offers</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.flashDeals" (change)="toggleSection('flashDeals')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Recommended Products Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Recommended Products</h3>
+              <p class="section-description">Curated picks based on browsing and purchase history</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.recommendedProducts" (change)="toggleSection('recommendedProducts')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Recently Viewed Section -->
+          <div class="section-toggle-item">
+            <div class="toggle-left">
+              <h3 class="section-name">Recently Viewed</h3>
+              <p class="section-description">Products the customer has recently browsed</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="sections.recentlyViewed" (change)="toggleSection('recentlyViewed')">
               <span class="toggle-slider"></span>
             </label>
           </div>

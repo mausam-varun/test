@@ -1,9 +1,11 @@
 <section class="hero">
   <div class="hero__media">
-    <img
-      [src]="currentSlide.image_url"
-      [alt]="imageAlt"
-      loading="eager">
+    <div class="hero__zoom">
+      <img
+        [src]="currentSlide.image_url"
+        [alt]="imageAlt"
+        loading="eager">
+    </div>
 
     <div class="hero__overlay"></div>
 

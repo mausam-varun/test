@@ -1,0 +1,60 @@
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+      .divara-text { font-family: 'Georgia', 'Garamond', serif; font-style: italic; font-weight: 700; }
+      .craft-text { font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: 4px; }
+    </style>
+  </defs>
+
+  <!-- Gold Scissors -->
+  <g id="scissors">
+    <!-- Left scissor blade -->
+    <path d="M 120 100 Q 110 140 120 200" stroke="#C9A561" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <ellipse cx="120" cy="80" rx="22" ry="28" fill="none" stroke="#C9A561" stroke-width="11" stroke-linecap="round"/>
+    <!-- Right scissor blade -->
+    <path d="M 200 100 Q 210 140 200 200" stroke="#C9A561" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <ellipse cx="200" cy="80" rx="22" ry="28" fill="none" stroke="#C9A561" stroke-width="11" stroke-linecap="round"/>
+    <!-- Connecting pin -->
+    <circle cx="160" cy="150" r="6" fill="#C9A561"/>
+    <!-- Decorative rings on handles -->
+    <circle cx="120" cy="80" r="20" fill="none" stroke="#E8D4A8" stroke-width="4"/>
+    <circle cx="200" cy="80" r="20" fill="none" stroke="#E8D4A8" stroke-width="4"/>
+  </g>
+
+  <!-- Thread Spool -->
+  <g id="spool">
+    <!-- Left rim -->
+    <ellipse cx="235" cy="145" rx="18" ry="12" fill="#C9A561" opacity="0.9"/>
+    <!-- Main spool body -->
+    <rect x="235" y="145" width="40" height="70" rx="3" fill="#D4AF37" opacity="0.85"/>
+    <!-- Right rim -->
+    <ellipse cx="255" cy="215" rx="18" ry="12" fill="#8B6F47"/>
+    <!-- Thread wraps (navy blue) -->
+    <circle cx="255" cy="180" r="16" fill="none" stroke="#1E40AF" stroke-width="4"/>
+    <circle cx="255" cy="180" r="12" fill="none" stroke="#0F3E7E" stroke-width="2"/>
+    <circle cx="255" cy="180" r="9" fill="none" stroke="#1E40AF" stroke-width="2"/>
+  </g>
+
+  <!-- Navy "D" with flourish -->
+  <g id="d-letter">
+    <text x="260" y="380" class="divara-text" font-size="180" fill="#0F3E7E">D</text>
+    <!-- Decorative flourish under D -->
+    <path d="M 260 420 Q 300 435 340 420" stroke="#0F3E7E" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
+  </g>
+
+  <!-- Navy Script "ivara" -->
+  <text x="420" y="370" class="divara-text" font-size="130" fill="#0F3E7E">ivara</text>
+
+  <!-- Decorative line separator -->
+  <line x1="280" y1="420" x2="380" y2="420" stroke="#C9A561" stroke-width="2"/>
+  <circle cx="275" cy="420" r="3.5" fill="#C9A561"/>
+  <circle cx="385" cy="420" r="3.5" fill="#C9A561"/>
+
+  <!-- Gold "CRAFT" text -->
+  <text x="300" y="490" class="craft-text" font-size="70" fill="#C9A561">CRAFT</text>
+
+  <!-- Additional decorative dots -->
+  <circle cx="285" cy="495" r="3" fill="#C9A561"/>
+  <circle cx="385" cy="495" r="3" fill="#C9A561"/>
+</svg>

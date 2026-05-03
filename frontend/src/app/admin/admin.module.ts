@@ -14,6 +14,7 @@ import { QueueMonitorComponent } from './queue-monitor/queue-monitor.component';
 import { CurrencySettingsComponent } from './currency-settings/currency-settings.component';
 import { ReviewsComponent } from './reviews/reviews.component';
 import { AdminSettingsComponent } from './settings/settings.component';
+import { AdminBannerManagementComponent } from './admin-banner-management/admin-banner-management.component';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
@@ -27,7 +28,8 @@ import { SharedModule } from '../shared/shared.module';
     QueueMonitorComponent,
     ReviewsComponent,
     CurrencySettingsComponent,
-    AdminSettingsComponent
+    AdminSettingsComponent,
+    AdminBannerManagementComponent
   ],
   imports: [
     CommonModule,

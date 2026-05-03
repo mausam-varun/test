@@ -104,6 +104,19 @@
                   [ngModel]="item.quantity"
                   (ngModelChange)="updateItemQuantity(item.id, $event)">
               </p>
+              <div class="size-selector" *ngIf="item.sizes && item.sizes.length > 0">
+                <label>Size:</label>
+                <select [(ngModel)]="selectedSizes[item.id]" [ngModelOptions]="{updateOn: 'change'}" [attr.name]="'size-' + item.id" class="size-select">
+                  <option value="">Select size</option>
+                  <option *ngFor="let sizeOption of item.sizes" [value]="sizeOption.size">
+                    {{ sizeOption.size }} ({{ sizeOption.stock }} available)
+                  </option>
+                </select>
+              </div>
+              <div class="size-selector" *ngIf="!item.sizes || item.sizes.length === 0">
+                <label>Size:</label>
+                <input type="text" [(ngModel)]="selectedSizes[item.id]" [attr.name]="'size-text-' + item.id" placeholder="Enter size" class="size-input">
+              </div>
               <button type="button" class="remove-item-btn" (click)="removeItem(item.id)">Remove</button>
             </div>
             <strong>{{ (item.price * item.quantity) | displayCurrency:2 }}</strong>

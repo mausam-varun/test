@@ -15,17 +15,32 @@
 .hero__media {
   position: relative;
   width: 100%;
-  height: clamp(380px, 50vh, 580px);
+  height: clamp(600px, 50vh, 580px);
   overflow: hidden;
   border-radius: 8px;
 }
 
-.hero__media img {
+/* ── Ken Burns zoom wrapper ── */
+.hero__zoom {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hero__zoom img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
+  animation: heroZoom var(--hero-duration, 5s) ease-in-out infinite alternate;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes heroZoom {
+  0%   { transform: scale(1.0); }
+  100% { transform: scale(1.08); }
 }
 
 /* ── Subtle gradient overlay - barely visible ── */
@@ -127,7 +142,7 @@
 
 .hero__features li::before {
   content: '✓ ';
-  color: #E8174B;
+  color: #4a1942;
   font-weight: bold;
 }
 
@@ -138,9 +153,9 @@
   transform: translateY(-50%);
   width: 42px;
   height: 42px;
-  border: 2px solid #E8174B;
+  border: 2px solid #C8A96A;
   border-radius: 50%;
-  background: rgba(232, 23, 75, 0.92);
+  background: #4a1942;
   color: #fff;
   font-size: 1.05rem;
   display: grid;
@@ -152,8 +167,8 @@
 }
 
 .hero__nav:hover {
-  background: #C91340;
-  border-color: #C91340;
+  background: #4a1942;
+  border-color: #4a1942;
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -179,7 +194,7 @@
 .hero__dots button {
   width: 11px;
   height: 11px;
-  border: 2px solid #E8174B;
+  border: 2px solid #4a1942;
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
@@ -188,8 +203,8 @@
 }
 
 .hero__dots button.active {
-  background: #E8174B;
-  border-color: #E8174B;
+  background: #4a1942;
+  border-color: #4a1942;
 }
 
 /* ── Responsive ── */

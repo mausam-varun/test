@@ -1,0 +1,1164 @@
+// ═══════════════════════════════════════════════════════════════
+//  HOME 3 — Noura-inspired: warm cream, Marcellus serif headings,
+//            DM Sans body, organic minimal luxury aesthetic
+// ═══════════════════════════════════════════════════════════════
+
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+// ── Design tokens ──
+$n3-cream:     #FAF7F2;
+$n3-cream-dark: #F0EBE1;
+$n3-sand:      #E8D9C0;
+$n3-dark:      #373737;
+$n3-mid:       #555555;
+$n3-light:     #999999;
+$n3-accent:    #C4956A;
+$n3-red:       #D94F4F;
+$n3-white:     #FFFFFF;
+$n3-black:     #1A1A1A;
+
+$font-serif:  'Marcellus', Georgia, serif;
+$font-sans:   'DM Sans', Arial, Helvetica, sans-serif;
+
+$gap-xs: 8px;
+$gap-sm: 16px;
+$gap-md: 32px;
+$gap-lg: 64px;
+$gap-xl: 96px;
+
+// ── Host/global reset ──
+:host {
+  display: block;
+  background: $n3-cream;
+  font-family: $font-sans;
+  color: $n3-mid;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SHARED UTILITIES
+// ═══════════════════════════════════════════════════════════════
+.n3-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 $gap-md;
+}
+
+.n3-label {
+  font-family: $font-sans;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: $n3-light;
+  margin-bottom: $gap-xs;
+
+  &--center { text-align: center; }
+}
+
+.n3-heading {
+  font-family: $font-serif;
+  font-size: clamp(32px, 4vw, 52px);
+  color: $n3-dark;
+  line-height: 1.15;
+  margin: 0 0 $gap-sm;
+
+  &--center { text-align: center; }
+}
+
+.n3-body {
+  font-family: $font-sans;
+  font-size: 16px;
+  line-height: 1.7;
+  color: $n3-mid;
+}
+
+// ── Buttons ──
+.n3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-sans;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background: none;
+  padding: 0;
+
+  &--circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 1.5px solid $n3-white;
+    color: $n3-white;
+    background: transparent;
+
+    &:hover {
+      background: $n3-white;
+      color: $n3-dark;
+    }
+  }
+
+  &--outline {
+    padding: 14px 36px;
+    border: 1.5px solid $n3-dark;
+    color: $n3-dark;
+    background: transparent;
+    border-radius: 0;
+
+    &:hover {
+      background: $n3-dark;
+      color: $n3-white;
+    }
+  }
+
+  &--outlined-full {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid $n3-dark;
+    color: $n3-dark;
+    background: transparent;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+
+    &:hover {
+      background: $n3-dark;
+      color: $n3-white;
+    }
+  }
+
+  &--outlined-sm {
+    padding: 12px 32px;
+    border: 1.5px solid $n3-dark;
+    color: $n3-dark;
+    background: transparent;
+    font-size: 10px;
+
+    &:hover {
+      background: $n3-dark;
+      color: $n3-white;
+    }
+  }
+
+  &--dark {
+    padding: 14px 36px;
+    background: $n3-dark;
+    color: $n3-white;
+    border: 1.5px solid $n3-dark;
+
+    &:hover {
+      background: $n3-black;
+      border-color: $n3-black;
+    }
+  }
+
+  &--ghost {
+    padding: 8px 0;
+    color: $n3-white;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+
+    &:hover { border-bottom-color: $n3-white; }
+  }
+
+  &--light {
+    border-color: $n3-white;
+    color: $n3-white;
+
+    &:hover {
+      background: $n3-white;
+      color: $n3-dark;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HERO
+// ═══════════════════════════════════════════════════════════════
+.n3-hero {
+  display: flex;
+  height: 90vh;
+  min-height: 560px;
+  gap: 2px;           // thin divider between the 2 panels
+
+  &__panel {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  // ── Background layer (animated) ────────────────────────────
+  &__bg {
+    position: absolute;
+    inset: -4%;        // slight outset so scale never reveals edges
+    background-size: cover;
+    background-position: center;
+    will-change: transform;
+
+    &--zoom-in {
+      animation: n3ZoomIn 10s ease-in-out infinite alternate;
+    }
+
+    &--zoom-out {
+      animation: n3ZoomOut 10s ease-in-out infinite alternate;
+    }
+  }
+
+  // ── Dark gradient overlay ───────────────────────────────────
+  &__panel-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.60) 0%,
+      rgba(0, 0, 0, 0.10) 55%,
+      rgba(0, 0, 0, 0.00) 100%
+    );
+  }
+
+  // ── Text + CTA content ─────────────────────────────────────
+  &__panel-content {
+    position: absolute;
+    bottom: 56px;
+    left: 40px;
+    right: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  &__eyebrow {
+    font-family: $font-sans;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0;
+  }
+
+  &__title {
+    font-family: $font-serif;
+    font-size: clamp(36px, 4.5vw, 72px);
+    font-weight: 400;
+    color: $n3-white;
+    line-height: 1.08;
+    margin: 0;
+  }
+
+  // ── Circular "VIEW MORE" button ─────────────────────────────
+  &__cta {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    background: transparent;
+    color: $n3-white;
+    font-family: $font-sans;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 4px;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
+    &:hover {
+      background: $n3-white;
+      color: $n3-dark;
+      border-color: $n3-white;
+    }
+  }
+
+  // ── Responsive ─────────────────────────────────────────────
+  @media (max-width: 640px) {
+    flex-direction: column;
+    height: auto;
+
+    &__panel { height: 55vw; min-height: 300px; }
+    &__panel-content { bottom: 32px; left: 24px; right: 24px; gap: 12px; }
+    &__title { font-size: clamp(28px, 8vw, 44px); }
+    &__cta { width: 72px; height: 72px; font-size: 9px; }
+  }
+}
+
+// ── Ken Burns keyframes ──────────────────────────────────────────
+@keyframes n3ZoomIn {
+  from { transform: scale(1.00); }
+  to   { transform: scale(1.12); }
+}
+
+@keyframes n3ZoomOut {
+  from { transform: scale(1.12); }
+  to   { transform: scale(1.00); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MARQUEE
+// ═══════════════════════════════════════════════════════════════
+.n3-marquee {
+  background: $n3-dark;
+  color: rgba(255,255,255,0.75);
+  font-family: $font-sans;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  padding: 14px 0;
+  overflow: hidden;
+  white-space: nowrap;
+
+  &__track {
+    display: inline-flex;
+    gap: 40px;
+    animation: marquee 28s linear infinite;
+
+    .sep { color: $n3-accent; }
+  }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SPLIT BANNER
+// ═══════════════════════════════════════════════════════════════
+.n3-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 560px;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: $gap-xl $gap-lg;
+    background: $n3-white;
+    gap: $gap-sm;
+  }
+
+  &__image {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    min-height: 480px;
+    transition: background-size 0.8s ease;
+
+    // subtle scale-on-hover via pseudo element trick
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: inherit;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.8s ease;
+    }
+
+    &:hover::before { transform: scale(1.05); }
+  }
+
+  &__image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.25) 0%,
+      rgba(0, 0, 0, 0.00) 60%
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  QUOTE BANNER
+// ═══════════════════════════════════════════════════════════════
+.n3-quote {
+  background: $n3-cream;
+  text-align: center;
+  padding: $gap-xl $gap-lg;
+
+  &__text {
+    font-family: $font-serif;
+    font-size: clamp(20px, 2.6vw, 32px);
+    color: $n3-dark;
+    line-height: 1.55;
+    max-width: 820px;
+    margin: 0 auto;
+    font-style: normal;
+    quotes: none;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TRUST BADGES
+// ═══════════════════════════════════════════════════════════════
+.n3-badges {
+  background: $n3-cream;
+  padding: 40px $gap-lg 64px;
+
+  &__row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  &__item { flex: 0 0 auto; }
+
+  &__circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    transition: transform 0.3s ease;
+
+    svg {
+      width: 86px;
+      height: 86px;
+    }
+
+    &:hover { transform: scale(1.06); }
+
+    // pill / squircle variant
+    &--pill {
+      border-radius: 28%;
+      width: 110px;
+      height: 126px;
+
+      svg { width: 78px; height: 90px; }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PRODUCT CARDS
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  PRODUCT TABS HEADER
+// ═══════════════════════════════════════════════════════════════
+.n3-products {
+  background: $n3-cream;
+  padding: $gap-xl 0;
+
+  &__tabs {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: $gap-md 0 $gap-lg;
+    border-bottom: 1px solid #E0D9D0;
+    padding-bottom: 0;
+  }
+
+  &__tab {
+    background: none;
+    border: none;
+    font-family: $font-sans;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: $n3-light;
+    cursor: pointer;
+    padding-bottom: 14px;
+    position: relative;
+    transition: color 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: $n3-accent;
+      transform: scaleX(0);
+      transition: transform 0.25s ease;
+    }
+
+    &.active {
+      color: $n3-dark;
+      &::after { transform: scaleX(1); }
+    }
+
+    &:hover:not(.active) { color: $n3-dark; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $gap-md $gap-sm;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PRODUCT CARD  (Noura-style: square image + right hover strip)
+// ═══════════════════════════════════════════════════════════════
+.n3-product-card {
+  background: $n3-white;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+
+  &:hover { box-shadow: 0 6px 28px rgba(0,0,0,0.09); }
+
+  // ── Image wrapper ──────────────────────────────────────────
+  &__img-wrap {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: $n3-cream-dark;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+
+    .n3-product-card:hover & { transform: scale(1.06); }
+  }
+
+  // ── Sale badge ─────────────────────────────────────────────
+  &__badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: $n3-red;
+    color: $n3-white;
+    font-family: $font-sans;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 2px;
+    z-index: 2;
+  }
+
+  // ── Right-side vertical action strip ───────────────────────
+  &__actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 4;
+  }
+
+  &__action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    border: 1px solid #E2D9D0;
+    background: $n3-white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    // Start hidden above — each slides down into place on hover
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: opacity 0.3s ease, transform 0.3s ease,
+                background 0.2s ease, border-color 0.2s ease;
+
+    // Staggered delay: wishlist → cart → eye → close
+    &:nth-child(1) { transition-delay: 0.05s; }
+    &:nth-child(2) { transition-delay: 0.10s; }
+    &:nth-child(3) { transition-delay: 0.15s; }
+    &:nth-child(4) { transition-delay: 0.20s; }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      stroke: $n3-dark;
+      transition: stroke 0.2s ease;
+    }
+
+    &:hover {
+      background: $n3-dark;
+      border-color: $n3-dark;
+      svg { stroke: $n3-white; }
+    }
+
+    &.wishlisted {
+      background: $n3-red;
+      border-color: $n3-red;
+      opacity: 1;
+      transform: translateY(0);
+      svg { stroke: $n3-white; fill: $n3-white; }
+    }
+  }
+
+  // Reveal all buttons when card is hovered
+  &:hover &__action-btn {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  // ── Info block ────────────────────────────────────────────
+  &__info {
+    padding: 14px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__category {
+    font-family: $font-sans;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: $n3-light;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  &__name {
+    font-family: $font-serif;
+    font-size: 16px;
+    color: $n3-dark;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  &__price {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+
+    .price-current {
+      font-family: $font-sans;
+      font-size: 14px;
+      font-weight: 600;
+      color: $n3-dark;
+    }
+
+    .price-original {
+      font-size: 12px;
+      color: $n3-light;
+      text-decoration: line-through;
+    }
+  }
+}
+
+// Quantity control inside cards
+.n3-qty-control {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  border: 1.5px solid $n3-dark;
+
+  button {
+    flex: 0 0 36px;
+    height: 38px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: $n3-dark;
+    transition: background 0.2s;
+
+    &:hover { background: $n3-dark; color: $n3-white; }
+  }
+
+  span {
+    flex: 1;
+    text-align: center;
+    font-family: $font-sans;
+    font-size: 13px;
+    font-weight: 600;
+    color: $n3-dark;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FULL-WIDTH IMAGE BREAK
+// ═══════════════════════════════════════════════════════════════
+.n3-fullwidth-img {
+  position: relative;
+  height: 500px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.38);
+  }
+
+  &__content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $gap-sm;
+    text-align: center;
+
+    .n3-label { color: rgba(255,255,255,0.7); }
+    .n3-heading { color: $n3-white; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COLLECTION TABS
+// ═══════════════════════════════════════════════════════════════
+.n3-collection {
+  background: $n3-cream;
+  padding: $gap-xl 0;
+
+  &__tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: $gap-xs;
+    margin: $gap-md 0 $gap-sm;
+  }
+
+  &__tab {
+    font-family: $font-sans;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    background: none;
+    border: 1.5px solid #D4CBC0;
+    color: $n3-mid;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border-radius: 2px;
+
+    &:hover,
+    &.active {
+      background: $n3-dark;
+      border-color: $n3-dark;
+      color: $n3-white;
+    }
+  }
+
+  &__desc {
+    text-align: center;
+    font-family: $font-sans;
+    font-size: 15px;
+    color: $n3-light;
+    margin-bottom: $gap-md;
+    min-height: 24px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $gap-sm;
+  }
+
+  &__item {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3/4;
+    cursor: pointer;
+    background: $n3-cream-dark;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    &:hover img { transform: scale(1.06); }
+  }
+
+  &__item-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    transition: background 0.3s ease;
+
+    span {
+      font-family: $font-serif;
+      font-size: 16px;
+      color: $n3-white;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.3s ease;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .n3-collection__item:hover & {
+      background: rgba(0,0,0,0.28);
+      span { opacity: 1; transform: translateY(0); }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  3-COLUMN PROMO BANNERS
+// ═══════════════════════════════════════════════════════════════
+.n3-promo-banners {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  background: $n3-cream-dark;
+
+  &__panel {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 2 / 3;
+    cursor: pointer;
+
+    // pan the bg image on hover via the bg child layer
+    &:hover .n3-promo-banners__bg { transform: scale(1.05); }
+  }
+
+  &__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.7s ease;
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.68) 0%,
+      rgba(0, 0, 0, 0.20) 50%,
+      rgba(0, 0, 0, 0.00) 100%
+    );
+  }
+
+  &__content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  &__eyebrow {
+    font-family: $font-sans;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    margin: 0;
+  }
+
+  &__heading {
+    font-family: $font-serif;
+    font-size: clamp(22px, 2.4vw, 38px);
+    font-weight: 400;
+    color: $n3-white;
+    line-height: 1.15;
+    margin: 0;
+    white-space: pre-line;
+  }
+
+  &__desc {
+    font-family: $font-sans;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__btn {
+    display: inline-block;
+    text-decoration: none;
+    margin-top: 6px;
+    padding: 10px 22px;
+    border: 1.5px solid rgba(255, 255, 255, 0.80);
+    background: transparent;
+    color: $n3-white;
+    font-family: $font-sans;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease;
+
+    &:hover {
+      background: $n3-white;
+      color: $n3-dark;
+    }
+  }
+
+  // ── Responsive ────────────────────────────────────────────────
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr 1fr;
+
+    &__panel:last-child {
+      grid-column: span 2;
+      aspect-ratio: 16 / 7;
+    }
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+
+    &__panel,
+    &__panel:last-child {
+      grid-column: unset;
+      aspect-ratio: 4 / 3;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HIGHLIGHT BANNER
+// ═══════════════════════════════════════════════════════════════
+.n3-highlight {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 560px;
+  background: $n3-sand;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: $gap-xl $gap-lg;
+    gap: $gap-sm;
+  }
+
+  &__features {
+    list-style: none;
+    padding: 0;
+    margin: $gap-sm 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: $font-sans;
+      font-size: 14px;
+      color: $n3-dark;
+
+      svg {
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        color: $n3-accent;
+      }
+    }
+  }
+
+  &__image {
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.8s ease;
+    }
+
+    &:hover img { transform: scale(1.04); }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SELLING FAST
+// ═══════════════════════════════════════════════════════════════
+.n3-selling-fast {
+  background: $n3-cream;
+  padding: $gap-xl 0;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $gap-md $gap-sm;
+    margin-top: $gap-md;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BLOG
+// ═══════════════════════════════════════════════════════════════
+.n3-blogs {
+  background: $n3-white;
+  padding: $gap-xl 0;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $gap-md;
+    margin-top: $gap-md;
+  }
+}
+
+.n3-blog-card {
+  display: flex;
+  flex-direction: column;
+
+  &__img-wrap {
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    background: $n3-cream-dark;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .n3-blog-card:hover & img { transform: scale(1.06); }
+  }
+
+  &__body {
+    padding: $gap-md;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    flex: 1;
+  }
+
+  &__date {
+    font-family: $font-sans;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $n3-light;
+    margin: 0;
+  }
+
+  &__title {
+    font-family: $font-serif;
+    font-size: 20px;
+    color: $n3-dark;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  &__excerpt {
+    font-family: $font-sans;
+    font-size: 14px;
+    line-height: 1.6;
+    color: $n3-mid;
+    margin: 0;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NEWSLETTER
+// ═══════════════════════════════════════════════════════════════
+.n3-newsletter {
+  background: $n3-cream-dark;
+  padding: $gap-xl $gap-md;
+  text-align: center;
+
+  &__inner {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $gap-sm;
+  }
+
+  &__form {
+    display: flex;
+    width: 100%;
+    max-width: 480px;
+    margin-top: $gap-xs;
+  }
+
+  &__input {
+    flex: 1;
+    padding: 14px 18px;
+    font-family: $font-sans;
+    font-size: 14px;
+    border: 1.5px solid #D4CBC0;
+    border-right: none;
+    background: $n3-white;
+    color: $n3-dark;
+    outline: none;
+
+    &::placeholder { color: $n3-light; }
+    &:focus { border-color: $n3-dark; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RESPONSIVE
+// ═══════════════════════════════════════════════════════════════
+@media (max-width: 1100px) {
+  .n3-products__grid { grid-template-columns: repeat(3, 1fr); }
+  .n3-selling-fast__grid { grid-template-columns: repeat(3, 1fr); }
+  .n3-collection__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .n3-split { grid-template-columns: 1fr; }
+  .n3-highlight { grid-template-columns: 1fr; }
+
+  .n3-products__grid { grid-template-columns: repeat(2, 1fr); }
+  .n3-selling-fast__grid { grid-template-columns: repeat(2, 1fr); }
+  .n3-collection__grid { grid-template-columns: repeat(2, 1fr); }
+  .n3-blogs__grid { grid-template-columns: repeat(2, 1fr); }
+
+  .n3-split__text,
+  .n3-highlight__text { padding: $gap-lg $gap-md; }
+
+  .n3-highlight__image { order: -1; height: 300px; }
+
+  .n3-hero__content { padding: 0 $gap-md; }
+}
+
+@media (max-width: 580px) {
+  .n3-products__grid { grid-template-columns: repeat(2, 1fr); }
+  .n3-selling-fast__grid { grid-template-columns: 1fr 1fr; }
+  .n3-collection__grid { grid-template-columns: 1fr 1fr; }
+  .n3-blogs__grid { grid-template-columns: 1fr; }
+
+  .n3-quote { padding: $gap-lg $gap-md; }
+
+  .n3-newsletter__form { flex-direction: column; }
+  .n3-newsletter__input { border-right: 1.5px solid #D4CBC0; border-bottom: none; }
+}

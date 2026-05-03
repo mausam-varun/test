@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
+import { Home3Component } from './home/home3.component';
+import { HomeDispatcherComponent } from './home/home-dispatcher.component';
 import { AboutComponent } from './about/about.component';
 import { ShopComponent } from './shop/shop.component';
 import { ContactComponent } from './contact/contact.component';
@@ -11,10 +13,13 @@ import { ProductDetailComponent } from './product-detail/product-detail.componen
 import { WishlistComponent } from './wishlist/wishlist.component';
 import { ProfileComponent } from './profile/profile.component';
 import { OrderTrackingComponent } from './order-tracking/order-tracking.component';
+import { AiMatcherPageComponent } from './pages/ai-matcher-page/ai-matcher-page.component';
 
 const routes: Routes = [
-  { path: '', component: HomeComponent, pathMatch: 'full' },
-  { path: 'home', component: HomeComponent },
+  { path: '', component: HomeDispatcherComponent, pathMatch: 'full' },
+  { path: 'home', component: HomeDispatcherComponent },
+  { path: 'home1', component: HomeComponent },
+  { path: 'home3', component: Home3Component },
   { path: 'shop', component: ShopComponent },
   { path: 'about', component: AboutComponent },
   { path: 'contact', component: ContactComponent },
@@ -27,6 +32,7 @@ const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   { path: 'track-order', component: OrderTrackingComponent },
   { path: 'track-order/:orderNumber', component: OrderTrackingComponent },
+  { path: 'ai-matcher', component: AiMatcherPageComponent },
   { path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule) },
   { path: '**', redirectTo: '' }
 ];

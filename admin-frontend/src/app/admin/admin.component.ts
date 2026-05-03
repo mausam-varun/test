@@ -109,6 +109,13 @@ export class AdminComponent implements OnInit {
     return Object.keys(this.themeSettings) as (keyof ThemeSettings)[];
   }
 
+  // Price Multiplier Settings
+  showPriceMultiplierPanel = false;
+  priceMultiplier: number = 1;
+  priceMultiplierMessage = '';
+  isSavingMultiplier = false;
+  readonly multiplierOptions = [1, 2, 3, 4, 5, 6];
+
   // New Arrivals Section Properties
   showNewArrivalsPanel = false;
   newArrivalsTopLabel = 'NEW ARRIVALS';
@@ -132,6 +139,7 @@ export class AdminComponent implements OnInit {
     this.adminId = this.getAdminIdFromSession();
     this.adminToken = this.getAdminTokenFromSession();
     this.loadAdminCurrencyPreference();
+    this.loadPriceMultiplier();
     this.loadProducts();
     this.loadThemeSettings();
   }
@@ -371,6 +379,54 @@ export class AdminComponent implements OnInit {
 
   toggleThemePanel(): void {
     this.showThemePanel = !this.showThemePanel;
+  }
+
+  togglePriceMultiplierPanel(): void {
+    this.showPriceMultiplierPanel = !this.showPriceMultiplierPanel;
+    if (this.showPriceMultiplierPanel && this.priceMultiplier === 1) {
+      this.loadPriceMultiplier();
+    }
+  }
+
+  loadPriceMultiplier(): void {
+    // Try to load from localStorage or use default
+    try {
+      const stored = localStorage.getItem('usd_display_multiplier');
+      this.priceMultiplier = stored ? Number(stored) : 1;
+    } catch {
+      this.priceMultiplier = 1;
+    }
+  }
+
+  savePriceMultiplier(): void {
+    this.priceMultiplierMessage = '';
+
+    if (!Number.isInteger(this.priceMultiplier) || this.priceMultiplier < 1 || this.priceMultiplier > 6) {
+      this.priceMultiplierMessage = 'Multiplier must be between 1 and 6.';
+      return;
+    }
+
+    this.isSavingMultiplier = true;
+
+    try {
+      // Save to localStorage (synced with frontend)
+      localStorage.setItem('usd_display_multiplier', String(this.priceMultiplier));
+      
+      this.isSavingMultiplier = false;
+      this.priceMultiplierMessage = `✓ Price multiplier set to ${this.priceMultiplier}x. Frontend will display prices multiplied by ${this.priceMultiplier}.`;
+      
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        this.priceMultiplierMessage = '';
+      }, 3000);
+    } catch (error) {
+      this.isSavingMultiplier = false;
+      this.priceMultiplierMessage = 'Error saving multiplier. Please try again.';
+    }
+  }
+
+  getMultiplierPreview(basePrice: number = 10): string {
+    return `$${(basePrice * this.priceMultiplier).toFixed(2)}`;
   }
 
   toggleNewArrivalsPanel(): void {

@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_ENDPOINTS } from '../config/app-config';
+import { CartService } from '../services/cart.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 interface ProductImage {
   id: number;
@@ -24,7 +27,8 @@ interface Product {
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.scss']
 })
-export class ProductListComponent implements OnInit {
+export class ProductListComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   private readonly apiUrl = API_ENDPOINTS.products;
 
   allProducts: Product[] = [];
@@ -43,10 +47,24 @@ export class ProductListComponent implements OnInit {
   readonly pageSize = 8;
   totalPages = 1;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly cartService: CartService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
+    // Subscribe to cart changes to trigger UI updates
+    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.cdr.markForCheck();
+    });
+    
     this.loadProducts();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadProducts(): void {
@@ -120,5 +138,40 @@ export class ProductListComponent implements OnInit {
     this.searchText = '';
     this.selectedCategory = '';
     this.applyFilter();
+  }
+
+  // Cart Management
+  addToCart(product: Product): void {
+    this.cartService.addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: this.getImageUrl(product)
+    });
+  }
+
+  isProductAdded(productId: number): boolean {
+    const cartItems = this.cartService.getCartItemsSnapshot();
+    return cartItems.some(item => item.id === productId);
+  }
+
+  getProductQuantity(productId: number): number {
+    const cartItems = this.cartService.getCartItemsSnapshot();
+    const item = cartItems.find(item => item.id === productId);
+    return item?.quantity || 0;
+  }
+
+  incrementQuantity(productId: number): void {
+    const currentQuantity = this.getProductQuantity(productId);
+    this.cartService.updateQuantity(productId, currentQuantity + 1);
+  }
+
+  decrementQuantity(productId: number): void {
+    const currentQuantity = this.getProductQuantity(productId);
+    if (currentQuantity > 1) {
+      this.cartService.updateQuantity(productId, currentQuantity - 1);
+    } else if (currentQuantity === 1) {
+      this.cartService.removeFromCart(productId);
+    }
   }
 }

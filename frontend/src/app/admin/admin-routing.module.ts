@@ -10,6 +10,7 @@ import { QueueMonitorComponent } from './queue-monitor/queue-monitor.component';
 import { CurrencySettingsComponent } from './currency-settings/currency-settings.component';
 import { ReviewsComponent } from './reviews/reviews.component';
 import { AdminSettingsComponent } from './settings/settings.component';
+import { AdminBannerManagementComponent } from './admin-banner-management/admin-banner-management.component';
 
 const routes: Routes = [
   {
@@ -25,7 +26,8 @@ const routes: Routes = [
       { path: 'ai-queue', component: QueueMonitorComponent },
       { path: 'reviews', component: ReviewsComponent },
       { path: 'currency-settings', component: CurrencySettingsComponent },
-      { path: 'settings', component: AdminSettingsComponent }
+      { path: 'settings', component: AdminSettingsComponent },
+      { path: 'manage-banners', component: AdminBannerManagementComponent }
     ]
   }
 ];

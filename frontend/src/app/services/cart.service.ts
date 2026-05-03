@@ -7,6 +7,8 @@ export interface CartItem {
   image: string;
   price: number;
   quantity: number;
+  size?: string;
+  sizes?: Array<{ size: string; stock: number }>;
 }
 
 interface AddCartPayload {
@@ -14,6 +16,8 @@ interface AddCartPayload {
   name: string;
   image: string;
   price: number;
+  size?: string;
+  sizes?: Array<{ size: string; stock: number }>;
 }
 
 @Injectable({

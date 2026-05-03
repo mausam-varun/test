@@ -200,6 +200,66 @@
   padding: 0;
 }
 
+.size-selector {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+
+  .size-input {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    width: 80px;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #8B5E3C;
+      box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1);
+    }
+  }
+
+  .size-select {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 1rem;
+    padding-right: 28px;
+
+    &:focus {
+      outline: none;
+      border-color: #8B5E3C;
+      box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1);
+    }
+
+    option {
+      padding: 8px;
+      background: white;
+      color: #333;
+    }
+  }
+}
+
 .empty-cart {
   margin: 0 0 14px;
   padding: 12px;

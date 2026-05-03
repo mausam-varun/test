@@ -4,6 +4,7 @@ const { uploadImage, deleteImageByUrl } = require('../services/cloudinaryService
 const {
   getSliderSettings,
   updateSliderDisplayCount,
+  updateSliderSettings,
   listSliderItems,
   createSliderItem,
   getSliderItemById,
@@ -33,6 +34,7 @@ exports.getAdminSlider = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     display_count: settings.display_count,
+    autoplay_interval: settings.autoplay_interval,
     items
   });
 });
@@ -126,10 +128,19 @@ exports.deleteSlider = asyncHandler(async (req, res) => {
 
 exports.updateSliderSettings = asyncHandler(async (req, res) => {
   const displayCount = parseDisplayCount(req.body?.display_count);
-  if (displayCount === null) {
+  const autoplayInterval = Number(req.body?.autoplay_interval);
+
+  if (req.body?.display_count !== undefined && displayCount === null) {
     throw new AppError('display_count must be an integer between 2 and 5', 400);
   }
 
-  const settings = await updateSliderDisplayCount(displayCount);
+  if (req.body?.autoplay_interval !== undefined && (!Number.isInteger(autoplayInterval) || autoplayInterval < 1000 || autoplayInterval > 15000)) {
+    throw new AppError('autoplay_interval must be between 1000 and 15000 ms', 400);
+  }
+
+  const settings = await updateSliderSettings({
+    displayCount: displayCount !== null ? displayCount : undefined,
+    autoplayInterval: req.body?.autoplay_interval !== undefined ? autoplayInterval : undefined
+  });
   res.status(200).json(settings);
 });

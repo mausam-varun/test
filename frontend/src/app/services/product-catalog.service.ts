@@ -66,6 +66,7 @@ interface ApiCatalogProduct {
   color_details?: CatalogProductColor[];
   color_hex?: string[];
   attributes?: CatalogProductAttributes;
+  stock?: number | string; // Inventory count
 }
 
 export interface CatalogProduct {
@@ -86,6 +87,7 @@ export interface CatalogProduct {
   attributes: CatalogProductAttributes;
   material: string;
   popularity: number;
+  stock?: number; // Inventory count
 }
 
 @Injectable({

@@ -153,6 +153,10 @@ button.danger {
   font-size: 0.85rem;
 }
 
+.req {
+  color: #dc2626;
+}
+
 @media (max-width: 980px) {
   .slider-item {
     grid-template-columns: 1fr;
@@ -171,5 +175,55 @@ button.danger {
 
   .item-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// ── Home3 promo banner section ────────────────────────────────────────────────
+.h3-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #e2e8f0;
+
+  .page-head h2 {
+    color: #7c3aed;
+  }
+}
+
+.h3-banner-item {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.h3-preview-img {
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.full-col {
+  grid-column: 1 / -1;
+}
+
+button.success-btn {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+@media (max-width: 980px) {
+  .h3-banner-item {
+    grid-template-columns: 1fr;
+  }
+
+  .h3-preview-img {
+    width: 100%;
+    height: 180px;
   }
 }

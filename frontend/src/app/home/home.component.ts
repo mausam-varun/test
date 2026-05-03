@@ -1,12 +1,19 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { CartService } from '../services/cart.service';
 import { WishlistService } from '../services/wishlist.service';
-import { API_ENDPOINTS } from '../config/app-config';
+import { RecentlyViewedService } from '../services/recently-viewed.service';
+import { API_ENDPOINTS, APP_CONFIG } from '../config/app-config';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 // ========== INTERFACES ==========
+
+interface ProductSize {
+  size: string;
+  stock: number;
+}
 
 interface Product {
   id: number;
@@ -15,6 +22,9 @@ interface Product {
   price: number;
   rating: number;
   reviews: number;
+  category: string;
+  stock: number;
+  sizes: ProductSize[];
   isOnSale?: boolean;
   originalPrice?: number;
   countdown?: { days: number; hours: number; minutes: number; seconds: number };
@@ -47,6 +57,18 @@ interface HeroSlide {
   is_active: boolean;
 }
 
+interface PromotionalBanner {
+  id: number;
+  label: string;
+  title: string;
+  cta_text: string;
+  cta_link: string;
+  image_url: string;
+  background_color: string;
+  display_order: number;
+  is_active: boolean;
+}
+
 // ========== COMPONENT ==========
 
 @Component({
@@ -61,58 +83,93 @@ export class HomeComponent implements OnInit, OnDestroy {
   private readonly productApiBaseUrl = API_ENDPOINTS.products;
   private readonly categoryApiBaseUrl = API_ENDPOINTS.categories;
 
+  // Section visibility (controlled from admin settings)
+  sectionVisibility = {
+    flashDeals: true,
+    recommendedProducts: true,
+    recentlyViewed: true
+  };
+
+  // Countdown storage - keeps flashDeals array stable
+  private countdownMap = new Map<number, { days: number; hours: number; minutes: number; seconds: number }>();
+
+  // Getter for countdown lookup in template
+  getCountdown(dealId: number) {
+    return this.countdownMap.get(dealId);
+  }
+
   // Data properties
   heroSlides: HeroSlide[] = [];
   heroSliderImages: string[] = [];
   heroImage = 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80';
+  heroAutoplayInterval = 4000;
   currentSlideIndex = 0;
   categories: Category[] = [];
   flashDeals: Product[] = [];
+  flashDealsBanner: any = {};
   recentProducts: Product[] = [];
+
+  // Hero promo banners (right column — loaded from API)
+  promoBanners: { bridal: any; festive: any } = { bridal: {}, festive: {} };
   newProducts: Product[] = [];
+  festiveProducts: Product[] = [];
   recommendedProducts: Product[] = [];
   blogs: Blog[] = [];
+  promotionalBanners: PromotionalBanner[] = [];
+  newProductsBannerImageUrl: string = '';
+  festiveBannerImageUrl: string = '';
 
   // Our Story section
   ourStory: any = null;
   newArrivals: any = null;
-
-  // AI Matching
-  uploadedImage: string | null = null;
-  isMatching = false;
-  matchResults: any[] = [];
-  aiMatchVisible = false;
-
-  // AI-Powered Bangle Match
-  selectedDressImage: File | null = null;
-  selectedDressImagePreview: string | null = null;
-  matchError = '';
-  matchedProducts: any[] = [];
-  detectedDetails: any = null;
-  generatedBangleImageUrl: string | null = null;
 
   // Newsletter
   newsletterEmail = '';
   isSubscribing = false;
   newsletterMessage = '';
 
+  // Quantity input for adding products
+  addQuantities: { [productId: number]: number } = {};
+  
+  // Size selection for bangles
+  selectedSizes: { [productId: number]: string } = {};
+
   constructor(
     private readonly http: HttpClient,
     private readonly cartService: CartService,
-    private readonly wishlistService: WishlistService
+    private readonly wishlistService: WishlistService,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly router: Router,
+    private readonly recentlyViewedService: RecentlyViewedService
   ) {}
 
   ngOnInit(): void {
+    console.log('🏠 Home Component initialized');
+    
+    // Subscribe to cart changes to trigger UI updates
+    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe((items) => {
+      console.log('🔄 Cart changed! New items:', items);
+      this.cdr.markForCheck();
+      console.log('✨ Change detection marked for check');
+    });
+    
     this.loadHeroSlides();
+    this.loadPromotionalBanners();
+    this.loadNewProductsBannerImage();
+    this.loadFestiveSeasonBannerImage();
+    this.loadFlashDealsBanner();
     this.loadCategories();
     this.loadFlashDeals();
     this.loadRecentProducts();
     this.loadNewProducts();
+    this.loadFestiveProducts();
     this.loadRecommendedProducts();
     this.loadBlogs();
     this.loadOurStory();
     this.loadNewArrivals();
     this.startCountdownTimer();
+    this.loadSectionVisibility();
+    this.loadPromoBanners();
   }
 
   ngOnDestroy(): void {
@@ -121,6 +178,34 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   // ========== DATA LOADING ==========
+
+  private loadPromoBanners(): void {
+    this.http.get<any[]>(`${APP_CONFIG.API_URL}/hero-promo-banners`).subscribe({
+      next: (banners) => {
+        if (!banners) return;
+        const bridal  = banners.find(b => b.banner_key === 'bridal');
+        const festive = banners.find(b => b.banner_key === 'festive');
+        if (bridal)  this.promoBanners.bridal  = bridal;
+        if (festive) this.promoBanners.festive = festive;
+      },
+      error: () => {}
+    });
+  }
+
+
+  private loadSectionVisibility(): void {
+    this.http.get<any>(`${APP_CONFIG.API_URL}/settings/admin/settings`).subscribe({
+      next: (data) => {
+        if (data?.sections) {
+          const s = data.sections;
+          this.sectionVisibility.flashDeals = s.flashDeals !== false;
+          this.sectionVisibility.recommendedProducts = s.recommendedProducts !== false;
+          this.sectionVisibility.recentlyViewed = s.recentlyViewed !== false;
+        }
+      },
+      error: () => { /* keep defaults (all true) on error */ }
+    });
+  }
 
   private loadHeroSlides(): void {
     // Use the /public endpoint which returns active slider items
@@ -138,6 +223,9 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.heroSlides = activeSlides.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
             this.heroSliderImages = this.heroSlides.map((slide: any) => slide.image_url);
             this.heroImage = this.heroSlides[0].image_url;
+            if (response?.autoplay_interval > 0) {
+              this.heroAutoplayInterval = Number(response.autoplay_interval);
+            }
             console.log('Loaded', this.heroSlides.length, 'Hero Slides from API:', this.heroSlides);
           } else {
             console.log('No active sliders found, using defaults');
@@ -153,6 +241,43 @@ export class HomeComponent implements OnInit, OnDestroy {
         console.error('Failed to load hero sliders:', error);
         console.log('Falling back to default slides');
         this.loadDefaultSlides();
+      }
+    });
+  }
+
+  private loadNewProductsBannerImage(): void {
+    this.http.get<{ image_url: string }>(API_ENDPOINTS.newProductsBanner).subscribe({
+      next: (res) => { this.newProductsBannerImageUrl = res?.image_url || ''; },
+      error: () => { this.newProductsBannerImageUrl = ''; }
+    });
+  }
+
+  private loadFestiveSeasonBannerImage(): void {
+    this.http.get<any>(API_ENDPOINTS.festiveSeasonBanner).subscribe({
+      next: (res) => { 
+        this.festiveBannerImageUrl = res?.image_url || ''; 
+      },
+      error: () => { 
+        this.festiveBannerImageUrl = ''; 
+      }
+    });
+  }
+
+  private loadPromotionalBanners(): void {
+    console.log('📢 Loading promotional banners from', API_ENDPOINTS.banners);
+    this.http.get<PromotionalBanner[]>(API_ENDPOINTS.banners).subscribe({
+      next: (response) => {
+        const banners = Array.isArray(response) ? response : [];
+        this.promotionalBanners = banners.sort((a: PromotionalBanner, b: PromotionalBanner) => 
+          (a.display_order || 0) - (b.display_order || 0)
+        );
+        console.log('✅ Loaded promotional banners:', this.promotionalBanners);
+        console.log(`📊 Total banners: ${this.promotionalBanners.length}`);
+      },
+      error: (error) => {
+        console.error('❌ Failed to load promotional banners:', error);
+        console.error('📡 Error Details:', error.message, error.status);
+        this.promotionalBanners = [];
       }
     });
   }
@@ -195,17 +320,24 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.http.get<any>(`${this.productApiBaseUrl}?is_sale=true&limit=4`).subscribe({
       next: (response) => {
         const products = Array.isArray(response) ? response : response?.products || [];
-        this.flashDeals = products.slice(0, 4).map((p: any) => ({
+        this.flashDeals = products.slice(0, 5).map((p: any) => ({
           id: p.id,
           name: p.name,
           image: p.image_url || 'https://via.placeholder.com/200',
           price: p.price || 0,
           rating: p.rating || 0,
           reviews: p.reviews || 0,
+          category: p.category || 'bangles',
+          stock: p.stock || 0,
+          sizes: p.sizes || [],
           isOnSale: true,
-          originalPrice: p.original_price || p.price * 1.2,
-          countdown: this.calculateCountdown()
+          originalPrice: p.original_price || p.price * 1.2
         }));
+
+        // Initialize countdown Map for each deal
+        this.flashDeals.forEach(deal => {
+          this.countdownMap.set(deal.id, this.calculateCountdown());
+        });
       },
       error: () => {
         this.flashDeals = [];
@@ -213,17 +345,33 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadFlashDealsBanner(): void {
+    this.http.get<any>(API_ENDPOINTS.flashDealsBanner).subscribe({
+      next: (data) => {
+        this.flashDealsBanner = data || {};
+      },
+      error: () => {
+        this.flashDealsBanner = {};
+      }
+    });
+  }
+
   private loadRecentProducts(): void {
-    this.http.get<any>(`${this.productApiBaseUrl}?limit=4`).subscribe({
-      next: (response) => {
-        const products = Array.isArray(response) ? response : response?.products || [];
-        this.recentProducts = products.slice(0, 4).map((p: any) => ({
+    this.recentlyViewedService.getRecentProducts(10).subscribe({
+      //console here
+      
+      next: (products) => {
+        console.log('📦 Loaded recent products:', products);
+        this.recentProducts = products.map((p: any) => ({
           id: p.id,
           name: p.name,
           image: p.image_url || 'https://via.placeholder.com/200',
-          price: p.price || 0,
+          price: Number(p.price) || 0,
           rating: p.rating || 0,
-          reviews: p.reviews || 0
+          reviews: p.reviews || 0,
+          category: p.category || 'bangles',
+          stock: p.stock || 0,
+          sizes: p.sizes || []
         }));
       },
       error: () => {
@@ -233,16 +381,19 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private loadNewProducts(): void {
-    this.http.get<any>(`${this.productApiBaseUrl}?limit=4&offset=4`).subscribe({
+    this.http.get<any>(`${this.productApiBaseUrl}?limit=10&offset=4`).subscribe({
       next: (response) => {
         const products = Array.isArray(response) ? response : response?.products || [];
-        this.newProducts = products.slice(0, 4).map((p: any) => ({
+        this.newProducts = products.slice(0, 10).map((p: any) => ({
           id: p.id,
           name: p.name,
           image: p.image_url || 'https://via.placeholder.com/200',
           price: p.price || 0,
           rating: p.rating || 0,
           reviews: p.reviews || 0,
+          category: p.category || 'bangles',
+          stock: p.stock || 0,
+          sizes: p.sizes || [],
           isOnSale: Math.random() > 0.6
         }));
       },
@@ -252,17 +403,43 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadRecommendedProducts(): void {
-    this.http.get<any>(`${this.productApiBaseUrl}?limit=4&offset=8`).subscribe({
+  private loadFestiveProducts(): void {
+    this.http.get<any>(`${this.productApiBaseUrl}?limit=8&offset=6`).subscribe({
       next: (response) => {
         const products = Array.isArray(response) ? response : response?.products || [];
-        this.recommendedProducts = products.slice(0, 4).map((p: any) => ({
+        this.festiveProducts = products.slice(0, 8).map((p: any) => ({
           id: p.id,
           name: p.name,
           image: p.image_url || 'https://via.placeholder.com/200',
           price: p.price || 0,
           rating: p.rating || 0,
           reviews: p.reviews || 0,
+          category: p.category || 'bangles',
+          stock: p.stock || 0,
+          sizes: p.sizes || [],
+          isOnSale: Math.random() > 0.5
+        }));
+      },
+      error: () => {
+        this.festiveProducts = [];
+      }
+    });
+  }
+
+  private loadRecommendedProducts(): void {
+    this.http.get<any>(`${this.productApiBaseUrl}?limit=4&offset=8`).subscribe({
+      next: (response) => {
+        const products = Array.isArray(response) ? response : response?.products || [];
+        this.recommendedProducts = products.slice(0, 5).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          image: p.image_url || 'https://via.placeholder.com/200',
+          price: p.price || 0,
+          rating: p.rating || 0,
+          reviews: p.reviews || 0,
+          category: p.category || 'bangles',
+          stock: p.stock || 0,
+          sizes: p.sizes || [],
           isOnSale: Math.random() > 0.7
         }));
       },
@@ -323,137 +500,98 @@ export class HomeComponent implements OnInit, OnDestroy {
   // ========== ACTIONS ==========
 
   addToCart(product: any): void {
-    this.cartService.addToCart(product);
+    console.log('🛒 ADD TO CART clicked', product);
+    
+    // Prepare cart item with all details including sizes
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      image: product.imageUrl || product.image,
+      price: product.price,
+      sizes: product.sizes // Include available sizes
+    };
+    
+    this.cartService.addToCart(cartItem);
+    console.log('📦 Cart after add:', this.cartService.getCartItemsSnapshot());
+  }
+
+  isProductAdded(productId: number): boolean {
+    const cartItems = this.cartService.getCartItemsSnapshot();
+    const exists = cartItems.some(item => item.id === productId);
+    console.log(`✅ isProductAdded(${productId}):`, exists, 'cart items:', cartItems);
+    return exists;
+  }
+
+  getProductQuantity(productId: number): number {
+    const cartItems = this.cartService.getCartItemsSnapshot();
+    const item = cartItems.find(item => item.id === productId);
+    console.log(`📊 getProductQuantity(${productId}):`, item?.quantity || 0);
+    return item?.quantity || 0;
+  }
+
+  incrementQuantity(productId: number): void {
+    const currentQuantity = this.getProductQuantity(productId);
+    console.log(`➕ incrementQuantity(${productId}): ${currentQuantity} → ${currentQuantity + 1}`);
+    this.cartService.updateQuantity(productId, currentQuantity + 1);
+  }
+
+  decrementQuantity(productId: number): void {
+    const currentQuantity = this.getProductQuantity(productId);
+    console.log(`➖ decrementQuantity(${productId}): ${currentQuantity} → ${Math.max(0, currentQuantity - 1)}`);
+    if (currentQuantity > 1) {
+      this.cartService.updateQuantity(productId, currentQuantity - 1);
+    } else if (currentQuantity === 1) {
+      this.cartService.removeFromCart(productId);
+    }
+  }
+
+  // ========== QUANTITY INPUT METHODS ==========
+
+  increaseAddQty(productId: number, maxStock: number): void {
+    const currentQty = this.addQuantities[productId] || 1;
+    if (currentQty < maxStock) {
+      this.addQuantities[productId] = currentQty + 1;
+    }
+  }
+
+  decreaseAddQty(productId: number): void {
+    const currentQty = this.addQuantities[productId] || 1;
+    if (currentQty > 1) {
+      this.addQuantities[productId] = currentQty - 1;
+    }
+  }
+
+  addToCartWithQty(product: any): void {
+    const quantity = this.addQuantities[product.id] || 1;
+    const selectedSize = this.selectedSizes[product.id];
+
+    console.log(`🛒 Adding ${quantity}x ${product.name}${selectedSize ? ` (${selectedSize})` : ''} to cart`);
+
+    // Prepare cart item with all details including sizes
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      image: product.imageUrl || product.image,
+      price: product.price,
+      size: selectedSize,
+      sizes: product.sizes // Include available sizes
+    };
+
+    // Add to cart multiple times based on quantity
+    for (let i = 0; i < quantity; i++) {
+      this.cartService.addToCart(cartItem);
+    }
+
+    // Reset quantity input and size selection
+    delete this.addQuantities[product.id];
+    delete this.selectedSizes[product.id];
+
+    console.log(`✅ Added to cart! Total items: ${this.cartService.getCartCountSnapshot()}`);
   }
 
   openQuickView(product: any): void {
     // TODO: Implement quick view modal or drawer
     console.log('Opening quick view for product:', product);
-  }
-
-  onDressImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] || null;
-
-    this.matchError = '';
-    this.matchedProducts = [];
-    this.detectedDetails = null;
-    this.generatedBangleImageUrl = null;
-
-    if (!file) {
-      this.selectedDressImage = null;
-      if (this.selectedDressImagePreview) {
-        URL.revokeObjectURL(this.selectedDressImagePreview);
-      }
-      this.selectedDressImagePreview = null;
-      return;
-    }
-
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      this.matchError = 'Please upload JPG, PNG, or WEBP image.';
-      input.value = '';
-      return;
-    }
-
-    this.selectedDressImage = file;
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      this.selectedDressImagePreview = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  findMatchingBangles(): void {
-    if (!this.selectedDressImage) {
-      this.matchError = 'Please choose a dress image first.';
-      return;
-    }
-
-    this.isMatching = true;
-    this.matchError = '';
-    this.matchedProducts = [];
-    this.detectedDetails = null;
-    this.generatedBangleImageUrl = null;
-
-    const formData = new FormData();
-    formData.append('image_file', this.selectedDressImage);
-
-    this.http.post<any>(`${this.productApiBaseUrl}/match-bangles`, formData).subscribe({
-      next: (response) => {
-        const safeMatches = Array.isArray(response) ? response : (response?.matches || []);
-        const generatedImageBase64 = Array.isArray(response) ? null : (response?.generated_image_base64 || null);
-
-        this.generatedBangleImageUrl = generatedImageBase64
-          ? `data:image/png;base64,${generatedImageBase64}`
-          : null;
-
-        this.detectedDetails = Array.isArray(response)
-          ? (safeMatches[0]?.payload || null)
-          : (response?.query_metadata || safeMatches[0]?.payload || null);
-
-        if (!safeMatches.length) {
-          this.isMatching = false;
-          this.matchError = this.generatedBangleImageUrl
-            ? 'No direct vector match found. Showing AI-generated matching bangle concept.'
-            : 'No similar bangles found for this image.';
-          return;
-        }
-
-        this.loadMatchedProductCards(safeMatches);
-      },
-      error: (error) => {
-        this.isMatching = false;
-        this.matchError = error?.error?.message || 'Failed to find matching bangles. Please try again.';
-      }
-    });
-  }
-
-  private loadMatchedProductCards(matches: any[]): void {
-    const productIds = matches.map((m: any) => m.product_id || m.id).filter(Boolean);
-
-    if (!productIds.length) {
-      this.isMatching = false;
-      return;
-    }
-
-    this.http.get<any>(`${this.productApiBaseUrl}`).subscribe({
-      next: (allProducts) => {
-        const products = Array.isArray(allProducts) ? allProducts : allProducts?.data || [];
-        const productsMap = new Map(products.map((p: any) => [p.id, p]));
-
-        this.matchedProducts = productIds
-          .map((id: any) => {
-            const product: any = productsMap.get(id);
-            if (!product) return null;
-
-            return {
-              id: product.id || 0,
-              name: product.name || '',
-              price: product.price || 0,
-              imageUrl: (product.image_url || (product.images && product.images[0]?.image_url) || 'assets/placeholder.png') as string,
-              rating: product.rating || 0,
-              reviews: product.reviews || 0
-            };
-          })
-          .filter(Boolean);
-
-        this.isMatching = false;
-      },
-      error: () => {
-        this.isMatching = false;
-        this.matchError = 'Failed to load product details.';
-      }
-    });
-  }
-
-  similarityPercent(value: number): number {
-    return Math.max(0, Math.min(100, Math.round((value || 0) * 100)));
-  }
-
-  trackByMatchedId(index: number, product: any): number {
-    return product.id || index;
   }
 
   addToWishlist(product: any): void {
@@ -467,63 +605,20 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleWishlist(product: any): void {
+    if (this.isWishlisted(product.id)) {
+      this.wishlistService.removeFromWishlist(product.id);
+    } else {
+      this.addToWishlist(product);
+    }
+  }
+
   isWishlisted(productId: number): boolean {
     return this.wishlistService.isInWishlist(productId);
   }
 
-  onImageSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.uploadedImage = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  performAIMatch(): void {
-    if (!this.uploadedImage) {
-      return;
-    }
-
-    this.isMatching = true;
-    // TODO: Call backend API for AI matching
-    setTimeout(() => {
-      this.matchResults = [
-        {
-          id: 1,
-          name: 'Elegant Pearl Bangle',
-          image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=300&q=80',
-          similarity: 92
-        },
-        {
-          id: 2,
-          name: 'Golden Wave Bangle',
-          image: 'https://images.unsplash.com/photo-1515562141207-6461a4b9b7fd?auto=format&fit=crop&w=300&q=80',
-          similarity: 85
-        },
-        {
-          id: 3,
-          name: 'Crystal Luxury Bangle',
-          image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=300&q=80',
-          similarity: 78
-        },
-        {
-          id: 4,
-          name: 'Artistic Pattern Bangle',
-          image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=300&q=80',
-          similarity: 72
-        }
-      ];
-      this.isMatching = false;
-    }, 2000);
-  }
-
-  toggleAIMatch(): void {
-    this.aiMatchVisible = !this.aiMatchVisible;
-    this.uploadedImage = null;
-    this.matchResults = [];
+  navigateToProduct(productId: number): void {
+    this.router.navigate(['/product', productId]);
   }
 
   subscribeNewsletter(): void {
@@ -555,10 +650,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private startCountdownTimer(): void {
     this.countdownInterval$.subscribe(() => {
-      this.flashDeals = this.flashDeals.map(deal => ({
-        ...deal,
-        countdown: this.calculateCountdown()
-      }));
+      // Only update the countdown Map, not the flashDeals array
+      this.flashDeals.forEach(deal => {
+        this.countdownMap.set(deal.id, this.calculateCountdown());
+      });
     });
   }
 

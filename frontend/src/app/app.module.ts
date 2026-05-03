@@ -6,6 +6,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
+import { Home3Component } from './home/home3.component';
+import { HomeDispatcherComponent } from './home/home-dispatcher.component';
 import { AboutComponent } from './about/about.component';
 import { SharedModule } from './shared/shared.module';
 import { ShopModule } from './shop/shop.module';
@@ -20,11 +22,14 @@ import { ProductDetailComponent } from './product-detail/product-detail.componen
 import { WishlistComponent } from './wishlist/wishlist.component';
 import { ProfileComponent } from './profile/profile.component';
 import { OrderTrackingComponent } from './order-tracking/order-tracking.component';
+import { AiMatcherPageComponent } from './pages/ai-matcher-page/ai-matcher-page.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
+    Home3Component,
+    HomeDispatcherComponent,
     AboutComponent,
     LoginComponent,
     AdminSignupComponent,
@@ -35,7 +40,8 @@ import { OrderTrackingComponent } from './order-tracking/order-tracking.componen
     ProductDetailComponent,
     WishlistComponent,
     ProfileComponent,
-    OrderTrackingComponent
+    OrderTrackingComponent,
+    AiMatcherPageComponent
   ],
   imports: [
     BrowserModule,

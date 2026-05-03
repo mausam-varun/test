@@ -167,7 +167,7 @@ class ProductProcessor:
             query_embedding,
             metadata.category or 'bangles',
             20,
-            metadata.occasion or None
+            None  # Don't filter by dress occasion — dress occasion ≠ bangle occasion
         )
         candidates = self._filter_by_target_gender(candidates, metadata.target_gender or 'women')
 

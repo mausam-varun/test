@@ -1,0 +1,750 @@
+<div class="admin-banner-management">
+  <div class="page-header">
+    <h1>Promotional Banners Management</h1>
+    <p>Manage promotional banners displayed on the home page</p>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>{{ errorMessage }}</span>
+    <button (click)="closeAlert()" class="close-btn">&times;</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>{{ successMessage }}</span>
+    <button (click)="closeAlert()" class="close-btn">&times;</button>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- Form Section -->
+    <div class="form-section">
+      <div class="form-card">
+        <h2>{{ editingId ? 'Edit Banner' : 'Create New Banner' }}</h2>
+
+        <form (ngSubmit)="saveBanner()" #bannerForm="ngForm">
+          <div class="form-group">
+            <label>Label *</label>
+            <input
+              type="text"
+              [(ngModel)]="form.label"
+              name="label"
+              placeholder="e.g., SPECIAL PRODUCTS, 30% OFF THIS WEEK"
+              class="form-input"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label>Title *</label>
+            <input
+              type="text"
+              [(ngModel)]="form.title"
+              name="title"
+              placeholder="e.g., Keep Your Feet Cool And Comfy"
+              class="form-input"
+              required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>CTA Text</label>
+              <input
+                type="text"
+                [(ngModel)]="form.cta_text"
+                name="cta_text"
+                placeholder="Shop Now"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>CTA Link</label>
+              <input
+                type="text"
+                [(ngModel)]="form.cta_link"
+                name="cta_link"
+                placeholder="#"
+                class="form-input">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Background Color (Gradient)</label>
+              
+              <!-- Color Picker Interface -->
+              <div class="gradient-picker">
+                <!-- Gradient Preview -->
+                <div 
+                  class="gradient-preview"
+                  [style.background]="form.background_color">
+                </div>
+
+                <!-- Start Color Picker -->
+                <div class="color-input-group">
+                  <label class="color-label">Start Color</label>
+                  <div class="color-input-wrapper">
+                    <input
+                      type="color"
+                      [(ngModel)]="gradientStartColor"
+                      (change)="onGradientColorChange()"
+                      name="gradientStartColor"
+                      class="color-input">
+                    <input
+                      type="text"
+                      [(ngModel)]="gradientStartColor"
+                      (change)="onGradientColorChange()"
+                      name="gradientStartColorText"
+                      class="color-hex"
+                      placeholder="#D946EF">
+                  </div>
+                </div>
+
+                <!-- End Color Picker -->
+                <div class="color-input-group">
+                  <label class="color-label">End Color</label>
+                  <div class="color-input-wrapper">
+                    <input
+                      type="color"
+                      [(ngModel)]="gradientEndColor"
+                      (change)="onGradientColorChange()"
+                      name="gradientEndColor"
+                      class="color-input">
+                    <input
+                      type="text"
+                      [(ngModel)]="gradientEndColor"
+                      (change)="onGradientColorChange()"
+                      name="gradientEndColorText"
+                      class="color-hex"
+                      placeholder="#9333EA">
+                  </div>
+                </div>
+
+                <!-- Gradient Angle Slider -->
+                <div class="angle-input-group">
+                  <label class="angle-label">
+                    Gradient Angle: <strong>{{ gradientAngle }}°</strong>
+                  </label>
+                  <input
+                    type="range"
+                    [(ngModel)]="gradientAngle"
+                    (change)="onGradientColorChange()"
+                    name="gradientAngle"
+                    min="0"
+                    max="360"
+                    class="angle-slider">
+                </div>
+
+                <!-- Hidden input for form submission -->
+                <input
+                  type="hidden"
+                  [(ngModel)]="form.background_color"
+                  name="background_color">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Display Order</label>
+              <input
+                type="number"
+                [(ngModel)]="form.display_order"
+                name="display_order"
+                min="0"
+                class="form-input">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Banner Image (Optional)</label>
+            <div class="file-input-wrapper">
+              <input
+                type="file"
+                id="banner-image"
+                (change)="onFileSelected($event)"
+                accept="image/*"
+                class="file-input"
+                #fileInput>
+              <label for="banner-image" class="file-label">
+                Choose Image
+              </label>
+              <small>JPG or PNG (max 5MB)</small>
+            </div>
+
+            <div *ngIf="previewUrl" class="image-preview">
+              <img [src]="previewUrl" [alt]="form.title">
+              <small>{{ selectedFile ? 'New image selected' : 'Current image' }}</small>
+            </div>
+          </div>
+
+          <div class="form-group checkbox">
+            <input
+              type="checkbox"
+              [(ngModel)]="form.is_active"
+              name="is_active"
+              id="is_active">
+            <label for="is_active">Active</label>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+              {{ editingId ? 'Update Banner' : 'Create Banner' }}
+            </button>
+            <button
+              *ngIf="editingId"
+              type="button"
+              (click)="cancelEdit()"
+              class="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Banners List Section -->
+    <div class="list-section">
+      <h2>Active Banners</h2>
+
+      <div *ngIf="isLoading" class="loading">
+        <p>Loading banners...</p>
+      </div>
+
+      <div *ngIf="!isLoading && banners.length === 0" class="empty-state">
+        <p>No banners found. Create one to get started!</p>
+      </div>
+
+      <div *ngIf="!isLoading && banners.length > 0" class="banners-grid">
+        <div
+          *ngFor="let banner of banners; trackBy: trackByBannerId"
+          class="banner-card"
+          [style.background]="banner.background_color">
+
+          <div class="banner-preview">
+            <img
+              *ngIf="banner.image_url"
+              [src]="banner.image_url"
+              [alt]="banner.title"
+              class="banner-image">
+            <div *ngIf="!banner.image_url" class="placeholder">
+              No Image
+            </div>
+          </div>
+
+          <div class="banner-content">
+            <span class="badge" [class.inactive]="!banner.is_active">
+              {{ banner.label }}
+            </span>
+            <h3>{{ banner.title }}</h3>
+            <p class="cta-link">{{ banner.cta_text }}</p>
+            <div class="banner-meta">
+              <small>Order: {{ banner.display_order }}</small>
+              <small *ngIf="banner.id">ID: {{ banner.id }}</small>
+            </div>
+          </div>
+
+          <div class="banner-actions">
+            <button
+              (click)="toggleActive(banner)"
+              [class.active]="banner.is_active"
+              class="btn-toggle"
+              [title]="banner.is_active ? 'Deactivate' : 'Activate'">
+              {{ banner.is_active ? '✓' : '○' }}
+            </button>
+            <button
+              (click)="editBanner(banner)"
+              class="btn btn-sm btn-edit">
+              Edit
+            </button>
+            <button
+              (click)="deleteBanner(banner.id || 0)"
+              class="btn btn-sm btn-delete">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     NEW PRODUCTS SECTION — Banner Image Upload
+════════════════════════════════════════════════════════════ -->
+<div class="admin-banner-management np-banner-section">
+  <div class="page-header">
+    <h1>New Products Section — Banner Image</h1>
+    <p>Upload the background image displayed in the left panel of the "New Products" section on the homepage</p>
+  </div>
+
+  <div *ngIf="npBannerError" class="alert alert-error">
+    <span>{{ npBannerError }}</span>
+    <button (click)="npBannerError=''" class="close-btn">&times;</button>
+  </div>
+  <div *ngIf="npBannerSuccess" class="alert alert-success">
+    <span>{{ npBannerSuccess }}</span>
+    <button (click)="npBannerSuccess=''" class="close-btn">&times;</button>
+  </div>
+
+  <div class="content-wrapper np-layout">
+    <!-- Current preview -->
+    <div class="np-current" *ngIf="npBannerCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="np-preview-wrap">
+        <img [src]="npBannerCurrentUrl" alt="Current banner" class="np-preview-img">
+        <span class="np-preview-label">Live on homepage</span>
+      </div>
+    </div>
+    <div class="np-current np-empty" *ngIf="!npBannerCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="np-no-image">No image set — default gradient is shown</div>
+    </div>
+
+    <!-- Upload form -->
+    <div class="form-section">
+      <div class="form-card">
+        <h2>Update Banner Image</h2>
+
+        <div class="form-group">
+          <label>Upload Image File</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="np-banner-file" (change)="onNpBannerFileSelected($event)"
+                   accept="image/*" class="file-input">
+            <label for="np-banner-file" class="file-label">Choose Image</label>
+            <small>{{ npBannerFileName || 'JPG or PNG (max 5 MB)' }}</small>
+          </div>
+          <div *ngIf="npBannerPreview" class="image-preview" style="margin-top:12px">
+            <img [src]="npBannerPreview" alt="Preview">
+            <small>New image preview</small>
+          </div>
+        </div>
+
+        <div class="np-divider">— or —</div>
+
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="url" [(ngModel)]="npBannerImageUrl" name="npBannerImageUrl"
+                 placeholder="https://example.com/banner.jpg" class="form-input">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="saveNpBanner()" [disabled]="npBannerIsSaving">
+            {{ npBannerIsSaving ? 'Saving…' : 'Save Banner Image' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     FLASH DEALS BANNER SECTION — Admin Configuration
+════════════════════════════════════════════════════════════ -->
+<div class="admin-banner-management flash-deals-section">
+  <div class="page-header">
+    <h1>TOP FLASH DEALS Banner Management</h1>
+    <p>Configure the "Festive Offers You'll Love" banner title, description, shop link, and background image</p>
+  </div>
+
+  <div *ngIf="fdBannerError" class="alert alert-error">
+    <span>{{ fdBannerError }}</span>
+    <button (click)="fdBannerError=''" class="close-btn">&times;</button>
+  </div>
+  <div *ngIf="fdBannerSuccess" class="alert alert-success">
+    <span>{{ fdBannerSuccess }}</span>
+    <button (click)="fdBannerSuccess=''" class="close-btn">&times;</button>
+  </div>
+
+  <div class="content-wrapper fd-layout">
+    <!-- Current preview -->
+    <div class="fd-current" *ngIf="fdBannerCurrentUrl">
+      <h3>Current Banner Background</h3>
+      <div class="fd-preview-wrap">
+        <img [src]="fdBannerCurrentUrl" alt="Current banner" class="fd-preview-img">
+        <span class="fd-preview-label">Live on homepage</span>
+      </div>
+    </div>
+    <div class="fd-current fd-empty" *ngIf="!fdBannerCurrentUrl">
+      <h3>Current Banner Background</h3>
+      <div class="fd-no-image">No background image set</div>
+    </div>
+
+    <!-- Configuration form -->
+    <div class="form-section">
+      <div class="form-card">
+        <h2>Update Flash Deals Banner</h2>
+
+        <div class="form-group">
+          <label>Main Title *</label>
+          <input
+            type="text"
+            [(ngModel)]="fdBannerTitle"
+            name="fdBannerTitle"
+            placeholder="e.g., Festive Offers You'll Love"
+            class="form-input"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea
+            [(ngModel)]="fdBannerDescription"
+            name="fdBannerDescription"
+            placeholder="e.g., Exclusive Deals on Our Most Loved Bangles"
+            class="form-input"
+            rows="3"
+            required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Shop Now Link</label>
+          <input
+            type="text"
+            [(ngModel)]="fdBannerShopLink"
+            name="fdBannerShopLink"
+            placeholder="/shop"
+            class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label>Background Banner Image</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="fd-banner-file" (change)="onFlashDealsBannerFileSelected($event)"
+                   accept="image/*" class="file-input">
+            <label for="fd-banner-file" class="file-label">Choose Image</label>
+            <small>{{ fdBannerFileName || 'JPG or PNG (max 5 MB)' }}</small>
+          </div>
+          <div *ngIf="fdBannerPreview" class="image-preview" style="margin-top:12px">
+            <img [src]="fdBannerPreview" alt="Preview">
+            <small>New image preview</small>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="saveFlashDealsBanner()" [disabled]="fdBannerIsSaving">
+            {{ fdBannerIsSaving ? 'Saving…' : 'Save Banner Configuration' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     FESTIVE SEASON BANNER SECTION — Admin Configuration
+════════════════════════════════════════════════════════════ -->
+<div class="admin-banner-management festive-season-section">
+  <div class="page-header">
+    <h1>Festive Season Banner Management</h1>
+    <p>Configure the "Festive Season" banner displayed on the homepage with custom colors, text, and image</p>
+  </div>
+
+  <div *ngIf="fsBannerError" class="alert alert-error">
+    <span>{{ fsBannerError }}</span>
+    <button (click)="fsBannerError=''" class="close-btn">&times;</button>
+  </div>
+  <div *ngIf="fsBannerSuccess" class="alert alert-success">
+    <span>{{ fsBannerSuccess }}</span>
+    <button (click)="fsBannerSuccess=''" class="close-btn">&times;</button>
+  </div>
+
+  <div class="content-wrapper fs-layout">
+    <!-- Current preview -->
+    <div class="fs-current" *ngIf="fsBannerCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="fs-preview-wrap">
+        <img [src]="fsBannerCurrentUrl" alt="Current banner" class="fs-preview-img">
+        <span class="fs-preview-label">Live on homepage</span>
+      </div>
+    </div>
+    <div class="fs-current fs-empty" *ngIf="!fsBannerCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="fs-no-image">No banner image set</div>
+    </div>
+
+    <!-- Configuration form -->
+    <div class="form-section">
+      <div class="form-card">
+        <h2>Update Festive Season Banner</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Top Label</label>
+            <input
+              type="text"
+              [(ngModel)]="fsBannerTopLabel"
+              name="fsBannerTopLabel"
+              placeholder="e.g., FESTIVE SEASON"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label>Button Text</label>
+            <input
+              type="text"
+              [(ngModel)]="fsBannerButtonText"
+              name="fsBannerButtonText"
+              placeholder="e.g., SHOP NOW"
+              class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Main Title *</label>
+          <input
+            type="text"
+            [(ngModel)]="fsBannerMainTitle"
+            name="fsBannerMainTitle"
+            placeholder="e.g., Celebrate in Style & Elegance"
+            class="form-input"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea
+            [(ngModel)]="fsBannerDescription"
+            name="fsBannerDescription"
+            placeholder="e.g., Exclusive festive collection for your special moments"
+            class="form-input"
+            rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Button Link</label>
+          <input
+            type="text"
+            [(ngModel)]="fsBannerButtonLink"
+            name="fsBannerButtonLink"
+            placeholder="/shop"
+            class="form-input">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Banner Color</label>
+            <div class="color-input-wrapper">
+              <input
+                type="color"
+                [(ngModel)]="fsBannerColor"
+                name="fsBannerColor"
+                class="color-input">
+              <input
+                type="text"
+                [(ngModel)]="fsBannerColor"
+                name="fsBannerColorText"
+                class="color-hex"
+                placeholder="#FF6B6B">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Accent Color</label>
+            <div class="color-input-wrapper">
+              <input
+                type="color"
+                [(ngModel)]="fsBannerAccentColor"
+                name="fsBannerAccentColor"
+                class="color-input">
+              <input
+                type="text"
+                [(ngModel)]="fsBannerAccentColor"
+                name="fsBannerAccentColorText"
+                class="color-hex"
+                placeholder="#FFD700">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Banner Image</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="fs-banner-file" (change)="onFestiveSeasonBannerFileSelected($event)"
+                   accept="image/*" class="file-input">
+            <label for="fs-banner-file" class="file-label">Choose Image</label>
+            <small>{{ fsBannerFileName || 'JPG or PNG (max 5 MB)' }}</small>
+          </div>
+          <div *ngIf="fsBannerPreview" class="image-preview" style="margin-top:12px">
+            <img [src]="fsBannerPreview" alt="Preview">
+            <small>New image preview</small>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="saveFestiveSeasonBanner()" [disabled]="fsBannerIsSaving">
+            {{ fsBannerIsSaving ? 'Saving…' : 'Save Banner Configuration' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     HERO PROMO BANNERS — Bridal Collection (Top-right slot 1)
+════════════════════════════════════════════════════════════ -->
+<div class="admin-banner-management np-banner-section">
+  <div class="page-header">
+    <h1>Hero Promo Banner — Bridal Collection</h1>
+    <p>Controls the top-right banner on the homepage (first slot). Update title, subtitle, button text, link and background image.</p>
+  </div>
+
+  <div *ngIf="bridalError" class="alert alert-error">
+    <span>{{ bridalError }}</span>
+    <button (click)="bridalError=''" class="close-btn">&times;</button>
+  </div>
+  <div *ngIf="bridalSuccess" class="alert alert-success">
+    <span>{{ bridalSuccess }}</span>
+    <button (click)="bridalSuccess=''" class="close-btn">&times;</button>
+  </div>
+
+  <div class="content-wrapper np-layout">
+    <!-- Current preview -->
+    <div class="np-current" *ngIf="bridalCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="np-preview-wrap">
+        <img [src]="bridalCurrentUrl" alt="Bridal banner" class="np-preview-img">
+        <span class="np-preview-label">Live on homepage</span>
+      </div>
+    </div>
+    <div class="np-current np-empty" *ngIf="!bridalCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="np-no-image">No image set — default placeholder is shown</div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-section">
+      <div class="form-card">
+        <h2>Update Bridal Collection Banner</h2>
+
+        <div class="form-group">
+          <label>Category Label *</label>
+          <input type="text" [(ngModel)]="bridalTitle" name="bridalTitle"
+                 placeholder="e.g., BRIDAL COLLECTION" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label>Subtitle *</label>
+          <input type="text" [(ngModel)]="bridalSubtitle" name="bridalSubtitle"
+                 placeholder="e.g., Made for Your Big Moments" class="form-input" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Button Text</label>
+            <input type="text" [(ngModel)]="bridalButtonText" name="bridalButtonText"
+                   placeholder="EXPLORE NOW →" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Button Link</label>
+            <input type="text" [(ngModel)]="bridalLink" name="bridalLink"
+                   placeholder="/shop?category=bridal" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Banner Image</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="bridal-banner-file" (change)="onBridalFileSelected($event)"
+                   accept="image/*" class="file-input">
+            <label for="bridal-banner-file" class="file-label">Choose Image</label>
+            <small>{{ bridalFileName || 'JPG or PNG (max 5 MB)' }}</small>
+          </div>
+          <div *ngIf="bridalPreview" class="image-preview" style="margin-top:12px">
+            <img [src]="bridalPreview" alt="Preview">
+            <small>New image preview</small>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="saveBridalBanner()" [disabled]="bridalIsSaving">
+            {{ bridalIsSaving ? 'Saving…' : 'Save Bridal Banner' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     HERO PROMO BANNERS — Festive Picks (Top-right slot 2)
+════════════════════════════════════════════════════════════ -->
+<div class="admin-banner-management np-banner-section">
+  <div class="page-header">
+    <h1>Hero Promo Banner — Festive Picks</h1>
+    <p>Controls the bottom-right banner on the homepage (second slot). Update title, subtitle, button text, link and background image.</p>
+  </div>
+
+  <div *ngIf="festivePError" class="alert alert-error">
+    <span>{{ festivePError }}</span>
+    <button (click)="festivePError=''" class="close-btn">&times;</button>
+  </div>
+  <div *ngIf="festivePSuccess" class="alert alert-success">
+    <span>{{ festivePSuccess }}</span>
+    <button (click)="festivePSuccess=''" class="close-btn">&times;</button>
+  </div>
+
+  <div class="content-wrapper np-layout">
+    <!-- Current preview -->
+    <div class="np-current" *ngIf="festivePCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="np-preview-wrap">
+        <img [src]="festivePCurrentUrl" alt="Festive picks banner" class="np-preview-img">
+        <span class="np-preview-label">Live on homepage</span>
+      </div>
+    </div>
+    <div class="np-current np-empty" *ngIf="!festivePCurrentUrl">
+      <h3>Current Banner Image</h3>
+      <div class="np-no-image">No image set — default placeholder is shown</div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-section">
+      <div class="form-card">
+        <h2>Update Festive Picks Banner</h2>
+
+        <div class="form-group">
+          <label>Category Label *</label>
+          <input type="text" [(ngModel)]="festivePTitle" name="festivePTitle"
+                 placeholder="e.g., FESTIVE PICKS" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label>Subtitle *</label>
+          <input type="text" [(ngModel)]="festivePSubtitle" name="festivePSubtitle"
+                 placeholder="e.g., Celebrate in Every Color" class="form-input" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Button Text</label>
+            <input type="text" [(ngModel)]="festivePButtonText" name="festivePButtonText"
+                   placeholder="SHOP NOW →" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Button Link</label>
+            <input type="text" [(ngModel)]="festivePLink" name="festivePLink"
+                   placeholder="/shop?category=festive" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Banner Image</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="festive-picks-file" (change)="onFestivePicksFileSelected($event)"
+                   accept="image/*" class="file-input">
+            <label for="festive-picks-file" class="file-label">Choose Image</label>
+            <small>{{ festivePFileName || 'JPG or PNG (max 5 MB)' }}</small>
+          </div>
+          <div *ngIf="festivePPreview" class="image-preview" style="margin-top:12px">
+            <img [src]="festivePPreview" alt="Preview">
+            <small>New image preview</small>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="saveFestivePicksBanner()" [disabled]="festivePIsSaving">
+            {{ festivePIsSaving ? 'Saving…' : 'Save Festive Picks Banner' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

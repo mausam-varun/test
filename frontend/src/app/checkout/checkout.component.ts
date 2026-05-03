@@ -13,6 +13,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private readonly checkoutDraftStorageKey = 'checkout_last_details';
 
   cartItems: CartItem[] = [];
+  selectedSizes: { [productId: number]: string } = {};
   isSubmitting = false;
   submitErrorMessage = '';
   submitSuccessMessage = '';
@@ -44,6 +45,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.cartService.cartItems$.subscribe((items) => {
         this.cartItems = items;
+        console.log('💳 Checkout cart items:', items);
+        // Initialize selectedSizes for items that have pre-selected sizes
+        items.forEach((item) => {
+          if (item.size && !this.selectedSizes[item.id]) {
+            this.selectedSizes[item.id] = item.size;
+          }
+          console.log(`📦 Item ${item.id} sizes:`, item.sizes);
+        });
       })
     );
 
@@ -121,7 +130,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       paymentMethod: this.paymentMethod,
       items: this.cartItems.map((item) => ({
         productId: item.id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        size: this.selectedSizes[item.id] || item.size || undefined
       }))
     }).subscribe({
       next: (response) => {

@@ -58,6 +58,11 @@ export class AdminLayoutComponent implements OnInit {
       icon: 'M4 6h16v12H4zM8 10h8M8 14h5'
     },
     {
+      label: 'Manage Banners',
+      route: '/admin/manage-banners',
+      icon: 'M4 6h16v4H4zM4 12h16v4H4zM4 18h16v2H4z'
+    },
+    {
       label: 'AI Queue',
       route: '/admin/ai-queue',
       icon: 'M3 6h18M3 12h18M3 18h12M17 16l4 2-4 2v-4z'

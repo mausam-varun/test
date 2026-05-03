@@ -351,6 +351,20 @@ function buildProductWithImages(product, images = [], colorDetails = [], attribu
   };
 }
 
+async function fetchProductSizes(productId) {
+  const db = getPool();
+  const [rows] = await db.query(
+    `SELECT id, size_value, stock FROM product_sizes WHERE product_id = ? ORDER BY id ASC`,
+    [productId]
+  );
+  
+  return rows.map(row => ({
+    id: row.id,
+    size: row.size_value,
+    stock: row.stock || 0
+  }));
+}
+
 async function fetchReviewAggregatesByProductIds(productIds) {
   if (!productIds.length) {
     return new Map();
@@ -578,8 +592,9 @@ async function fetchAllProducts() {
 
   const query = schema.productMode === 'normalized'
     ? `SELECT p.id,
-              p.title AS name,
-              p.base_price AS price,
+              p.name,
+              p.price,
+              p.stock,
               COALESCE(c.name, '') AS category,
               p.description,
               p.seo_title,
@@ -593,6 +608,7 @@ async function fetchAllProducts() {
     : `SELECT p.id,
               p.name,
               p.price,
+              p.stock,
               p.category,
               p.description,
               p.seo_title,
@@ -631,8 +647,8 @@ async function fetchFeaturedProducts(limit = 8) {
 
   const query = schema.productMode === 'normalized'
     ? `SELECT p.id,
-              p.title AS name,
-              p.base_price AS price,
+              p.name,
+              p.price,
               COALESCE(c.name, '') AS category,
               p.description,
               p.seo_title,
@@ -704,8 +720,9 @@ async function fetchProductById(id) {
 
   const query = schema.productMode === 'normalized'
     ? `SELECT p.id,
-              p.title AS name,
-              p.base_price AS price,
+              p.name,
+              p.price,
+              p.stock,
               COALESCE(c.name, '') AS category,
               p.description,
               p.seo_title,
@@ -719,6 +736,7 @@ async function fetchProductById(id) {
     : `SELECT p.id,
               p.name,
               p.price,
+              p.stock,
               p.category,
               p.description,
               p.seo_title,
@@ -740,8 +758,11 @@ async function fetchProductById(id) {
   const colorsByProductId = await fetchColorsByProductIds([id]);
   const attributesByProductId = await fetchAttributesByProductIds([id]);
   const reviewAggregatesByProductId = await fetchReviewAggregatesByProductIds([id]);
+  
+  // Fetch sizes for bangles
+  const sizes = await fetchProductSizes(id);
 
-  return attachReviewAggregates(
+  const productWithDetails = attachReviewAggregates(
     buildProductWithImages(
       product,
       imagesByProductId.get(id) || [],
@@ -750,6 +771,13 @@ async function fetchProductById(id) {
     ),
     reviewAggregatesByProductId
   );
+  
+  // Add sizes if product is bangle
+  if (sizes && sizes.length > 0) {
+    productWithDetails.sizes = sizes;
+  }
+  
+  return productWithDetails;
 }
 
 async function updateProductById(id, updates, replacementImages = null) {
@@ -845,8 +873,8 @@ async function searchProducts(searchQuery, limit = 10) {
   
   const query = schema.productMode === 'normalized'
     ? `SELECT p.id,
-              p.title AS name,
-              p.base_price AS price,
+              p.name,
+              p.price,
               COALESCE(c.name, '') AS category,
               p.description,
               p.seo_title,
@@ -856,11 +884,11 @@ async function searchProducts(searchQuery, limit = 10) {
               NULL AS image_url
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
-       WHERE p.title LIKE ? 
+       WHERE p.name LIKE ? 
           OR p.description LIKE ?
           OR c.name LIKE ?
        ORDER BY (CASE 
-                  WHEN p.title LIKE ? THEN 0
+                  WHEN p.name LIKE ? THEN 0
                   WHEN p.description LIKE ? THEN 1
                   ELSE 2
                 END), p.id DESC

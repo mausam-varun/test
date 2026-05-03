@@ -3,6 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ReviewService } from './services/review.service';
 import { ThemeService } from './shared/services/theme.service';
+import { CurrencyPreferenceService } from './shared/services/currency-preference.service';
 
 @Component({
   selector: 'app-root',
@@ -17,8 +18,25 @@ export class AppComponent {
   constructor(
     private readonly router: Router,
     private readonly reviewService: ReviewService,
-    private readonly themeService: ThemeService
+    private readonly themeService: ThemeService,
+    private readonly currencyPreferenceService: CurrencyPreferenceService
   ) {
+    // Initialize currency detection and multiplier loading on app startup
+    console.log('🚀 App initializing... Syncing currency with system timezone');
+    this.currencyPreferenceService.syncFrontendCurrencyWithSystem();
+    
+    // Also ensure multiplier is loaded from localStorage
+    try {
+      const multiplier = localStorage.getItem('usd_display_multiplier');
+      if (multiplier) {
+        const parsed = Number(multiplier);
+        if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 10) {
+          this.currencyPreferenceService.setUsdMultiplier(parsed);
+          console.log('📊 Price multiplier loaded:', parsed + 'x');
+        }
+      }
+    } catch { /* ignore */ }
+
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(e => {

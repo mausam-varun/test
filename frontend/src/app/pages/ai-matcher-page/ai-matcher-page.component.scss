@@ -1,0 +1,22 @@
+.page-wrapper {
+  min-height: 100vh;
+}
+
+.page-breadcrumb {
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  color: #666;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+
+  a {
+    color: #d4af37;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+
+  .sep {
+    margin: 0 0.4rem;
+    color: #ccc;
+  }
+}

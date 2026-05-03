@@ -24,12 +24,14 @@ function normalizeSliderItem(row) {
 async function getSliderSettings() {
   const db = getPool();
   const [rows] = await db.query(
-    'SELECT display_count FROM product_slider_settings WHERE id = 1 LIMIT 1'
+    'SELECT display_count, autoplay_interval FROM product_slider_settings WHERE id = 1 LIMIT 1'
   );
 
   const displayCount = Number(rows[0]?.display_count) || 5;
+  const autoplayInterval = Number(rows[0]?.autoplay_interval) || 4000;
   return {
-    display_count: Math.min(5, Math.max(2, displayCount))
+    display_count: Math.min(5, Math.max(2, displayCount)),
+    autoplay_interval: Math.min(15000, Math.max(1000, autoplayInterval))
   };
 }
 
@@ -41,6 +43,19 @@ async function updateSliderDisplayCount(displayCount) {
      WHERE id = 1`,
     [displayCount]
   );
+  return getSliderSettings();
+}
+
+async function updateSliderSettings({ displayCount, autoplayInterval }) {
+  const db = getPool();
+  const sets = [];
+  const values = [];
+  if (displayCount !== undefined) { sets.push('display_count = ?'); values.push(displayCount); }
+  if (autoplayInterval !== undefined) { sets.push('autoplay_interval = ?'); values.push(autoplayInterval); }
+  if (sets.length > 0) {
+    values.push(1);
+    await db.execute(`UPDATE product_slider_settings SET ${sets.join(', ')} WHERE id = 1`, values);
+  }
   return getSliderSettings();
 }
 
@@ -164,6 +179,7 @@ async function getPublicSliderPayload() {
 
   return {
     display_count: settings.display_count,
+    autoplay_interval: settings.autoplay_interval,
     images: items
   };
 }
@@ -171,6 +187,7 @@ async function getPublicSliderPayload() {
 module.exports = {
   getSliderSettings,
   updateSliderDisplayCount,
+  updateSliderSettings,
   listSliderItems,
   createSliderItem,
   getSliderItemById,

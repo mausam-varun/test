@@ -31,7 +31,16 @@ export class CurrencyPreferenceService {
   }
 
   syncFrontendCurrencyWithSystem(): void {
-    this.setCurrency(this.detectCurrencyFromSystem(), false);
+    // Force clear old USD preference to ensure timezone detection works
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('🔄 Cleared cached currency preference, will auto-detect...');
+      } catch { /* ignore */ }
+    }
+    const detected = this.detectCurrencyFromSystem();
+    console.log('🎯 Auto-detected currency:', detected);
+    this.setCurrency(detected, false); // Don't persist to localStorage yet
   }
 
   getSystemTimeZone(): string {
@@ -48,12 +57,18 @@ export class CurrencyPreferenceService {
       return 0;
     }
 
-    if (this.getCurrency() === 'INR') {
-      return Number((safeAmount * USD_TO_INR_RATE).toFixed(2));
+    const currentCurrency = this.getCurrency();
+    const multiplier = this.multiplierSubject.value;
+    
+    if (currentCurrency === 'INR') {
+      const converted = Number((safeAmount * USD_TO_INR_RATE).toFixed(2));
+      console.log(`💱 USD $${safeAmount} → INR ₹${converted} (rate: 1:${USD_TO_INR_RATE})`);
+      return converted;
     }
 
-    const multiplier = this.multiplierSubject.value;
-    return Number((safeAmount * multiplier).toFixed(2));
+    const converted = Number((safeAmount * multiplier).toFixed(2));
+    console.log(`💰 USD $${safeAmount} × ${multiplier}x multiplier → $${converted}`);
+    return converted;
   }
 
   convertToUsd(amount: number, sourceCurrency: DisplayCurrency): number {
@@ -116,12 +131,22 @@ export class CurrencyPreferenceService {
       return DEFAULT_CURRENCY;
     }
 
-    const value = localStorage.getItem(STORAGE_KEY);
-    if (value === 'USD' || value === 'INR') {
-      return value;
+    // PRIORITY 1: Always detect system timezone first (India detection is automatic)
+    const detectedCurrency = this.detectCurrencyFromSystem();
+    
+    // If India is detected, always use INR (ignore any cached preference)
+    if (detectedCurrency === 'INR') {
+      return 'INR';
     }
 
-    return this.detectCurrencyFromSystem();
+    // PRIORITY 2: For non-India users, check if they manually selected INR
+    const storedValue = localStorage.getItem(STORAGE_KEY);
+    if (storedValue === 'INR') {
+      return 'INR';
+    }
+
+    // PRIORITY 3: Default to USD for non-India users
+    return 'USD';
   }
 
   private detectCurrencyFromSystem(): DisplayCurrency {
@@ -144,7 +169,10 @@ export class CurrencyPreferenceService {
 
   private isIndiaSystemContext(): boolean {
     const timeZone = this.getSystemTimeZone();
+    console.log('🌍 Detected TimeZone:', timeZone); // Debug log
+    
     if (INDIA_TIME_ZONES.has(timeZone)) {
+      console.log('✅ India timezone detected, using INR'); // Debug log
       return true;
     }
 
@@ -156,6 +184,10 @@ export class CurrencyPreferenceService {
       .filter((value): value is string => typeof value === 'string' && value.length > 0)
       .map((value) => value.toUpperCase());
 
-    return localeCandidates.some((value) => value.endsWith('-IN') || value.includes('_IN'));
+    const isIndiaLocale = localeCandidates.some((value) => value.endsWith('-IN') || value.includes('_IN'));
+    if (isIndiaLocale) {
+      console.log('✅ India locale detected, using INR'); // Debug log
+    }
+    return isIndiaLocale;
   }
 }

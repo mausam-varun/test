@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { CartService } from '../services/cart.service';
 import { ProductCatalogService, CatalogProduct, CatalogProductImage, CatalogRecentReview } from '../services/product-catalog.service';
 import { WishlistService } from '../services/wishlist.service';
+import { RecentlyViewedService } from '../services/recently-viewed.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -26,7 +27,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly productCatalogService: ProductCatalogService,
     private readonly cartService: CartService,
-    private readonly wishlistService: WishlistService
+    private readonly wishlistService: WishlistService,
+    private readonly recentlyViewedService: RecentlyViewedService
   ) {}
 
   ngOnInit(): void {
@@ -191,6 +193,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
           this.selectedImageUrl = primaryImage || product.image_url;
           this.syncQuantityFromCart();
           this.isLoading = false;
+          // Record this product view
+          this.recentlyViewedService.recordView(productId);
         },
         error: (error) => {
           this.errorMessage = error?.error?.message || 'Unable to load this product right now.';

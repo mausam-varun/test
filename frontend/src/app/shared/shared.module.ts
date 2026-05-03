@@ -8,6 +8,8 @@ import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { RatingPopupComponent } from './rating-popup/rating-popup.component';
 import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
+import { PromoBannerComponent } from './promo-banner/promo-banner.component';
+import { SmartBangleMatcherComponent } from './smart-bangle-matcher/smart-bangle-matcher.component';
 
 @NgModule({
   declarations: [
@@ -15,7 +17,9 @@ import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
     FooterComponent,
     AuthSignupPopupComponent,
     RatingPopupComponent,
-    DisplayCurrencyPipe
+    DisplayCurrencyPipe,
+    PromoBannerComponent,
+    SmartBangleMatcherComponent
   ],
   imports: [
     CommonModule,
@@ -28,7 +32,9 @@ import { DisplayCurrencyPipe } from './pipes/display-currency.pipe';
     FooterComponent,
     AuthSignupPopupComponent,
     RatingPopupComponent,
-    DisplayCurrencyPipe
+    DisplayCurrencyPipe,
+    PromoBannerComponent,
+    SmartBangleMatcherComponent
   ]
 })
 export class SharedModule { }

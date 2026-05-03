@@ -1,0 +1,129 @@
+<section class="smart-bangle-matcher-section">
+  <div class="matcher-header">
+    <h2 class="matcher-title">✨ Smart Bangle Matcher</h2>
+    <p class="matcher-subtitle">Upload your outfit and discover perfectly coordinated bangles in seconds.</p>
+    <div class="header-sparkle">✦</div>
+  </div>
+
+  <!-- Main Matcher Container -->
+  <div class="matcher-main-container">
+    <!-- Left: Upload Area -->
+    <div class="matcher-upload-area" (click)="fileInput.click()" [class.has-image]="uploadedImage">
+      <div class="upload-placeholder">
+        <svg class="cloud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <p class="upload-title">{{ uploadedImage ? '✓ Image Selected' : 'Click to upload or drag & drop' }}</p>
+        <p class="upload-hint">{{ uploadedImage ? 'Click to change image' : 'PNG, JPG, WEBP (max. 10 MB)' }}</p>
+      </div>
+      <input #fileInput type="file" accept="image/jpeg,image/png,image/webp"
+             (change)="onImageSelected($event)" style="display:none;">
+    </div>
+
+    <!-- Middle: Outfit preview -->
+    <div class="matcher-preview-area">
+      <img *ngIf="!uploadedImage" src="assets/costume_dummy.png" alt="Example outfit" class="preview-image">
+      <img *ngIf="uploadedImage" [src]="uploadedImage" alt="Uploaded outfit" class="preview-image">
+      <p class="preview-caption" *ngIf="uploadedImage">✓ Outfit Uploaded</p>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="matcher-results-area">
+      <h3 class="results-title">Your AI-Matched Bangles</h3>
+
+      <!-- Matched products -->
+      <div class="results-grid-vertical" *ngIf="!isMatching && matchedProducts.length > 0">
+        <div class="result-card-vert" *ngFor="let product of matchedProducts | slice:0:3; trackBy: trackById">
+          <div class="card-image-wrapper-vert">
+            <img [src]="product.imageUrl" [alt]="product.name" class="card-image-vert">
+          </div>
+          <div class="card-content-vert">
+            <h4 class="card-title-vert">{{ product.name | slice:0:28 }}{{ product.name.length > 28 ? '…' : '' }}</h4>
+            <div class="card-price-vert">₹{{ product.price }}</div>
+            <div class="card-rating-vert">★★★★☆</div>
+            <button class="view-product-btn-vert" (click)="navigateToProduct(product.id)">View Product</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated image fallback -->
+      <div class="generated-result" *ngIf="!isMatching && generatedBangleImageUrl && matchedProducts.length === 0">
+        <p class="generated-label">AI-Generated Bangle Concept</p>
+        <img [src]="generatedBangleImageUrl" alt="Generated bangle" class="generated-image">
+      </div>
+
+      <!-- Error state -->
+      <div class="results-error" *ngIf="!isMatching && matchError">
+        <p>{{ matchError }}</p>
+      </div>
+
+      <!-- Empty state -->
+      <div class="results-placeholder" *ngIf="!isMatching && !matchError && matchedProducts.length === 0 && !generatedBangleImageUrl">
+        <p>Your matched bangles will appear here after you upload an outfit.</p>
+      </div>
+
+      <!-- Loading -->
+      <div class="matching-loader" *ngIf="isMatching">
+        <div class="loader-spinner"></div>
+        <p>Finding perfect matches…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="matcher-actions">
+    <button class="action-btn primary"
+            (click)="findMatchingBangles()"
+            [disabled]="!uploadedImage || isMatching">
+      <span class="btn-icon">{{ isMatching ? '⏳' : '🔍' }}</span>
+      {{ isMatching ? 'ANALYZING OUTFIT…' : 'Find My Perfect Match' }}
+    </button>
+    <div class="security-badge">🔒 Secure • Private • AI-Powered</div>
+  </div>
+
+  <!-- Features -->
+  <div class="matcher-features">
+    <div class="feature-box">
+      <div class="feature-icon">🤖</div>
+      <h4 class="feature-title">AI-Powered Matching</h4>
+      <p class="feature-text">Advanced AI analyzes colors, style &amp; patterns for perfect matches.</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">✨</div>
+      <h4 class="feature-title">Style That Complements</h4>
+      <p class="feature-text">Find bangles that enhance your outfit beautifully.</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">🔒</div>
+      <h4 class="feature-title">100% Private</h4>
+      <p class="feature-text">Your images are secure and never shared.</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">💎</div>
+      <h4 class="feature-title">Curated Collection</h4>
+      <p class="feature-text">Handpicked designs for every occasion &amp; mood.</p>
+    </div>
+  </div>
+
+  <!-- Social Proof -->
+  <div class="social-proof">
+    <div class="proof-left">
+      <span class="heart-icon">❤️</span>
+      <span class="proof-text">Loved by 10,000+ customers</span>
+    </div>
+    <div class="proof-middle">
+      <div class="avatars">
+        <img src="https://i.pravatar.cc/32?img=1" alt="Customer" class="avatar">
+        <img src="https://i.pravatar.cc/32?img=2" alt="Customer" class="avatar">
+        <img src="https://i.pravatar.cc/32?img=3" alt="Customer" class="avatar">
+        <img src="https://i.pravatar.cc/32?img=4" alt="Customer" class="avatar">
+      </div>
+    </div>
+    <div class="proof-right">
+      <span class="star-icon">⭐</span>
+      <span class="rating-text"><strong>4.8/5</strong> from 2,500+ reviews</span>
+    </div>
+  </div>
+</section>

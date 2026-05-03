@@ -57,8 +57,8 @@ async function fetchProductsForOrder(connection, productIds) {
 
   const query = productStorageMode === 'normalized'
     ? `SELECT p.id,
-              p.title AS name,
-              p.base_price AS price
+              p.name,
+              p.price
        FROM products p
        WHERE p.id IN (${placeholders})`
     : `SELECT p.id,

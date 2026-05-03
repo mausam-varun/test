@@ -31,11 +31,14 @@
   --theme-border-light: #E5E7EB;
   --theme-bg-light: #F9FAFB;
   
-  /* Button Colors */
-  --button-add-to-cart: var(--theme-primary-purple);
-  --button-add-to-cart-hover: var(--theme-deep-purple);
+  /* Admin Customizable Colors (from admin settings) */
+  --color-primary: #E8174B;
+  --color-secondary: #64748b;
+  --color-accent: #d97706;
+  --button-add-to-cart: #0f3e7e;
+  --button-add-to-cart-hover: #0a2547;
   --button-wishlist-hover: #fecaca;
-  --menu-hover: var(--theme-bg-light);
+  --menu-hover: #f3f4f6;
 }
 
 /* Global Resets */

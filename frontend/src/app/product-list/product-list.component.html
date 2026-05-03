@@ -74,6 +74,16 @@
         <div class="pl-card-desc" *ngIf="product.description" [innerHTML]="product.description"></div>
         <div class="pl-card-footer">
           <span class="pl-card-price">{{ product.price | displayCurrency:2 }}</span>
+          
+          <button type="button" class="btn-add-to-cart" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product)" aria-label="Add to cart">
+            Add to Cart →
+          </button>
+
+          <div class="quantity-control" *ngIf="isProductAdded(product.id)">
+            <button type="button" class="quantity-btn decrease" (click)="decrementQuantity(product.id)" aria-label="Decrease quantity">−</button>
+            <span class="quantity-display">{{ getProductQuantity(product.id) }}</span>
+            <button type="button" class="quantity-btn increase" (click)="incrementQuantity(product.id)" aria-label="Increase quantity">+</button>
+          </div>
         </div>
       </div>
     </article>
