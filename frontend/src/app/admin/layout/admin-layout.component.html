@@ -22,19 +22,59 @@
     <nav class="sidebar-nav">
       <p class="nav-section-label" *ngIf="sidebarOpen">CATALOGUE</p>
 
-      <a
-        *ngFor="let item of navItems"
-        class="nav-item"
-        [routerLink]="item.route"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        [title]="!sidebarOpen ? item.label : ''"
-      >
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path [attr.d]="item.icon"/>
-        </svg>
-        <span class="nav-label" *ngIf="sidebarOpen">{{ item.label }}</span>
-      </a>
+      <!-- Regular nav items (no children) -->
+      <ng-container *ngFor="let item of navItems; let i = index">
+        <a
+          *ngIf="!item.children"
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [title]="!sidebarOpen ? item.label : ''"
+        >
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path [attr.d]="item.icon"/>
+          </svg>
+          <span class="nav-label" *ngIf="sidebarOpen">{{ item.label }}</span>
+        </a>
+      </ng-container>
+
+      <!-- Group items (with children) -->
+      <ng-container *ngFor="let item of navItems; let i = index">
+        <ng-container *ngIf="item.children && item.children.length > 0">
+          <!-- Group header -->
+          <button
+            class="nav-group-header"
+            [class.nav-group-header--expanded]="isGroupExpanded(item.label)"
+            (click)="toggleGroupExpand(item.label)"
+            [title]="!sidebarOpen ? item.label : ''"
+          >
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path [attr.d]="item.icon"/>
+            </svg>
+            <span class="nav-label" *ngIf="sidebarOpen">{{ item.label }}</span>
+            <svg class="nav-group-chevron" *ngIf="sidebarOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <!-- Group children (collapsed by default) -->
+          <div class="nav-group-children" *ngIf="isGroupExpanded(item.label) && sidebarOpen">
+            <a
+              *ngFor="let child of item.children"
+              class="nav-item nav-item--child"
+              [routerLink]="child.route"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+            >
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path [attr.d]="child.icon"/>
+              </svg>
+              <span class="nav-label">{{ child.label }}</span>
+            </a>
+          </div>
+        </ng-container>
+      </ng-container>
 
         <!-- Currency Settings: super_admin only -->
         <ng-container *ngIf="isSuperAdmin">
@@ -87,7 +127,7 @@
         <span class="breadcrumb-sep">›</span>
         <span class="breadcrumb-active">
           <ng-container *ngFor="let item of navItems">
-            <ng-container *ngIf="isActive(item.route)">{{ item.label }}</ng-container>
+            <ng-container *ngIf="item.route && isActive(item.route)">{{ item.label }}</ng-container>
           </ng-container>
         </span>
       </div>

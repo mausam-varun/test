@@ -24,8 +24,13 @@
     </button>
   </div>
 
+  <p class="product-card__brand">Divara Craft</p>
+
   <a class="product-card__name-link" [routerLink]="['/product', product.id]">
-    <h3 class="product-card__name">{{ product.name }}</h3>
+    <h3 class="product-card__name">
+      <span class="product-card__name-desktop">{{ product.name }}</span>
+      <span class="product-card__name-mobile">{{ product.name.replace('Divara Craft ', '') }}</span>
+    </h3>
   </a>
 
   <p class="product-card__rating" [class.is-unrated]="!hasReviews" [attr.aria-label]="hasReviews ? 'Product rating' : 'No product reviews yet'">
@@ -42,8 +47,6 @@
     </ng-template>
   </p>
 
-  <p class="product-card__price">{{ product.price | displayCurrency:2 }}</p>
-
   <!-- Stock Status Display -->
   <div class="stock-status" *ngIf="isOutOfStock || isLowStock">
     <span [class.out-of-stock]="isOutOfStock" [class.low-stock]="isLowStock">
@@ -51,28 +54,32 @@
     </span>
   </div>
 
-  <button 
-    type="button" 
-    class="product-card__button add-to-cart" 
-    [class.is-added]="isAdded"
-    [class.is-out-of-stock]="isOutOfStock"
-    [disabled]="isOutOfStock"
-    (click)="onAdd()" 
-    *ngIf="!isAdded"
-    [attr.aria-label]="isOutOfStock ? 'Out of stock' : 'Add to cart'">
-    <span aria-hidden="true">🛒</span>
-    <ng-container *ngIf="!isOutOfStock">
-      ADD TO CART
-    </ng-container>
-    <ng-container *ngIf="isOutOfStock">
-      Out of Stock
-    </ng-container>
-  </button>
+  <div class="product-card__footer">
+    <p class="product-card__price">{{ product.price | displayCurrency:2 }}</p>
 
-  <div class="product-card__quantity-control" *ngIf="isAdded">
-    <button type="button" class="quantity-btn decrease" (click)="onDecrement()" aria-label="Decrease quantity">−</button>
-    <span class="quantity-display">{{ quantity }}</span>
-    <button type="button" class="quantity-btn increase" (click)="onIncrement()" aria-label="Increase quantity">+</button>
+    <button 
+      type="button" 
+      class="product-card__button add-to-cart" 
+      [class.is-added]="isAdded"
+      [class.is-out-of-stock]="isOutOfStock"
+      [disabled]="isOutOfStock"
+      (click)="onAdd()" 
+      *ngIf="!isAdded"
+      [attr.aria-label]="isOutOfStock ? 'Out of stock' : 'Add to cart'">
+      <span aria-hidden="true" class="cart-icon-mobile">🛒</span>
+      <ng-container *ngIf="!isOutOfStock">
+        <span class="cart-btn-text">ADD TO CART</span>
+      </ng-container>
+      <ng-container *ngIf="isOutOfStock">
+        <span class="cart-btn-text">Out of Stock</span>
+      </ng-container>
+    </button>
+
+    <div class="product-card__quantity-control" *ngIf="isAdded">
+      <button type="button" class="quantity-btn decrease" (click)="onDecrement()" aria-label="Decrease quantity">−</button>
+      <span class="quantity-display">{{ quantity }}</span>
+      <button type="button" class="quantity-btn increase" (click)="onIncrement()" aria-label="Increase quantity">+</button>
+    </div>
   </div>
 
   <!-- Quality Badges -->

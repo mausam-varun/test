@@ -138,7 +138,8 @@ router.get('/admin/settings', async (req, res) => {
       theme: {
         primaryColor: '#2563eb',
         secondaryColor: '#64748b',
-        accentColor: '#d97706'
+        accentColor: '#d97706',
+        fontFamily: 'Poppins'
       }
     });
   } catch (err) {
@@ -161,6 +162,25 @@ router.post('/admin/settings', async (req, res) => {
     const colors = [theme.primaryColor, theme.secondaryColor, theme.accentColor];
     if (!colors.every(color => colorRegex.test(color))) {
       return res.status(400).json({ error: 'Invalid color format. Use hex colors (e.g., #2563eb)' });
+    }
+
+    const allowedFonts = [
+      'Poppins',
+      'Inter',
+      'Montserrat',
+      'Manrope',
+      'DM Sans',
+      'Lora',
+      'Merriweather',
+      'Playfair Display',
+      'Segoe UI'
+    ];
+    if (theme.fontFamily && !allowedFonts.includes(theme.fontFamily)) {
+      return res.status(400).json({ error: 'Invalid font family selected.' });
+    }
+
+    if (!theme.fontFamily) {
+      theme.fontFamily = 'Poppins';
     }
 
     const settings = { sections, theme };

@@ -24,7 +24,8 @@ interface AddCartPayload {
   providedIn: 'root'
 })
 export class CartService {
-  private readonly storageKey = 'divara_cart_items';
+  private readonly storageKey    = 'divara_cart_items';
+  private readonly buyNowKey     = 'divara_buy_now_item';
   private readonly cartItemsSubject = new BehaviorSubject<CartItem[]>(this.loadFromStorage());
 
   readonly cartItems$ = this.cartItemsSubject.asObservable();
@@ -73,6 +74,30 @@ export class CartService {
     this.setCartState([]);
   }
 
+  // ── Buy Now session ───────────────────────────────────────────────────────
+  // A buy-now item is stored separately so it never pollutes the main cart.
+
+  setBuyNow(item: CartItem): void {
+    try {
+      localStorage.setItem(this.buyNowKey, JSON.stringify(item));
+    } catch { /* ignore */ }
+  }
+
+  getBuyNow(): CartItem | null {
+    try {
+      const raw = localStorage.getItem(this.buyNowKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return this.normalizeCartItem(parsed);
+    } catch {
+      return null;
+    }
+  }
+
+  clearBuyNow(): void {
+    try { localStorage.removeItem(this.buyNowKey); } catch { /* ignore */ }
+  }
+
   private setCartState(items: CartItem[]): void {
     this.cartItemsSubject.next(items);
     this.saveToStorage(items);
@@ -92,16 +117,37 @@ export class CartService {
 
       return parsed
         .filter((item) => item && typeof item.id === 'number')
-        .map((item) => ({
-          id: item.id,
-          name: String(item.name || ''),
-          image: String(item.image || ''),
-          price: Number(item.price || 0),
-          quantity: Math.max(1, Number(item.quantity || 1))
-        }));
+        .map((item) => this.normalizeCartItem(item))
+        .filter((item): item is CartItem => !!item);
     } catch {
       return [];
     }
+  }
+
+  private normalizeCartItem(item: any): CartItem | null {
+    if (!item || typeof item.id !== 'number') {
+      return null;
+    }
+
+    const size = String(item.size || '').trim();
+    const sizes = Array.isArray(item.sizes)
+      ? item.sizes
+          .map((sizeOption: any) => ({
+            size: String(sizeOption?.size || '').trim(),
+            stock: Number(sizeOption?.stock || 0)
+          }))
+          .filter((sizeOption: { size: string; stock: number }) => !!sizeOption.size)
+      : undefined;
+
+    return {
+      id: item.id,
+      name: String(item.name || ''),
+      image: String(item.image || ''),
+      price: Number(item.price || 0),
+      quantity: Math.max(1, Number(item.quantity || 1)),
+      ...(size ? { size } : {}),
+      ...(sizes?.length ? { sizes } : {})
+    };
   }
 
   private saveToStorage(items: CartItem[]): void {

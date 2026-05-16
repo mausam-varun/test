@@ -1,5 +1,11 @@
 <header class="navbar-top" [class.scrolled]="isScrolled">
   <div class="navbar-container">
+    <button class="menu-toggle-header" (click)="toggleMenu()" aria-label="Toggle menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
     <!-- Logo -->
     <a class="navbar-logo" routerLink="/" aria-label="Divara Craft home">
       <img src="assets/new_divara_logo.png" alt="Logo" class="logo-img">
@@ -48,7 +54,7 @@
             <div class="result-actions">
               <button 
                 class="action-btn cart-btn" 
-                [class.animating]="isCartBumping"
+                [class.animating]="animatingCartProductId === product.id"
                 (mousedown)="addToCart(product, $event)"
                 (click)="$event.preventDefault()"
                 aria-label="Add to cart">
@@ -60,7 +66,7 @@
               </button>
               <button 
                 class="action-btn wishlist-btn" 
-                [class.animating]="isWishlistBumping"
+                [class.animating]="animatingWishlistProductId === product.id"
                 (mousedown)="addToWishlist(product, $event)"
                 (click)="$event.preventDefault()"
                 aria-label="Add to wishlist">
@@ -80,22 +86,14 @@
 
     <!-- Top Icons & Hamburger -->
     <div class="navbar-right">
-      <!-- Hamburger Menu Toggle -->
-      <button class="menu-toggle-header" (click)="toggleMenu()" aria-label="Toggle menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
       <div class="navbar-icons">
-        
-        <a href="#" class="icon-link notification" aria-label="Notifications">
+        <!-- Mobile-only search toggle (replaces bell) -->
+        <button class="mob-search-toggle" (click)="toggleMobileSearch($event)" aria-label="Search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
           </svg>
-          <span class="badge">0</span>
-        </a>
+        </button>
         <a [routerLink]="'/wishlist'" class="icon-link wishlist" [class.animating]="isWishlistBumping" aria-label="Wishlist">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -113,24 +111,19 @@
 
         <!-- User Account Icon -->
         <div class="icon-link user-account" [class.authenticated]="isAuthenticated">
-          <button class="user-btn" (click)="toggleProfileMenu()" aria-label="User account">
-            <svg *ngIf="!isAuthenticated" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <img *ngIf="isAuthenticated && userAvatarUrl" [src]="userAvatarUrl" [alt]="userDisplayName" class="user-avatar">
-            <div *ngIf="isAuthenticated && !userAvatarUrl" class="user-avatar-initials">
-              {{ (userDisplayName || 'User').charAt(0).toUpperCase() }}
-            </div>
+          <!-- Not logged in: show Login link -->
+          <a *ngIf="!isAuthenticated" routerLink="/login" class="login-text-link" aria-label="Login">
+            Login
+          </a>
+          <!-- Logged in: show avatar / initials button -->
+          <button *ngIf="isAuthenticated" class="user-btn" (click)="toggleProfileMenu($event)" aria-label="User account">
+            <img [src]="userAvatarUrl || defaultAvatarUrl" [alt]="userDisplayName || 'User profile'" class="user-avatar" referrerpolicy="no-referrer" (error)="onUserAvatarError()">
           </button>
           <!-- Profile Dropdown Menu -->
-          <div class="profile-dropdown" *ngIf="isProfileMenuOpen">
+          <div class="profile-dropdown" *ngIf="isProfileMenuOpen" (click)="$event.stopPropagation()">
             <div class="profile-header" *ngIf="isAuthenticated">
               <div class="profile-avatar">
-                <img *ngIf="userAvatarUrl" [src]="userAvatarUrl" [alt]="userDisplayName">
-                <div *ngIf="!userAvatarUrl" class="avatar-initials">
-                  {{ (userDisplayName || 'User').charAt(0).toUpperCase() }}
-                </div>
+                <img [src]="userAvatarUrl || defaultAvatarUrl" [alt]="userDisplayName || 'User profile'" referrerpolicy="no-referrer" (error)="onUserAvatarError()">
               </div>
               <div class="profile-info">
                 <p class="profile-name">{{ userDisplayName || 'Guest' }}</p>
@@ -138,35 +131,13 @@
               </div>
             </div>
             <div class="profile-content">
-              <a href="/account" class="profile-menu-item" (click)="closeProfileMenu()">
+              <button type="button" class="profile-menu-item" (click)="editProfile($event)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span>My Account</span>
-              </a>
-              <a href="/wishlist" class="profile-menu-item" (click)="closeProfileMenu()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                <span>Wishlist</span>
-              </a>
-              <a href="/orders" class="profile-menu-item" (click)="closeProfileMenu()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M9 3H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"></path>
-                  <polyline points="16 3 16 10 13 7"></polyline>
-                  <line x1="12" y1="12" x2="20" y2="12"></line>
-                  <line x1="12" y1="16" x2="20" y2="16"></line>
-                </svg>
-                <span>Orders</span>
-              </a>
-              <a href="/settings" class="profile-menu-item" (click)="closeProfileMenu()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
-                </svg>
-                <span>Settings</span>
-              </a>
+                <span>Edit Profile</span>
+              </button>
               <div class="profile-divider"></div>
               <button class="profile-menu-item logout" (click)="logout()" *ngIf="isAuthenticated">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -210,7 +181,7 @@
   </div>
 
   <!-- Second Row Navigation -->
-  <nav class="navbar-menu" [class.active]="isMenuOpen" [class.scrolled]="isScrolled">
+  <nav class="navbar-menu" [class.active]="isMenuOpen" [class.scrolled]="isScrolled" [class.nav-hidden]="isNavHidden">
     <div class="navbar-container">
       <button class="menu-toggle" (click)="toggleMenu()" aria-label="Toggle menu">
         <span></span>
@@ -225,9 +196,9 @@
           </a>
         </li>
         <li class="nav-item dropdown">
-          <a href="#" class="nav-link">
+          <a href="shop" class="nav-link">
             Shop
-            <span class="badge shop-badge">NEW</span>
+            <!-- <span class="badge shop-badge">NEW</span> -->
           </a>
           <div class="dropdown-menu">
             <div class="dropdown-column">
@@ -259,12 +230,12 @@
             </div>
           </div>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link" routerLink="/about" routerLinkActive="active" (click)="closeMenu()">
             Blog
           </a>
-        </li>
-        <li class="nav-item dropdown">
+        </li> -->
+        <!-- <li class="nav-item dropdown">
           <a href="#" class="nav-link" (click)="closeMenu()">Pages</a>
           <div class="dropdown-menu">
             <div class="dropdown-column">
@@ -294,7 +265,7 @@
               </ul>
             </div>
           </div>
-        </li>
+        </li> -->
         <li class="nav-item">
           <a class="nav-link" routerLink="/about" routerLinkActive="active" (click)="closeMenu()">
             About Us
@@ -310,9 +281,9 @@
             ✨ AI Match
           </a>
         </li>
-        <li class="nav-item dropdown">
+        <!-- <li class="nav-item dropdown">
           <a href="#" class="nav-link" (click)="closeMenu()">Vendor Zone</a>
-        </li>
+        </li> -->
       </ul>
       <!-- <div class="nav-right">
         <span class="hotline">

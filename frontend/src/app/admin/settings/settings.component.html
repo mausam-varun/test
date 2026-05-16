@@ -184,6 +184,26 @@
       <div class="card-body">
         <div class="color-grid">
 
+          <!-- Font Family -->
+          <div class="color-picker-item font-picker-item">
+            <label for="font-family" class="color-label">
+              <span class="label-text">Font Family (Global)</span>
+              <small>Applies across all storefront pages</small>
+            </label>
+            <div class="font-input-wrapper">
+              <select
+                id="font-family"
+                [(ngModel)]="theme.fontFamily"
+                (change)="onFontFamilyChange()"
+                class="font-select">
+                <option *ngFor="let option of fontFamilyOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+              <span class="font-preview" [style.font-family]="theme.fontFamily">
+                The quick brown fox jumps over the lazy dog
+              </span>
+            </div>
+          </div>
+
           <!-- Primary Color -->
           <div class="color-picker-item">
             <label for="primary-color" class="color-label">

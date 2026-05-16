@@ -39,6 +39,7 @@ Return STRICTLY valid JSON only using this schema:
 
 Rules:
 - Output only valid JSON.
+- Generate product descrition with bullet points in the long_description field.
 - Be accurate and concise.
 - Include primary_color_hex for the dominant dress color.
 - Use arrays where multiple values apply.

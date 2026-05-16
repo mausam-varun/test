@@ -1,0 +1,152 @@
+<section class="so-page">
+
+  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <div class="so-header">
+    <div>
+      <h1 class="so-title">Sales Overview</h1>
+      <p class="so-subtitle">Real-time revenue &amp; order analytics</p>
+    </div>
+  </div>
+
+  <!-- ── KPI Error ─────────────────────────────────────────────────────── -->
+  <div class="so-alert so-alert--error" *ngIf="kpiError && !loadingKpi">
+    <span class="so-alert__icon">⚠️</span>
+    <span>Could not load KPI data: <strong>{{ kpiError }}</strong></span>
+    <button class="so-alert__retry" (click)="retryKpi()">Retry</button>
+  </div>
+
+  <!-- ── KPI Cards ─────────────────────────────────────────────────────── -->
+  <div class="so-kpi-grid">
+
+    <!-- Skeleton -->
+    <ng-container *ngIf="loadingKpi">
+      <div class="so-kpi-card so-kpi-card--skeleton" *ngFor="let i of [1,2,3,4]">
+        <div class="sk-icon"></div>
+        <div class="sk-body">
+          <div class="sk-line sk-line--sm"></div>
+          <div class="sk-line sk-line--lg"></div>
+          <div class="sk-line sk-line--xs"></div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Loaded -->
+    <ng-container *ngIf="!loadingKpi && !kpiError">
+      <div
+        class="so-kpi-card"
+        *ngFor="let card of kpiCards; trackBy: trackByTitle"
+      >
+        <div class="so-kpi-card__icon" [ngClass]="card.colorClass">
+          <!-- Sun icon -->
+          <svg *ngIf="card.iconClass === 'icon-sun'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Trend icon -->
+          <svg *ngIf="card.iconClass === 'icon-trend'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          <!-- Bag icon -->
+          <svg *ngIf="card.iconClass === 'icon-bag'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          <!-- Coin icon -->
+          <svg *ngIf="card.iconClass === 'icon-coin'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </div>
+
+        <div class="so-kpi-card__body">
+          <p class="so-kpi-card__label">{{ card.title }}</p>
+          <p class="so-kpi-card__value">{{ card.value }}</p>
+          <p class="so-kpi-card__sub">{{ card.subtitle }}</p>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ── Sales Trend Chart ──────────────────────────────────────────────── -->
+  <div class="so-chart-card">
+
+    <!-- Chart Card Header -->
+    <div class="so-chart-card__header">
+      <div class="so-chart-card__title-row">
+        <h2 class="so-chart-card__title">Sales Trend</h2>
+        <!-- Growth badge -->
+        <span
+          *ngIf="!loadingChart && hasChartData && growthPercent !== null"
+          class="so-growth-badge"
+          [class.so-growth-badge--positive]="growthPercent >= 0"
+          [class.so-growth-badge--negative]="growthPercent < 0"
+        >
+          {{ growthPercent >= 0 ? '▲' : '▼' }} {{ (growthPercent < 0 ? -growthPercent : growthPercent) | number:'1.1-1' }}%
+        </span>
+      </div>
+
+      <!-- Toggle pills -->
+      <div class="so-toggle">
+        <button
+          class="so-toggle__btn"
+          [class.so-toggle__btn--active]="trendType === 'daily'"
+          (click)="setTrendType('daily')"
+        >Last 7 Days</button>
+        <button
+          class="so-toggle__btn"
+          [class.so-toggle__btn--active]="trendType === 'monthly'"
+          (click)="setTrendType('monthly')"
+        >Last 12 Months</button>
+      </div>
+    </div>
+
+    <!-- Chart Error -->
+    <div class="so-alert so-alert--error so-alert--inline" *ngIf="chartError && !loadingChart">
+      <span>⚠️ Failed to load chart: <strong>{{ chartError }}</strong></span>
+      <button class="so-alert__retry" (click)="retryChart()">Try again</button>
+    </div>
+
+    <!-- Chart Skeleton -->
+    <div class="so-chart-skeleton" *ngIf="loadingChart">
+      <div class="so-chart-skeleton__bars">
+        <div class="sk-bar" *ngFor="let h of [40,65,35,80,55,90,45]" [style.height.%]="h"></div>
+      </div>
+      <div class="so-chart-skeleton__axis">
+        <div class="sk-axis-label" *ngFor="let i of [1,2,3,4,5,6,7]"></div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="so-empty" *ngIf="!loadingChart && !chartError && !hasChartData">
+      <svg class="so-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <p class="so-empty__title">No sales data yet</p>
+      <p class="so-empty__sub">Orders will appear here once payments are recorded.</p>
+    </div>
+
+    <!-- Line Chart -->
+    <div class="so-chart-wrap" *ngIf="!loadingChart && !chartError && hasChartData">
+      <canvas
+        baseChart
+        [data]="lineChartData"
+        [options]="lineChartOptions"
+        type="line"
+      ></canvas>
+    </div>
+
+    <!-- X-axis hint -->
+    <p class="so-chart-hint" *ngIf="!loadingChart && hasChartData && !chartError">
+      {{ trendType === 'daily' ? 'Showing last 7 days (MM-DD)' : 'Showing last 12 months' }}
+    </p>
+
+  </div>
+</section>

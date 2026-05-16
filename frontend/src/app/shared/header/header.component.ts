@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -42,7 +42,8 @@ interface Product {
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent implements OnInit, OnDestroy {
+export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
+  private static readonly MOBILE_BREAKPOINT = 768;
   cartCount: number = 0;
   wishlistCount: number = 0;
   isAuthenticated: boolean = false;
@@ -53,8 +54,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isProfileMenuOpen: boolean = false;
   isMenuOpen: boolean = false;
   isScrolled: boolean = false;
+  isNavHidden: boolean = false;
+  private lastScrollY: number = 0;
+  readonly defaultAvatarUrl: string = 'assets/default-profile-avatar.svg';
   cartBurstParticles: CartBurstParticle[] = [];
   wishlistBurstParticles: CartBurstParticle[] = [];
+  animatingCartProductId: number | null = null;
+  animatingWishlistProductId: number | null = null;
 
   // Search properties
   searchQuery: string = '';
@@ -69,12 +75,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private previousWishlistCount: number = 0;
   private cartAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
   private wishlistAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
+  private searchCartAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
+  private searchWishlistAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
   private cartBurstTimeout: ReturnType<typeof setTimeout> | null = null;
   private wishlistBurstTimeout: ReturnType<typeof setTimeout> | null = null;
   private nextParticleId: number = 1;
   private isComponentInitialized: boolean = false;
 
   constructor(
+    private readonly hostRef: ElementRef<HTMLElement>,
     private readonly router: Router,
     private readonly http: HttpClient,
     private readonly authPopupService: AuthPopupService,
@@ -130,22 +139,54 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    this.isScrolled = window.scrollY > 100;
+    const currentScrollY = window.scrollY;
+    this.isScrolled = currentScrollY > 100;
+
+    if (this.shouldHideNavOnScroll() && currentScrollY > 150) {
+      // Scrolling down → hide nav; scrolling up → show nav
+      this.isNavHidden = currentScrollY > this.lastScrollY;
+    } else {
+      this.isNavHidden = false;
+    }
+
+    this.lastScrollY = currentScrollY;
+
     if (this.isScrolled && this.isMenuOpen) {
       this.isMenuOpen = false;
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.syncDesktopHeaderMetrics();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.syncDesktopHeaderMetrics();
+
+    if (!this.shouldHideNavOnScroll()) {
+      this.isNavHidden = false;
     }
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    // Check if click is outside the search dropdown
     const searchContainer = document.querySelector('.navbar-search');
     if (searchContainer && !searchContainer.contains(target)) {
-      // Close dropdown only if clicking outside the search area
       this.showSearchDropdown = false;
     }
     this.closeProfileMenu();
+  }
+
+  toggleMobileSearch(event?: Event): void {
+    event?.stopPropagation();
+    // Focus the always-visible home search input
+    const homeInput = document.querySelector('.mobile-search-box input') as HTMLInputElement;
+    if (homeInput) {
+      homeInput.focus();
+      homeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   ngOnDestroy(): void {
@@ -164,6 +205,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.cartBurstTimeout = null;
     }
 
+    if (this.searchCartAnimationTimeout) {
+      clearTimeout(this.searchCartAnimationTimeout);
+      this.searchCartAnimationTimeout = null;
+    }
+
+    if (this.searchWishlistAnimationTimeout) {
+      clearTimeout(this.searchWishlistAnimationTimeout);
+      this.searchWishlistAnimationTimeout = null;
+    }
+
     if (this.wishlistBurstTimeout) {
       clearTimeout(this.wishlistBurstTimeout);
       this.wishlistBurstTimeout = null;
@@ -175,6 +226,33 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     this.subscriptions.unsubscribe();
+  }
+
+  private shouldHideNavOnScroll(): boolean {
+    return window.innerWidth <= HeaderComponent.MOBILE_BREAKPOINT;
+  }
+
+  private syncDesktopHeaderMetrics(): void {
+    const host = this.hostRef.nativeElement;
+    const menuRow = host.querySelector('.navbar-menu') as HTMLElement | null;
+
+    if (!menuRow) {
+      return;
+    }
+
+    if (this.shouldHideNavOnScroll()) {
+      host.style.removeProperty('--desktop-header-height');
+      host.style.removeProperty('--desktop-header-menu-offset');
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      const menuOffsetTop = Math.round(menuRow.offsetTop);
+      const headerHeight = Math.round(menuOffsetTop + menuRow.offsetHeight);
+
+      host.style.setProperty('--desktop-header-height', `${headerHeight}px`);
+      host.style.setProperty('--desktop-header-menu-offset', `${menuOffsetTop}px`);
+    });
   }
 
   openSignupPopup(): void {
@@ -194,6 +272,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
   }
 
+  onUserAvatarError(): void {
+    if (this.userAvatarUrl) {
+      this.userAvatarUrl = '';
+    }
+  }
+
   closeProfileMenu(): void {
     this.isProfileMenuOpen = false;
   }
@@ -205,8 +289,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onSearch(): void {
-    if (this.searchQuery.trim()) {
-      this.router.navigate(['/shop'], { queryParams: { search: this.searchQuery } });
+    const search = this.searchQuery.trim();
+    if (search) {
+      this.router.navigate(['/shop'], { queryParams: { q: search } });
       this.showSearchDropdown = false;
     }
   }
@@ -289,6 +374,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   addToCart(product: Product, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    this.triggerSearchCartButtonBump(product.id);
     this.triggerCartBump();
     this.cartService.addToCart({
       id: product.id,
@@ -301,6 +387,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   addToWishlist(product: Product, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    this.triggerSearchWishlistButtonBump(product.id);
     this.triggerWishlistBump();
     this.wishlistService.addToWishlist({
       id: product.id,
@@ -359,6 +446,32 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.cartAnimationTimeout = null;
       }, 500);
     }, 0);
+  }
+
+  private triggerSearchCartButtonBump(productId: number): void {
+    this.animatingCartProductId = productId;
+
+    if (this.searchCartAnimationTimeout) {
+      clearTimeout(this.searchCartAnimationTimeout);
+    }
+
+    this.searchCartAnimationTimeout = setTimeout(() => {
+      this.animatingCartProductId = null;
+      this.searchCartAnimationTimeout = null;
+    }, 500);
+  }
+
+  private triggerSearchWishlistButtonBump(productId: number): void {
+    this.animatingWishlistProductId = productId;
+
+    if (this.searchWishlistAnimationTimeout) {
+      clearTimeout(this.searchWishlistAnimationTimeout);
+    }
+
+    this.searchWishlistAnimationTimeout = setTimeout(() => {
+      this.animatingWishlistProductId = null;
+      this.searchWishlistAnimationTimeout = null;
+    }, 500);
   }
 
   private triggerCartBurst(): void {

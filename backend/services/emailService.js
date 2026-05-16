@@ -145,7 +145,37 @@ async function sendOrderConfirmationEmail({ order, invoiceBuffer, invoiceFilenam
   });
 }
 
+async function sendOtpEmail({ to, code }) {
+  if (!to || !code) {
+    throw new Error('Email destination and code are required');
+  }
+
+  const transport = getTransporter();
+
+  await transport.sendMail({
+    from: `"${fromName}" <${fromAddress}>`,
+    to,
+    subject: 'Your Divara Craft Login Code',
+    text: `Your Divara Craft OTP is: ${code}\n\nThis code expires in 10 minutes. Do not share it with anyone.`,
+    html: `
+      <div style="font-family:Arial,Helvetica,sans-serif;color:#1f3a5f;max-width:480px;margin:0 auto;">
+        <div style="text-align:center;padding:24px 0 8px;">
+          <h2 style="margin:0;color:#7c3f6e;font-size:22px;">Divara Craft</h2>
+          <p style="margin:4px 0 0;color:#888;font-size:13px;">Your one-time login code</p>
+        </div>
+        <div style="background:#fff8f2;border:1px solid #e4cfae;border-radius:12px;padding:32px 24px;text-align:center;margin:16px 0;">
+          <p style="margin:0 0 8px;color:#5a5a5a;font-size:14px;">Enter this code to sign in:</p>
+          <div style="font-size:36px;font-weight:700;letter-spacing:10px;color:#7c3f6e;padding:8px 0;">${code}</div>
+          <p style="margin:16px 0 0;font-size:12px;color:#999;">Expires in 10 minutes &bull; Do not share this code</p>
+        </div>
+        <p style="font-size:12px;color:#bbb;text-align:center;">If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `
+  });
+}
+
 module.exports = {
   sendProfileVerificationEmail,
-  sendOrderConfirmationEmail
+  sendOrderConfirmationEmail,
+  sendOtpEmail
 };

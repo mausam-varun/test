@@ -6,11 +6,14 @@
  * 2. Create a new project or select existing
  * 3. Go to APIs & Services → Credentials
  * 4. Create OAuth 2.0 Client ID (Web application)
- * 5. Add authorized redirect URIs:
+ * 5. Add Authorized JavaScript origins for every frontend origin that will launch Google Sign-In:
  *    - http://localhost:4200 (development)
+ *    - https://dev.divaracraft.com
  *    - Your production domain
  * 6. Copy the Client ID and paste below
  */
+
+import { GENERATED_APP_ENV } from './app-env.generated';
 
 const LOCAL_API_ORIGIN = 'http://localhost:5002';
 
@@ -30,9 +33,8 @@ function resolveApiOrigin(): string {
 const apiOrigin = resolveApiOrigin();
 
 export const APP_CONFIG = {
-  // Replace with your actual Google OAuth Client ID
-  // Get it from Google Cloud Console
-  GOOGLE_CLIENT_ID: '677837219372-uqfna9po2t1q53gamrh22fde1ndhqr6m.apps.googleusercontent.com',
+  GOOGLE_CLIENT_ID: GENERATED_APP_ENV.GOOGLE_CLIENT_ID,
+  GOOGLE_PLACES_API_KEY: GENERATED_APP_ENV.GOOGLE_PLACES_API_KEY,
 
   // API Endpoints
   API_URL: `${apiOrigin}/api`,
@@ -58,7 +60,8 @@ export const API_ENDPOINTS = {
   orderRatingEligibility: (orderId: number | string) => `${APP_CONFIG.API_URL}/orders/${encodeURIComponent(String(orderId))}/rating-eligibility`,
   adminAiQueue: `${APP_CONFIG.API_URL}/admin/ai-queue`,
   aiMatch: `${APP_CONFIG.API_URL}/ai/match`,
-  aiHealth: `${APP_CONFIG.API_URL}/ai/health`
+  aiHealth: `${APP_CONFIG.API_URL}/ai/health`,
+  instagramFeed: `${APP_CONFIG.API_URL}/instagram/feed`
 };
 
 /**

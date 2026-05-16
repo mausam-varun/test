@@ -6,8 +6,9 @@ import { CurrencyPreferenceService, DisplayCurrency } from '../../shared/service
 
 interface SidebarItem {
   label: string;
-  route: string;
+  route?: string;
   icon: string; // inline SVG path data
+  children?: SidebarItem[]; // For groups with nested items
 }
 
 @Component({
@@ -25,6 +26,7 @@ export class AdminLayoutComponent implements OnInit {
   isSavingCurrency = false;
   currencyMessage = '';
   isProfileMenuOpen = false;
+  expandedGroups: Set<string> = new Set(['Reports']); // Track expanded groups
 
   readonly currencyOptions: { value: DisplayCurrency; label: string }[] = [
     { value: 'USD', label: 'USD ($)' },
@@ -58,6 +60,37 @@ export class AdminLayoutComponent implements OnInit {
       icon: 'M4 6h16v12H4zM8 10h8M8 14h5'
     },
     {
+      label: 'Reports',
+      icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+      children: [
+        {
+          label: 'Sales Overview',
+          route: '/admin/sales-overview',
+          icon: 'M23 6L13.5 15.5 8.5 10.5 1 18M17 6h6v6'
+        },
+        {
+          label: 'Product Performance',
+          route: '/admin/product-performance',
+          icon: 'M12 6v12M6 12h12'
+        },
+        {
+          label: 'Customer Insights',
+          route: '/admin/customer-insights',
+          icon: 'M17 20h5v-2a3 3 0 00-5.856-1.487M16 10a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'
+        },
+        {
+          label: 'Inventory Report',
+          route: '/admin/inventory-report',
+          icon: 'M20 7l-8-4-8 4m0 0l-2 1v6l10 5 10-5V8l-2-1m0 0l8-4 8 4m0 0v6l-10 5-10-5V8'
+        },
+        {
+          label: 'Order Management',
+          route: '/admin/order-management',
+          icon: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm8 0c1.66 0 2.99-1.34 2.99-3S25.66 5 24 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm0 2c-1.33 0-4 .67-4 2v3h8v-3c0-1.33-2.67-2-4-2zm-8 0c-1.33 0-4 .67-4 2v3h8v-3c0-1.33-2.67-2-4-2zM8 11c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-1.33 0-4 .67-4 2v3h8v-3c0-1.33-2.67-2-4-2z'
+        }
+      ]
+    },
+    {
       label: 'Manage Banners',
       route: '/admin/manage-banners',
       icon: 'M4 6h16v4H4zM4 12h16v4H4zM4 18h16v2H4z'
@@ -66,6 +99,11 @@ export class AdminLayoutComponent implements OnInit {
       label: 'AI Queue',
       route: '/admin/ai-queue',
       icon: 'M3 6h18M3 12h18M3 18h12M17 16l4 2-4 2v-4z'
+    },
+    {
+      label: 'Vector Data',
+      route: '/admin/vector-data',
+      icon: 'M4 7c0-1.66 3.58-3 8-3s8 1.34 8 3-3.58 3-8 3-8-1.34-8-3zm0 0v5c0 1.66 3.58 3 8 3s8-1.34 8-3V7M4 12v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5'
     },
     {
       label: 'Reviews',
@@ -170,6 +208,18 @@ export class AdminLayoutComponent implements OnInit {
     this.adminId = null;
     this.currencyMessage = '';
     this.router.navigate(['/admin/login']);
+  }
+
+  toggleGroupExpand(groupLabel: string): void {
+    if (this.expandedGroups.has(groupLabel)) {
+      this.expandedGroups.delete(groupLabel);
+    } else {
+      this.expandedGroups.add(groupLabel);
+    }
+  }
+
+  isGroupExpanded(groupLabel: string): boolean {
+    return this.expandedGroups.has(groupLabel);
   }
 
   @HostListener('window:resize')

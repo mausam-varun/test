@@ -567,6 +567,8 @@ textarea:focus {
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 10px;
+	gap: 8px;
+	flex-wrap: wrap;
 }
 
 .list-header span {
@@ -815,4 +817,73 @@ td img {
 	.save-btn {
 		width: 100%;
 	}
+}
+
+// ── Inventory Management ──────────────────────────────────────────
+.btn-inventory-link {
+  background: #f0fdf4;
+  border: 1.5px solid #16a34a;
+  color: #15803d;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: #dcfce7; }
+}
+
+.btn-refresh {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  &:hover { background: #f1f5f9; }
+}
+
+.inventory-card {
+  margin-top: 16px;
+}
+
+.loading-text { color: #64748b; font-style: italic; }
+.error-text   { color: #b91c1c; }
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  .inv-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .qty-cell {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    &.total { color: #1d4ed8; }
+    &.sold  { color: #7c3aed; }
+    &.stock { color: #15803d; }
+    &.stock.zero { color: #b91c1c; }
+  }
+
+  tr.low-stock   { background: #fffbeb; }
+  tr.out-of-stock { background: #fef2f2; }
+
+  .stock-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    &.out { background: #fee2e2; color: #b91c1c; }
+    &.low { background: #fef9c3; color: #92400e; }
+  }
 }

@@ -20,6 +20,30 @@ function normalizeAdminUserType(userType) {
   return value;
 }
 
+function normalizeAvatarUrl(value) {
+  const normalizedValue = String(value || '').trim();
+  return normalizedValue || null;
+}
+
+function mapCustomerUser(user) {
+  if (!user) {
+    return null;
+  }
+
+  const avatarUrl = user.avatar_url || user.avatarUrl || user.picture || null;
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    created_at: user.created_at,
+    avatarUrl,
+    avatar_url: avatarUrl
+  };
+}
+
 async function createCustomerUser({ name, email, password, phone }) {
   const db = getPool();
   const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -38,7 +62,9 @@ async function createCustomerUser({ name, email, password, phone }) {
       email: normalizedEmail,
       phone: normalizedPhone,
       role: 'user',
-      created_at: new Date()
+      created_at: new Date(),
+      avatarUrl: null,
+      avatar_url: null
     };
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
@@ -52,7 +78,7 @@ async function loginCustomerUser(email, password) {
   const db = getPool();
   const normalizedEmail = String(email || '').trim().toLowerCase();
   const [rows] = await db.query(
-    'SELECT id, name, email, password, phone, role, created_at FROM users WHERE email = ? LIMIT 1',
+    'SELECT id, name, email, password, phone, role, avatar_url, created_at FROM users WHERE email = ? LIMIT 1',
     [normalizedEmail]
   );
 
@@ -67,35 +93,41 @@ async function loginCustomerUser(email, password) {
     throw new Error('Invalid email or password');
   }
 
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    role: user.role,
-    created_at: user.created_at
-  };
+  return mapCustomerUser(user);
 }
 
-async function updateCustomerProfile(userId, { name, email, phone }) {
+async function updateCustomerProfile(userId, profile) {
   const db = getPool();
 
   if (!userId) {
     throw new Error('User id is required');
   }
 
-  const normalizedName = String(name || '').trim();
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const normalizedPhone = String(phone || '').trim();
+  const normalizedName = String(profile?.name || '').trim();
+  const normalizedEmail = String(profile?.email || '').trim().toLowerCase();
+  const normalizedPhone = String(profile?.phone || '').trim();
+  const hasAvatarUrl = Object.prototype.hasOwnProperty.call(profile || {}, 'avatarUrl')
+    || Object.prototype.hasOwnProperty.call(profile || {}, 'avatar_url');
+  const normalizedAvatarUrl = normalizeAvatarUrl(profile?.avatarUrl ?? profile?.avatar_url);
 
   if (!normalizedName || !normalizedEmail) {
     throw new Error('Name and email are required');
   }
 
   try {
+    const updateFields = ['name = ?', 'email = ?', 'phone = ?'];
+    const updateValues = [normalizedName, normalizedEmail, normalizedPhone || null];
+
+    if (hasAvatarUrl) {
+      updateFields.push('avatar_url = ?');
+      updateValues.push(normalizedAvatarUrl);
+    }
+
+    updateValues.push(Number(userId));
+
     const [result] = await db.query(
-      'UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?',
-      [normalizedName, normalizedEmail, normalizedPhone || null, Number(userId)]
+      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateValues
     );
 
     if (!result.affectedRows) {
@@ -103,11 +135,11 @@ async function updateCustomerProfile(userId, { name, email, phone }) {
     }
 
     const [rows] = await db.query(
-      'SELECT id, name, email, phone, role, created_at FROM users WHERE id = ? LIMIT 1',
+      'SELECT id, name, email, phone, role, avatar_url, created_at FROM users WHERE id = ? LIMIT 1',
       [Number(userId)]
     );
 
-    return rows[0] || null;
+    return mapCustomerUser(rows[0]);
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       throw new Error('Email already exists');
@@ -119,11 +151,11 @@ async function updateCustomerProfile(userId, { name, email, phone }) {
 async function getCustomerUserById(userId) {
   const db = getPool();
   const [rows] = await db.query(
-    'SELECT id, name, email, phone, role, created_at FROM users WHERE id = ? LIMIT 1',
+    'SELECT id, name, email, phone, role, avatar_url, created_at FROM users WHERE id = ? LIMIT 1',
     [Number(userId)]
   );
 
-  return rows[0] || null;
+  return mapCustomerUser(rows[0]);
 }
 
 async function createAdminUser(email, password, userType = 'admin') {
@@ -291,38 +323,41 @@ async function loginOrCreateGoogleUser(googleToken) {
 
     // Check if user already exists
     const [existingUsers] = await db.query(
-      'SELECT id, name, email, phone, role, created_at FROM users WHERE email = ? LIMIT 1',
+      'SELECT id, name, email, phone, role, avatar_url, created_at FROM users WHERE email = ? LIMIT 1',
       [email]
     );
 
     if (existingUsers.length > 0) {
-      // User exists, return existing user
       const existingUser = existingUsers[0];
-      return {
-        id: existingUser.id,
-        name: existingUser.name,
-        email: existingUser.email,
-        phone: existingUser.phone,
-        role: existingUser.role,
-        created_at: existingUser.created_at
-      };
+      const normalizedPicture = normalizeAvatarUrl(picture);
+
+      if (normalizedPicture && !existingUser.avatar_url) {
+        await db.query(
+          'UPDATE users SET avatar_url = ? WHERE id = ?',
+          [normalizedPicture, existingUser.id]
+        );
+        existingUser.avatar_url = normalizedPicture;
+      }
+
+      return mapCustomerUser(existingUser);
     }
 
     // Create new user with Google OAuth data
     try {
       const [result] = await db.query(
-        'INSERT INTO users (name, email, phone, role) VALUES (?, ?, ?, ?)',
-        [name, email, null, 'user']
+        'INSERT INTO users (name, email, phone, role, avatar_url) VALUES (?, ?, ?, ?, ?)',
+        [name, email, null, 'user', normalizeAvatarUrl(picture)]
       );
 
-      return {
+      return mapCustomerUser({
         id: result.insertId,
         name,
         email,
         phone: null,
         role: 'user',
+        avatar_url: normalizeAvatarUrl(picture),
         created_at: new Date().toISOString()
-      };
+      });
     } catch (dbError) {
       if (dbError.code === 'ER_DUP_ENTRY') {
         throw new Error('Email already registered. Please use normal login instead.');
@@ -345,28 +380,39 @@ async function loginOrCreateGoogleProfileUser({ email, name, picture }) {
   }
 
   const [existingUsers] = await db.query(
-    'SELECT id, name, email, phone, role, created_at FROM users WHERE email = ? LIMIT 1',
+    'SELECT id, name, email, phone, role, avatar_url, created_at FROM users WHERE email = ? LIMIT 1',
     [normalizedEmail]
   );
 
   if (existingUsers.length > 0) {
-    return existingUsers[0];
+    const existingUser = existingUsers[0];
+    const normalizedPicture = normalizeAvatarUrl(picture);
+
+    if (normalizedPicture && !existingUser.avatar_url) {
+      await db.query(
+        'UPDATE users SET avatar_url = ? WHERE id = ?',
+        [normalizedPicture, existingUser.id]
+      );
+      existingUser.avatar_url = normalizedPicture;
+    }
+
+    return mapCustomerUser(existingUser);
   }
 
   const [result] = await db.query(
-    'INSERT INTO users (name, email, phone, role) VALUES (?, ?, ?, ?)',
-    [normalizedName, normalizedEmail, null, 'user']
+    'INSERT INTO users (name, email, phone, role, avatar_url) VALUES (?, ?, ?, ?, ?)',
+    [normalizedName, normalizedEmail, null, 'user', normalizeAvatarUrl(picture)]
   );
 
-  return {
+  return mapCustomerUser({
     id: result.insertId,
     name: normalizedName,
     email: normalizedEmail,
     phone: null,
     role: 'user',
     created_at: new Date().toISOString(),
-    picture: picture || null
-  };
+    avatar_url: normalizeAvatarUrl(picture)
+  });
 }
 
 module.exports = {
@@ -382,5 +428,48 @@ module.exports = {
   getAllAdminUsers,
   deleteAdminUser,
   getAdminCurrencyPreference,
-  updateAdminCurrencyPreference
+  updateAdminCurrencyPreference,
+  findOrCreateUserByIdentifier
 };
+
+async function findOrCreateUserByIdentifier(identifier, name) {
+  const db = getPool();
+  const isPhone = /^\+?[\d\s\-()]{7,15}$/.test(String(identifier).replace(/[\s\-()]/g, ''));
+
+  let rows;
+  if (isPhone) {
+    [rows] = await db.query(
+      'SELECT id, name, email, phone, role, avatar_url, created_at FROM users WHERE phone = ? LIMIT 1',
+      [identifier]
+    );
+  } else {
+    const normalizedEmail = String(identifier).trim().toLowerCase();
+    [rows] = await db.query(
+      'SELECT id, name, email, phone, role, avatar_url, created_at FROM users WHERE email = ? LIMIT 1',
+      [normalizedEmail]
+    );
+  }
+
+  if (rows.length > 0) return mapCustomerUser(rows[0]);
+
+  // New user — create without password (OTP-only account)
+  const userName = (name || '').trim() || (isPhone ? `User ${String(identifier).slice(-4)}` : String(identifier).split('@')[0]);
+  const newEmail = isPhone ? null : String(identifier).trim().toLowerCase();
+  const newPhone = isPhone ? identifier : null;
+
+  const [result] = await db.query(
+    'INSERT INTO users (name, email, phone, role) VALUES (?, ?, ?, ?)',
+    [userName, newEmail, newPhone, 'user']
+  );
+
+  return {
+    id: result.insertId,
+    name: userName,
+    email: newEmail,
+    phone: newPhone,
+    role: 'user',
+    created_at: new Date(),
+    avatarUrl: null,
+    avatar_url: null
+  };
+}

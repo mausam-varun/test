@@ -1,11 +1,15 @@
 FROM node:20-alpine AS build
 
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci --legacy-peer-deps
+
 WORKDIR /app
+COPY frontend ./frontend
+COPY backend/.env ./backend/.env
 
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
+WORKDIR /app/frontend
 RUN npm run build -- --configuration production
 
 FROM nginx:1.27-alpine
@@ -15,8 +19,8 @@ ENV BACKEND_URL=${BACKEND_URL}
 
 RUN apk add --no-cache gettext
 
-COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
-COPY --from=build /app/dist/divara-craft-frontend /usr/share/nginx/html
+COPY frontend/nginx/default.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/frontend/dist/divara-craft-frontend /usr/share/nginx/html
 
 EXPOSE 8080
 

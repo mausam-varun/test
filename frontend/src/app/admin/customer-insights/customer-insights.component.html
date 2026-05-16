@@ -1,0 +1,142 @@
+<div class="ci-page">
+  <!-- Page header -->
+  <div class="ci-header">
+    <h1 class="ci-title">Customer Insights</h1>
+    <p class="ci-subtitle">Understand your customer base and purchasing behavior</p>
+  </div>
+
+  <!-- Date filter -->
+  <div class="ci-filters">
+    <div class="ci-filter-group">
+      <button
+        class="ci-filter-btn"
+        [class.ci-filter-btn--active]="selectedDateFilter === '7days'"
+        (click)="setDateFilter('7days')"
+      >
+        Last 7 Days
+      </button>
+      <button
+        class="ci-filter-btn"
+        [class.ci-filter-btn--active]="selectedDateFilter === '30days'"
+        (click)="setDateFilter('30days')"
+      >
+        Last 30 Days
+      </button>
+    </div>
+  </div>
+
+  <!-- Total customers KPI -->
+  <div class="ci-kpi-section">
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingSummary" class="ci-kpi-card ci-skeleton-shimmer">
+      <div style="height: 20px; width: 80px; border-radius: 4px; margin-bottom: 8px;"></div>
+      <div style="height: 36px; width: 120px; border-radius: 4px;"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="errorSummary && !isLoadingSummary" class="ci-kpi-card ci-card-error">
+      <div class="ci-error-content">
+        <p class="ci-error-text">{{ errorSummary }}</p>
+        <button class="ci-retry-btn" (click)="retryFetch('summary')">Retry</button>
+      </div>
+    </div>
+
+    <!-- Data state -->
+    <div *ngIf="customerSummary && !isLoadingSummary && !errorSummary" class="ci-kpi-card ci-card-primary">
+      <p class="ci-kpi-label">Total Customers</p>
+      <p class="ci-kpi-value">{{ customerSummary.totalCustomers }}</p>
+    </div>
+  </div>
+
+  <!-- New vs Returning section -->
+  <div class="ci-chart-card">
+    <h2 class="ci-section-title">Customer Breakdown</h2>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingChart" class="ci-chart-skeleton">
+      <div style="height: 300px; border-radius: 8px;" class="ci-skeleton-shimmer"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="errorChart && !isLoadingChart" class="ci-error-content ci-error-card">
+      <p class="ci-error-text">{{ errorChart }}</p>
+      <button class="ci-retry-btn" (click)="retryFetch('chart')">Retry</button>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="newVsReturning && !isLoadingChart && !errorChart && (newVsReturning.newCustomers + newVsReturning.returningCustomers) === 0" class="ci-empty-state">
+      <p class="ci-empty-text">No customer data available for this period</p>
+    </div>
+
+    <!-- Chart -->
+    <div *ngIf="newVsReturning && !isLoadingChart && !errorChart && (newVsReturning.newCustomers + newVsReturning.returningCustomers) > 0" class="ci-chart-wrapper">
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas
+          baseChart
+          [type]="'pie'"
+          [data]="newVsReturningChartConfig!.data"
+          [options]="newVsReturningChartConfig!.options"
+        ></canvas>
+      </div>
+
+      <!-- Stats below chart -->
+      <div class="ci-chart-stats">
+        <div class="ci-stat">
+          <span class="ci-stat-color ci-stat-color--new"></span>
+          <span class="ci-stat-label">New</span>
+          <span class="ci-stat-value">{{ newVsReturning.newCustomers }}</span>
+        </div>
+        <div class="ci-stat">
+          <span class="ci-stat-color ci-stat-color--returning"></span>
+          <span class="ci-stat-label">Returning</span>
+          <span class="ci-stat-value">{{ newVsReturning.returningCustomers }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top customers section -->
+  <div class="ci-table-card">
+    <h2 class="ci-section-title">Top Customers (by Spend)</h2>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingTable" class="ci-table-skeleton">
+      <div *ngFor="let i of [1, 2, 3, 4, 5]" style="height: 48px; margin-bottom: 8px; border-radius: 6px;" class="ci-skeleton-shimmer"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="errorTable && !isLoadingTable" class="ci-error-content ci-error-card">
+      <p class="ci-error-text">{{ errorTable }}</p>
+      <button class="ci-retry-btn" (click)="retryFetch('table')">Retry</button>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="topCustomers.length === 0 && !isLoadingTable && !errorTable" class="ci-empty-state">
+      <p class="ci-empty-text">No customer data available for this period</p>
+    </div>
+
+    <!-- Table -->
+    <table class="ci-table" *ngIf="topCustomers.length > 0 && !isLoadingTable && !errorTable">
+      <thead>
+        <tr class="ci-table-header">
+          <th class="ci-table-cell ci-table-cell--rank">Rank</th>
+          <th class="ci-table-cell ci-table-cell--name">Customer Name</th>
+          <th class="ci-table-cell ci-table-cell--email">Email</th>
+          <th class="ci-table-cell ci-table-cell--orders">Orders</th>
+          <th class="ci-table-cell ci-table-cell--spend">Total Spend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let customer of topCustomers; let i = index" class="ci-table-row">
+          <td class="ci-table-cell ci-table-cell--rank">
+            <span class="ci-rank-badge" [ngClass]="'ci-rank-' + (i + 1)">{{ i + 1 }}</span>
+          </td>
+          <td class="ci-table-cell ci-table-cell--name">{{ customer.name }}</td>
+          <td class="ci-table-cell ci-table-cell--email">{{ customer.email }}</td>
+          <td class="ci-table-cell ci-table-cell--orders">{{ customer.totalOrders }}</td>
+          <td class="ci-table-cell ci-table-cell--spend">{{ formatCurrency(customer.totalSpend) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

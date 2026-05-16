@@ -24,6 +24,7 @@ interface ThemeSettings {
   addToCartButtonHoverColor: string;
   wishlistButtonHoverColor: string;
   headerMenuHoverColor: string;
+  fontFamily: string;
 }
 
 interface AdminSettings {
@@ -58,8 +59,21 @@ export class AdminSettingsComponent implements OnInit {
     addToCartButtonColor: '#0f3e7e',
     addToCartButtonHoverColor: '#0a2547',
     wishlistButtonHoverColor: '#fecaca',
-    headerMenuHoverColor: '#f3f4f6'
+    headerMenuHoverColor: '#f3f4f6',
+    fontFamily: 'Poppins'
   };
+
+  readonly fontFamilyOptions: { value: string; label: string }[] = [
+    { value: 'Poppins', label: 'Poppins (Default)' },
+    { value: 'Inter', label: 'Inter' },
+    { value: 'Montserrat', label: 'Montserrat' },
+    { value: 'Manrope', label: 'Manrope' },
+    { value: 'DM Sans', label: 'DM Sans' },
+    { value: 'Lora', label: 'Lora' },
+    { value: 'Merriweather', label: 'Merriweather' },
+    { value: 'Playfair Display', label: 'Playfair Display' },
+    { value: 'Segoe UI', label: 'Segoe UI (System)' }
+  ];
 
   isLoading = false;
   isSaving = false;
@@ -135,6 +149,11 @@ export class AdminSettingsComponent implements OnInit {
     this.saveSettings();
   }
 
+  onFontFamilyChange(): void {
+    this.themeService.setTheme(this.theme);
+    this.saveSettings();
+  }
+
   private darkenHexColor(hex: string, percent: number): string {
     const num = parseInt(hex.replace('#', ''), 16);
     const r = Math.max(0, (num >> 16) - Math.round(2.55 * percent));
@@ -192,7 +211,8 @@ export class AdminSettingsComponent implements OnInit {
         addToCartButtonColor: '#0f3e7e',
         addToCartButtonHoverColor: '#0a2547',
         wishlistButtonHoverColor: '#fecaca',
-        headerMenuHoverColor: '#f3f4f6'
+        headerMenuHoverColor: '#f3f4f6',
+        fontFamily: 'Poppins'
       };
 
       this.themeService.setTheme(this.theme);

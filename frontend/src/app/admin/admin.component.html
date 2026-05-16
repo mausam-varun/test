@@ -4,6 +4,7 @@
 			<h1>Admin Product Panel</h1>
 			<p>Currency preference is controlled from the top header and product prices are stored in USD.</p>
 		</div>
+		<a class="btn-inventory-report" routerLink="/admin/inventory-report">View Stock List</a>
 	</div>
 
 	<div class="card upload-card">
@@ -38,6 +39,11 @@
 			<label>
 				<span>Price</span>
 				<input type="number" min="1" [(ngModel)]="productPrice" placeholder="e.g. 1499" />
+			</label>
+
+			<label>
+				<span>Product Quantity</span>
+				<input type="number" min="0" [(ngModel)]="productQuantity" placeholder="e.g. 50" />
 			</label>
 
 			<label>

@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
   /* Legacy colors (backward compatibility) */
@@ -39,6 +39,7 @@
   --button-add-to-cart-hover: #0a2547;
   --button-wishlist-hover: #fecaca;
   --menu-hover: #f3f4f6;
+  --app-font-family: 'Poppins', 'Segoe UI', sans-serif;
 }
 
 /* Global Resets */
@@ -49,16 +50,19 @@
 }
 
 html, body {
-  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family, 'Poppins', 'Segoe UI', sans-serif);
   font-size: 15px;
   font-weight: 400;
   color: #777777;
   background-color: var(--bg);
   line-height: 1.7;
+  overflow-x: hidden;
 }
 
+
+
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--app-font-family, 'Poppins', 'Segoe UI', sans-serif);
   font-weight: 600;
   color: #222222;
   letter-spacing: 0.5px;
@@ -77,11 +81,71 @@ a {
 
 /* Default button styling override */
 button {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--app-font-family, 'Poppins', 'Segoe UI', sans-serif);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
+}
+
+/* Enforce admin-selected font across the storefront */
+body,
+body * {
+  font-family: var(--app-font-family, 'Poppins', 'Segoe UI', sans-serif) !important;
+}
+
+/* Google Places autocomplete dropdown */
+body .pac-container,
+body .pac-container * {
+  font-family: var(--app-font-family, 'Poppins', 'Segoe UI', sans-serif) !important;
+}
+
+.pac-container {
+  border: 1px solid #e2d7c7 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 26px rgba(56, 42, 31, 0.14) !important;
+  margin-top: 6px !important;
+  overflow: hidden !important;
+  z-index: 100000 !important;
+}
+
+.pac-item {
+  align-items: center !important;
+  border-top: 1px solid #f0e4d5 !important;
+  color: #6f625a !important;
+  cursor: pointer !important;
+  display: flex !important;
+  gap: 8px !important;
+  min-height: 42px !important;
+  padding: 9px 12px !important;
+}
+
+.pac-item:first-child {
+  border-top: 0 !important;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background: #fff7eb !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
+
+.pac-item-query {
+  color: #34261f !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.pac-matched {
+  color: #8a5c28 !important;
+  font-weight: 700 !important;
+}
+
+.pac-logo::after {
+  margin: 6px 12px 8px !important;
 }
 
 /* Smooth scrolling */

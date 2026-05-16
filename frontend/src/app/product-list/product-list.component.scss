@@ -397,3 +397,141 @@
   .pl-category-select { width: 100%; }
   .pl-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
 }
+
+@media (max-width: 768px) {
+  .product-list-page {
+    padding: 0 12px 44px;
+  }
+
+  .pl-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
+  }
+
+  .pl-card {
+    border: 1px solid #f4edf1;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(52, 32, 45, 0.06);
+    overflow: hidden;
+
+    &:hover {
+      transform: none;
+      box-shadow: 0 6px 18px rgba(52, 32, 45, 0.06);
+    }
+  }
+
+  .pl-card-img-wrap {
+    aspect-ratio: 1 / 0.9;
+    border-radius: 17px 17px 0 0;
+    background: #fbf8f4;
+  }
+
+  .pl-card-img {
+    object-fit: cover;
+  }
+
+  .pl-card-category {
+    top: 16px;
+    left: 16px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #f08ab4;
+    color: #fff;
+    font-size: clamp(7px, 1.55vw, 13px);
+    line-height: 1.1;
+    letter-spacing: 0.06em;
+  }
+
+  .pl-card-body {
+    min-height: clamp(94px, 26vw, 205px);
+    padding: clamp(9px, 2.4vw, 20px) clamp(8px, 2.2vw, 18px) clamp(10px, 2.4vw, 20px);
+    gap: 4px;
+  }
+
+  .pl-card-body::before {
+    content: 'Divara Craft';
+    color: #24192a;
+    font-size: clamp(9px, 2.4vw, 18px);
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .pl-card-name {
+    color: #24192a;
+    font-size: clamp(9.5px, 2.5vw, 20px);
+    line-height: 1.28;
+    font-weight: 800;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .pl-card-desc {
+    display: none;
+  }
+
+  .pl-card-footer {
+    margin-top: auto;
+    align-items: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .pl-card-price {
+    color: #32132b;
+    font-size: clamp(11px, 3.2vw, 24px);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .btn-add-to-cart {
+    width: clamp(29px, 7vw, 54px);
+    min-width: clamp(29px, 7vw, 54px);
+    height: clamp(29px, 7vw, 54px);
+    padding: 0;
+    border: 1px solid #eadfe3;
+    border-radius: 999px;
+    background: #fff;
+    color: transparent;
+    font-size: 0;
+    box-shadow: 0 8px 18px rgba(95, 77, 86, 0.12);
+    position: relative;
+
+    &::before {
+      content: '🛒';
+      color: #5f4d56;
+      font-size: clamp(14px, 3.1vw, 24px);
+      line-height: 1;
+    }
+
+    &:hover {
+      background: #fff;
+      transform: none;
+    }
+  }
+
+  .quantity-control {
+    min-width: 96px;
+    padding: 0;
+    gap: 0;
+    border: 1px solid #eadfe3;
+    border-radius: 999px;
+    background: #fff7fa;
+    overflow: hidden;
+
+    .quantity-btn {
+      width: 30px;
+      height: 36px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #6c5660;
+    }
+
+    .quantity-display {
+      min-width: 32px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+  }
+}

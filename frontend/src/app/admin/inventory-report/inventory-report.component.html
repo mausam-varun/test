@@ -1,0 +1,248 @@
+<div class="inv-page">
+  <!-- Page header -->
+  <div class="inv-header">
+    <h1 class="inv-title">Inventory Report</h1>
+    <p class="inv-subtitle">Track stock levels, identify low stock items, and monitor inventory value</p>
+  </div>
+
+  <!-- Summary KPI Cards -->
+  <div class="inv-kpi-section">
+    <!-- Total Products -->
+    <div *ngIf="isLoadingSummary" class="inv-kpi-card inv-skeleton-shimmer">
+      <div style="height: 20px; width: 80px; border-radius: 4px; margin-bottom: 8px;"></div>
+      <div style="height: 36px; width: 120px; border-radius: 4px;"></div>
+    </div>
+
+    <div *ngIf="errorSummary && !isLoadingSummary" class="inv-kpi-card inv-card-error">
+      <div class="inv-error-content">
+        <p class="inv-error-text">{{ errorSummary }}</p>
+        <button class="inv-retry-btn" (click)="retryFetch('summary')">Retry</button>
+      </div>
+    </div>
+
+    <div *ngIf="summary && !isLoadingSummary && !errorSummary" class="inv-kpi-card inv-card-primary">
+      <p class="inv-kpi-label">Total Products</p>
+      <p class="inv-kpi-value">{{ summary.totalProducts }}</p>
+    </div>
+
+    <!-- Total Stock Quantity -->
+    <div *ngIf="summary && !isLoadingSummary && !errorSummary" class="inv-kpi-card inv-card-accent">
+      <p class="inv-kpi-label">Total Stock Qty</p>
+      <p class="inv-kpi-value">{{ summary.totalStockQuantity }}</p>
+    </div>
+
+    <!-- Inventory Value -->
+    <div *ngIf="summary && !isLoadingSummary && !errorSummary" class="inv-kpi-card inv-card-success">
+      <p class="inv-kpi-label">Inventory Value</p>
+      <p class="inv-kpi-value">{{ formatCurrency(summary.inventoryValue) }}</p>
+    </div>
+  </div>
+
+  <!-- Low Stock Section -->
+  <div class="inv-section">
+    <div class="inv-section-header">
+      <h2 class="inv-section-title">Low Stock Products</h2>
+      <div class="inv-section-controls">
+        <label class="inv-threshold-label">Threshold:</label>
+        <input
+          type="number"
+          class="inv-threshold-input"
+          [(ngModel)]="lowStockThreshold"
+          min="1"
+          max="50"
+          (change)="onThresholdChange()"
+        />
+      </div>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingLowStock" class="inv-table-skeleton">
+      <div *ngFor="let i of [1, 2, 3, 4, 5]" style="height: 48px; margin-bottom: 8px; border-radius: 6px;" class="inv-skeleton-shimmer"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="errorLowStock && !isLoadingLowStock" class="inv-error-content inv-error-card">
+      <p class="inv-error-text">{{ errorLowStock }}</p>
+      <button class="inv-retry-btn" (click)="retryFetch('low-stock')">Retry</button>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="lowStockProducts.length === 0 && !isLoadingLowStock && !errorLowStock" class="inv-empty-state">
+      <p class="inv-empty-text">No low stock products found</p>
+    </div>
+
+    <!-- Search -->
+    <div *ngIf="lowStockProducts.length > 0 && !isLoadingLowStock && !errorLowStock" class="inv-search-box">
+      <input
+        type="text"
+        class="inv-search-input"
+        [(ngModel)]="searchLowStock"
+        placeholder="Search product name..."
+      />
+    </div>
+
+    <!-- Table -->
+    <table class="inv-table" *ngIf="filteredLowStock.length > 0 && !isLoadingLowStock && !errorLowStock">
+      <thead>
+        <tr class="inv-table-header">
+          <th class="inv-table-cell inv-table-cell--name">Product Name</th>
+          <th class="inv-table-cell inv-table-cell--stock">Current Stock</th>
+          <th class="inv-table-cell inv-table-cell--status">Status</th>
+          <th class="inv-table-cell inv-table-cell--price">Cost Price</th>
+          <th class="inv-table-cell inv-table-cell--value">Stock Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of filteredLowStock" class="inv-table-row inv-table-row--warning">
+          <td class="inv-table-cell inv-table-cell--name">{{ product.name }}</td>
+          <td class="inv-table-cell inv-table-cell--stock">{{ product.stock }}</td>
+          <td class="inv-table-cell inv-table-cell--status">
+            <span class="inv-status-badge inv-status-badge--warning">Low Stock</span>
+          </td>
+          <td class="inv-table-cell inv-table-cell--price">{{ formatCurrency(product.costPrice) }}</td>
+          <td class="inv-table-cell inv-table-cell--value">{{ formatCurrency(product.stock * product.costPrice) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- No results after search -->
+    <div *ngIf="lowStockProducts.length > 0 && filteredLowStock.length === 0 && !isLoadingLowStock && !errorLowStock" class="inv-empty-state">
+      <p class="inv-empty-text">No products match your search</p>
+    </div>
+  </div>
+
+  <!-- Out of Stock Section -->
+  <div class="inv-section">
+    <div class="inv-section-header">
+      <h2 class="inv-section-title">Out of Stock Products</h2>
+      <div class="inv-badge-count" *ngIf="!isLoadingOutOfStock && !errorOutOfStock">
+        {{ outOfStockProducts.length }} item(s)
+      </div>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingOutOfStock" class="inv-table-skeleton">
+      <div *ngFor="let i of [1, 2, 3, 4, 5]" style="height: 48px; margin-bottom: 8px; border-radius: 6px;" class="inv-skeleton-shimmer"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="errorOutOfStock && !isLoadingOutOfStock" class="inv-error-content inv-error-card">
+      <p class="inv-error-text">{{ errorOutOfStock }}</p>
+      <button class="inv-retry-btn" (click)="retryFetch('out-of-stock')">Retry</button>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="outOfStockProducts.length === 0 && !isLoadingOutOfStock && !errorOutOfStock" class="inv-empty-state inv-empty-state--success">
+      <p class="inv-empty-text">✓ All products are in stock</p>
+    </div>
+
+    <!-- Search -->
+    <div *ngIf="outOfStockProducts.length > 0 && !isLoadingOutOfStock && !errorOutOfStock" class="inv-search-box">
+      <input
+        type="text"
+        class="inv-search-input"
+        [(ngModel)]="searchOutOfStock"
+        placeholder="Search product name..."
+      />
+    </div>
+
+    <!-- Table -->
+    <table class="inv-table" *ngIf="filteredOutOfStock.length > 0 && !isLoadingOutOfStock && !errorOutOfStock">
+      <thead>
+        <tr class="inv-table-header">
+          <th class="inv-table-cell inv-table-cell--name">Product Name</th>
+          <th class="inv-table-cell inv-table-cell--stock">Stock</th>
+          <th class="inv-table-cell inv-table-cell--status">Status</th>
+          <th class="inv-table-cell inv-table-cell--price">Cost Price</th>
+          <th class="inv-table-cell inv-table-cell--value">Stock Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of filteredOutOfStock" class="inv-table-row inv-table-row--danger">
+          <td class="inv-table-cell inv-table-cell--name">{{ product.name }}</td>
+          <td class="inv-table-cell inv-table-cell--stock">{{ product.stock }}</td>
+          <td class="inv-table-cell inv-table-cell--status">
+            <span class="inv-status-badge inv-status-badge--danger">Out of Stock</span>
+          </td>
+          <td class="inv-table-cell inv-table-cell--price">{{ formatCurrency(product.costPrice) }}</td>
+          <td class="inv-table-cell inv-table-cell--value">{{ formatCurrency(product.stock * product.costPrice) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- No results after search -->
+    <div *ngIf="outOfStockProducts.length > 0 && filteredOutOfStock.length === 0 && !isLoadingOutOfStock && !errorOutOfStock" class="inv-empty-state">
+      <p class="inv-empty-text">No products match your search</p>
+    </div>
+  </div>
+
+  <!-- ── All Products Inventory Table ───────────────────────────── -->
+  <div class="inv-section">
+    <div class="inv-section-header">
+      <h2 class="inv-section-title">All Products — Stock Overview</h2>
+      <div class="inv-badge-count" *ngIf="!isLoadingAllProducts && !errorAllProducts">
+        {{ allProducts.length }} product(s)
+      </div>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingAllProducts" class="inv-table-skeleton">
+      <div *ngFor="let i of [1,2,3,4,5,6]" style="height:48px;margin-bottom:8px;border-radius:6px;" class="inv-skeleton-shimmer"></div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorAllProducts && !isLoadingAllProducts" class="inv-error-content inv-error-card">
+      <p class="inv-error-text">{{ errorAllProducts }}</p>
+      <button class="inv-retry-btn" (click)="retryFetch('all-products')">Retry</button>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="allProducts.length === 0 && !isLoadingAllProducts && !errorAllProducts" class="inv-empty-state">
+      <p class="inv-empty-text">No products found</p>
+    </div>
+
+    <!-- Search -->
+    <div *ngIf="allProducts.length > 0 && !isLoadingAllProducts && !errorAllProducts" class="inv-search-box">
+      <input type="text" class="inv-search-input" [(ngModel)]="searchAllProducts" placeholder="Search by name or category..." />
+    </div>
+
+    <!-- Table -->
+    <table class="inv-table inv-all-table" *ngIf="filteredAllProducts.length > 0 && !isLoadingAllProducts && !errorAllProducts">
+      <thead>
+        <tr class="inv-table-header">
+          <th class="inv-table-cell" style="width:50px">ID</th>
+          <th class="inv-table-cell" style="width:60px">Image</th>
+          <th class="inv-table-cell inv-table-cell--name">Product Name</th>
+          <th class="inv-table-cell">Category</th>
+          <th class="inv-table-cell inv-col-center">Total Added</th>
+          <th class="inv-table-cell inv-col-center">Sold</th>
+          <th class="inv-table-cell inv-col-center">Available Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of filteredAllProducts" class="inv-table-row"
+            [class.inv-table-row--warning]="p.current_stock > 0 && p.current_stock <= 5"
+            [class.inv-table-row--danger]="p.current_stock === 0">
+          <td class="inv-table-cell">{{ p.id }}</td>
+          <td class="inv-table-cell">
+            <img *ngIf="p.image_url" [src]="p.image_url" [alt]="p.name" class="inv-product-thumb" />
+            <div *ngIf="!p.image_url" class="inv-no-img">—</div>
+          </td>
+          <td class="inv-table-cell inv-table-cell--name">{{ p.name }}</td>
+          <td class="inv-table-cell">{{ p.category }}</td>
+          <td class="inv-table-cell inv-col-center inv-qty-total">{{ p.total_added_quantity }}</td>
+          <td class="inv-table-cell inv-col-center inv-qty-sold">{{ p.sold_quantity }}</td>
+          <td class="inv-table-cell inv-col-center">
+            <span class="inv-qty-stock" [class.inv-zero]="p.current_stock === 0">{{ p.current_stock }}</span>
+            <span class="inv-status-badge inv-status-badge--danger" *ngIf="p.current_stock === 0">Out</span>
+            <span class="inv-status-badge inv-status-badge--warning" *ngIf="p.current_stock > 0 && p.current_stock <= 5">Low</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="allProducts.length > 0 && filteredAllProducts.length === 0 && !isLoadingAllProducts" class="inv-empty-state">
+      <p class="inv-empty-text">No products match your search</p>
+    </div>
+  </div>
+</div>

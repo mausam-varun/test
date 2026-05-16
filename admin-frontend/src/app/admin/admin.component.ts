@@ -28,6 +28,16 @@ interface ThemeSettings {
 
 type ProductCurrency = 'USD' | 'INR';
 
+interface InventoryProduct {
+  id: number;
+  name: string;
+  image_url: string;
+  category: string;
+  total_added_quantity: number;
+  current_stock: number;
+  sold_quantity: number;
+}
+
 @Component({
   selector: 'app-admin',
   templateUrl: './admin.component.html',
@@ -47,6 +57,7 @@ export class AdminComponent implements OnInit {
   selectedImageName = '';
 
   // Metadata fields (comma-separated or array format)
+  productQuantity: number | null = null;
   productColors = '';
   productColorHex = '';
   productSize = '';
@@ -54,6 +65,12 @@ export class AdminComponent implements OnInit {
   productPatterns = '';
   productStyles = '';
   productMaterials = '';
+
+  // Inventory management
+  inventoryProducts: InventoryProduct[] = [];
+  isLoadingInventory = false;
+  inventoryError = '';
+  showInventorySection = false;
 
   isSubmitting = false;
   isLoadingProducts = false;
@@ -212,6 +229,10 @@ export class AdminComponent implements OnInit {
     payload.append('description', this.productDescription.trim());
     payload.append('image', this.selectedImageFile);
 
+    if (this.productQuantity !== null && this.productQuantity > 0) {
+      payload.append('quantity', String(this.productQuantity));
+    }
+
     // Append metadata fields (comma-separated strings that will be parsed on backend)
     if (this.productColors.trim()) payload.append('colors', this.productColors.trim());
     if (this.productColorHex.trim()) payload.append('color_hex', this.productColorHex.trim());
@@ -253,6 +274,7 @@ export class AdminComponent implements OnInit {
   private resetForm(): void {
     this.productName = '';
     this.productPrice = null;
+    this.productQuantity = null;
     this.productCategory = '';
     this.productDescription = '';
     this.selectedImageFile = null;
@@ -264,6 +286,26 @@ export class AdminComponent implements OnInit {
     this.productPatterns = '';
     this.productStyles = '';
     this.productMaterials = '';
+  }
+
+  loadInventory(): void {
+    this.showInventorySection = true;
+    this.isLoadingInventory = true;
+    this.inventoryError = '';
+    const token = this.adminToken || localStorage.getItem('admin_token') || '';
+    this.http.get<{ total: number; products: InventoryProduct[] }>(
+      'http://localhost:5002/api/inventory/all-products',
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).subscribe({
+      next: (res) => {
+        this.inventoryProducts = res.products || [];
+        this.isLoadingInventory = false;
+      },
+      error: () => {
+        this.inventoryError = 'Failed to load inventory data.';
+        this.isLoadingInventory = false;
+      }
+    });
   }
 
   get pricePreviewInUsd(): number | null {

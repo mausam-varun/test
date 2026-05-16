@@ -1,13 +1,14 @@
 <main class="checkout-page">
-  <section class="checkout-wrap">
-    <header class="checkout-head">
-      <h1>Secure Checkout</h1>
-      <p>Complete your order for handcrafted treasures</p>
-    </header>
-
+  <section class="checkout-shell">
     <div class="checkout-grid">
-      <section class="checkout-form-card">
-        <h2>Shipping Details</h2>
+      <section class="details-card">
+        <header class="section-head">
+          <span class="section-icon">📍</span>
+          <div>
+            <h2>Shipping Details</h2>
+            <p>Please enter your details to continue</p>
+          </div>
+        </header>
 
         <div class="checkout-status is-error" *ngIf="validationMessage">
           {{ validationMessage }}
@@ -21,7 +22,7 @@
           <strong>{{ submitSuccessMessage }}</strong>
           <span *ngIf="placedOrderNumber">Order Number: <b>{{ placedOrderNumber }}</b></span>
           <a *ngIf="placedOrderNumber" [routerLink]="['/track-order', placedOrderNumber]" class="track-order-link">
-            &#128672; Track Your Order
+            Track Your Order
           </a>
         </div>
 
@@ -36,29 +37,66 @@
             <input type="email" [(ngModel)]="email" placeholder="name@example.com">
           </label>
 
-          <label>
+          <label class="phone-group">
             Phone
-            <input type="tel" [(ngModel)]="phone" placeholder="+91 98xxxxxx">
+            <div class="phone-row">
+              <select class="country-code" aria-label="Country code">
+                <option value="+91" selected>🇮🇳 +91</option>
+              </select>
+              <input type="tel" [(ngModel)]="phone" placeholder="98xxxxxx">
+            </div>
           </label>
 
-          <label>
-            Address Line 1
-            <input type="text" [(ngModel)]="addressLine1" placeholder="Street address">
-          </label>
+          <div class="full-width address-search-field">
+            <label for="checkout-address-search">Address Line 1</label>
+            <input
+              id="checkout-address-search"
+              type="text"
+              [(ngModel)]="addressLine1"
+              (ngModelChange)="onAddressSearchChange($event)"
+              (focus)="onAddressSearchFocus()"
+              (blur)="hideAddressSuggestionsSoon()"
+              placeholder="Search address or street"
+              autocomplete="off">
+
+            <div class="address-suggestions" *ngIf="showAddressSuggestions">
+              <button type="button" class="address-suggestion address-suggestion--current" (mousedown)="useCurrentLocation($event)">
+                <strong>{{ isUsingCurrentLocation ? 'Detecting location...' : 'Use current location' }}</strong>
+                <span>{{ currentLocationMessage || 'Fill address from this device location' }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="address-suggestion"
+                *ngFor="let suggestion of addressSuggestions"
+                (mousedown)="selectAddressSuggestion(suggestion, $event)">
+                <strong>{{ suggestion.structured_formatting?.main_text || suggestion.description }}</strong>
+                <span>{{ suggestion.structured_formatting?.secondary_text || suggestion.description }}</span>
+              </button>
+
+              <div class="address-suggestion address-suggestion--muted" *ngIf="isAddressSearchLoading">Searching...</div>
+              <div class="address-suggestion address-suggestion--muted" *ngIf="shouldShowNoAddressFound">No address found</div>
+            </div>
+
+            <div class="current-location-map" *ngIf="showCurrentLocationMap">
+              <div id="checkout-current-location-map" class="current-location-map__canvas" aria-label="Current location map"></div>
+              <p>Current location selected</p>
+            </div>
+          </div>
 
           <label>
-            Address Line 2
-            <input type="text" [(ngModel)]="addressLine2" placeholder="Apartment, suite, etc. (optional)">
+            Address Line 2 (optional)
+            <input type="text" [(ngModel)]="addressLine2" placeholder="Apartment, suite, etc.">
           </label>
 
           <label>
             City
-            <input type="text" [(ngModel)]="city" placeholder="City">
+            <input type="text" [(ngModel)]="city" placeholder="City" readonly>
           </label>
 
           <label>
             State
-            <input type="text" [(ngModel)]="state" placeholder="State">
+            <input type="text" [(ngModel)]="state" placeholder="Select state" readonly>
           </label>
 
           <label>
@@ -66,60 +104,113 @@
             <input type="text" [(ngModel)]="postalCode" placeholder="Postal code">
           </label>
 
-          <label>
+          <label class="full-width">
             Country
-            <input type="text" [(ngModel)]="country" placeholder="Country">
+            <input type="text" [(ngModel)]="country" placeholder="Country" readonly>
           </label>
         </div>
 
-        <h3>Payment Method</h3>
-        <div class="payment-options">
-          <label>
-            <input type="radio" name="paymentMethod" value="cod" [(ngModel)]="paymentMethod">
-            Cash on Delivery
-          </label>
-          <label>
-            <input type="radio" name="paymentMethod" value="card" [(ngModel)]="paymentMethod">
-            Credit / Debit Card
-          </label>
-          <label>
-            <input type="radio" name="paymentMethod" value="upi" [(ngModel)]="paymentMethod">
-            UPI
-          </label>
+        <div class="payment-block">
+          <header class="section-head section-head--compact">
+            <span class="section-icon">🛡️</span>
+            <h3>Payment Method</h3>
+          </header>
+
+          <div class="payment-options">
+            <label class="payment-option" [class.active]="paymentMethod === 'cod'">
+              <input type="radio" name="paymentMethod" value="cod" [(ngModel)]="paymentMethod">
+              <span class="payment-copy">
+                <span class="payment-main">Cash on Delivery</span>
+                <span class="payment-sub">Pay securely upon delivery</span>
+              </span>
+              <span class="payment-chip">COD Available</span>
+            </label>
+
+            <label class="payment-option" [class.active]="paymentMethod === 'card'">
+              <input type="radio" name="paymentMethod" value="card" [(ngModel)]="paymentMethod">
+              <span class="payment-copy">
+                <span class="payment-main">Card</span>
+                <span class="payment-sub">Pay with debit or credit card</span>
+              </span>
+              <span class="payment-chip payment-chip--muted">Secure</span>
+            </label>
+
+            <label class="payment-option" [class.active]="paymentMethod === 'upi'">
+              <input type="radio" name="paymentMethod" value="upi" [(ngModel)]="paymentMethod">
+              <span class="payment-copy">
+                <span class="payment-main">UPI</span>
+                <span class="payment-sub">Pay using any UPI app</span>
+              </span>
+              <span class="payment-chip payment-chip--muted">Instant</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="trust-strip">
+          <div class="trust-item">
+            <strong>100% Secure</strong>
+            <span>Secure Checkout</span>
+          </div>
+          <div class="trust-item">
+            <strong>Easy Returns</strong>
+            <span>7-day return policy</span>
+          </div>
+          <div class="trust-item">
+            <strong>Fast Delivery</strong>
+            <span>On all orders</span>
+          </div>
+          <div class="trust-item">
+            <strong>Help Center</strong>
+            <span>24/7 Support</span>
+          </div>
         </div>
       </section>
 
-      <aside class="order-summary-card">
-        <h2>Order Summary</h2>
+      <aside class="summary-card">
+        <header class="section-head">
+          <span class="section-icon">🛍️</span>
+          <h2>Order Summary</h2>
+        </header>
 
         <div class="summary-items" *ngIf="cartItems.length; else emptyCartState">
           <article class="summary-item" *ngFor="let item of cartItems">
             <img [src]="item.image" [alt]="item.name">
-            <div>
+            <div class="summary-item-body">
               <h4>{{ item.name }}</h4>
-              <p>Qty:
+
+              <div class="summary-item-row">
+                <label>Qty:</label>
                 <input
                   type="number"
                   min="1"
                   [ngModel]="item.quantity"
                   (ngModelChange)="updateItemQuantity(item.id, $event)">
-              </p>
-              <div class="size-selector" *ngIf="item.sizes && item.sizes.length > 0">
-                <label>Size:</label>
-                <select [(ngModel)]="selectedSizes[item.id]" [ngModelOptions]="{updateOn: 'change'}" [attr.name]="'size-' + item.id" class="size-select">
+
+                <label class="size-label">Size:</label>
+                <select
+                  *ngIf="item.sizes && item.sizes.length > 0"
+                  [(ngModel)]="selectedSizes[item.id]"
+                  [ngModelOptions]="{ updateOn: 'change' }"
+                  [attr.name]="'size-' + item.id">
                   <option value="">Select size</option>
                   <option *ngFor="let sizeOption of item.sizes" [value]="sizeOption.size">
-                    {{ sizeOption.size }} ({{ sizeOption.stock }} available)
+                    {{ sizeOption.size }}
                   </option>
                 </select>
+
+                <input
+                  *ngIf="!item.sizes || item.sizes.length === 0"
+                  type="text"
+                  [(ngModel)]="selectedSizes[item.id]"
+                  [attr.name]="'size-text-' + item.id"
+                  placeholder="Enter size">
               </div>
-              <div class="size-selector" *ngIf="!item.sizes || item.sizes.length === 0">
-                <label>Size:</label>
-                <input type="text" [(ngModel)]="selectedSizes[item.id]" [attr.name]="'size-text-' + item.id" placeholder="Enter size" class="size-input">
-              </div>
-              <button type="button" class="remove-item-btn" (click)="removeItem(item.id)">Remove</button>
             </div>
-            <strong>{{ (item.price * item.quantity) | displayCurrency:2 }}</strong>
+
+            <div class="summary-item-price">
+              <button type="button" class="remove-item-btn" (click)="removeItem(item.id)" aria-label="Remove item">🗑️</button>
+              <strong>{{ (item.price * item.quantity) | displayCurrency:0 }}</strong>
+            </div>
           </article>
         </div>
 
@@ -127,30 +218,42 @@
           <p class="empty-cart">Your cart is empty. Add products from Home or Shop to continue.</p>
         </ng-template>
 
-        <div class="summary-line">
-          <span>Subtotal</span>
-          <span>{{ subtotal | displayCurrency:2 }}</span>
-        </div>
-        <div class="summary-line">
-          <span>Shipping</span>
-          <span>
-            <ng-container *ngIf="shipping === 0; else shippingValue">Free</ng-container>
-            <ng-template #shippingValue>{{ shipping | displayCurrency:2 }}</ng-template>
-          </span>
-        </div>
-        <div class="summary-line">
-          <span>Tax</span>
-          <span>{{ tax | displayCurrency:2 }}</span>
+        <div class="amount-lines">
+          <div class="summary-line">
+            <span>Subtotal</span>
+            <span>{{ subtotal | displayCurrency:0 }}</span>
+          </div>
+          <div class="summary-line">
+            <span>Shipping</span>
+            <span>
+              <ng-container *ngIf="shipping === 0; else shippingValue">Free</ng-container>
+              <ng-template #shippingValue>{{ shipping | displayCurrency:0 }}</ng-template>
+            </span>
+          </div>
+          <div class="summary-line">
+            <span>Tax</span>
+            <span>{{ tax | displayCurrency:0 }}</span>
+          </div>
         </div>
 
         <div class="summary-total">
-          <span>Total</span>
-          <span>{{ total | displayCurrency:2 }}</span>
+          <span>Total Amount</span>
+          <strong>{{ total | displayCurrency:0 }}</strong>
         </div>
 
         <button type="button" class="place-order-btn" (click)="placeOrder()" [disabled]="!cartItems.length || isSubmitting">
           {{ isSubmitting ? 'Placing Order...' : 'Place Order' }}
         </button>
+
+        <p class="secure-note">Your data is safe and secure with us.</p>
+
+        <div class="payment-logos">
+          <span><i class="payment-logo-icon payment-logo-icon--visa">V</i>VISA</span>
+          <span><i class="payment-logo-icon payment-logo-icon--mastercard"></i>Mastercard</span>
+          <span><i class="payment-logo-icon payment-logo-icon--rupay">R</i>RuPay</span>
+          <span><i class="payment-logo-icon payment-logo-icon--upi">U</i>UPI</span>
+          <span><i class="payment-logo-icon payment-logo-icon--paytm">P</i>Paytm</span>
+        </div>
       </aside>
     </div>
   </section>

@@ -134,7 +134,8 @@ export class ProductCatalogService {
       color_details: colorDetails,
       attributes,
       material: attributes.material_estimated?.[0] || this.inferMaterial(product.category, safeDescription),
-      popularity: this.buildPopularity(Number(product.id))
+      popularity: this.buildPopularity(Number(product.id)),
+      stock: Number(product.stock) || 0
     };
   }
 

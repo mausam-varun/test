@@ -1,21 +1,14 @@
-<!-- Hero Banner -->
-<section class="shop-hero">
-  <div class="hero-content">
-    <h1>SHOP ALL HANDMADE TREASURES</h1>
-    <p>Explore our curated catalog</p>
-  </div>
-</section>
-
-<!-- Shop Container -->
-<div class="shop-container">
+<section class="shop-page">
+  <div class="shop-container">
   <button
     type="button"
     class="mobile-filter-toggle"
+    [class.is-open]="isMobileFiltersOpen"
     (click)="toggleMobileFilters()"
     [attr.aria-expanded]="isMobileFiltersOpen"
     aria-controls="shop-mobile-filters"
     aria-label="Toggle filters">
-    <span>{{ isMobileFiltersOpen ? 'Hide Filters' : 'Show Filters' }}</span>
+    <span class="mobile-filter-toggle__label">{{ isMobileFiltersOpen ? 'Hide Filters' : 'Show Filters' }}</span>
   </button>
 
   <button
@@ -26,26 +19,33 @@
     aria-label="Close filters">
   </button>
 
-  <!-- Sidebar -->
   <aside class="shop-sidebar" id="shop-mobile-filters" [class.is-mobile-open]="isMobileFiltersOpen">
-    <!-- Categories -->
+    <div class="sidebar-heading">
+      <h2>Filters</h2>
+      <button type="button" class="sidebar-clear-btn" (click)="clearAllFilters()">Clear All</button>
+    </div>
+
     <div class="filter-section">
-      <h3 class="filter-title">Shop By Category</h3>
-      <div class="collapse-icon">–</div>
-      <ul class="category-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('category')" [attr.aria-expanded]="isFilterSectionOpen('category')">
+        <h3 class="filter-title">Shop By Category</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('category') ? '−' : '+' }}</span>
+      </button>
+      <ul class="category-list" *ngIf="isFilterSectionOpen('category')">
         <li *ngFor="let category of categories" class="category-item">
-          <a (click)="onCategoryClick(category)" class="category-link" [class.active]="category.selected">
+          <button type="button" (click)="onCategoryClick(category)" class="category-link" [class.active]="category.selected">
             <span class="category-name">{{ category.name }}</span>
             <span class="category-count">{{ category.count }}</span>
-          </a>
+          </button>
         </li>
       </ul>
     </div>
 
-    <!-- Price Range -->
     <div class="filter-section">
-      <h3 class="filter-title">Price Range</h3>
-      <div class="price-slider-container">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('price')" [attr.aria-expanded]="isFilterSectionOpen('price')">
+        <h3 class="filter-title">Price Range</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('price') ? '−' : '+' }}</span>
+      </button>
+      <div class="price-slider-container" *ngIf="isFilterSectionOpen('price')">
         <div class="price-slider-labels">
           <div>
             <span>Min</span>
@@ -92,11 +92,12 @@
       </div>
     </div>
 
-    <!-- Primary Color -->
     <div class="filter-section" *ngIf="primaryColors.length">
-      <h3 class="filter-title">Primary Color</h3>
-      <div class="collapse-icon">–</div>
-      <div class="material-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('primaryColor')" [attr.aria-expanded]="isFilterSectionOpen('primaryColor')">
+        <h3 class="filter-title">Primary Color</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('primaryColor') ? '−' : '+' }}</span>
+      </button>
+      <div class="material-list" *ngIf="isFilterSectionOpen('primaryColor')">
         <label *ngFor="let color of primaryColors" class="material-checkbox">
           <input 
             type="checkbox" 
@@ -107,11 +108,12 @@
       </div>
     </div>
 
-    <!-- Secondary Color -->
     <div class="filter-section" *ngIf="secondaryColors.length">
-      <h3 class="filter-title">Secondary Color</h3>
-      <div class="collapse-icon">–</div>
-      <div class="material-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('secondaryColor')" [attr.aria-expanded]="isFilterSectionOpen('secondaryColor')">
+        <h3 class="filter-title">Secondary Color</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('secondaryColor') ? '−' : '+' }}</span>
+      </button>
+      <div class="material-list" *ngIf="isFilterSectionOpen('secondaryColor')">
         <label *ngFor="let color of secondaryColors" class="material-checkbox">
           <input 
             type="checkbox" 
@@ -122,11 +124,12 @@
       </div>
     </div>
 
-    <!-- Style -->
     <div class="filter-section" *ngIf="styleFilters.length">
-      <h3 class="filter-title">Style</h3>
-      <div class="collapse-icon">–</div>
-      <div class="material-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('style')" [attr.aria-expanded]="isFilterSectionOpen('style')">
+        <h3 class="filter-title">Style</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('style') ? '−' : '+' }}</span>
+      </button>
+      <div class="material-list" *ngIf="isFilterSectionOpen('style')">
         <label *ngFor="let style of styleFilters" class="material-checkbox">
           <input 
             type="checkbox" 
@@ -137,11 +140,12 @@
       </div>
     </div>
 
-    <!-- Pattern -->
     <div class="filter-section" *ngIf="patternFilters.length">
-      <h3 class="filter-title">Pattern</h3>
-      <div class="collapse-icon">–</div>
-      <div class="material-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('pattern')" [attr.aria-expanded]="isFilterSectionOpen('pattern')">
+        <h3 class="filter-title">Pattern</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('pattern') ? '−' : '+' }}</span>
+      </button>
+      <div class="material-list" *ngIf="isFilterSectionOpen('pattern')">
         <label *ngFor="let pattern of patternFilters" class="material-checkbox">
           <input 
             type="checkbox" 
@@ -152,11 +156,12 @@
       </div>
     </div>
 
-    <!-- Craft Type -->
     <div class="filter-section" *ngIf="craftTypeFilters.length">
-      <h3 class="filter-title">Craft Type</h3>
-      <div class="collapse-icon">–</div>
-      <div class="material-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('craftType')" [attr.aria-expanded]="isFilterSectionOpen('craftType')">
+        <h3 class="filter-title">Craft Type</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('craftType') ? '−' : '+' }}</span>
+      </button>
+      <div class="material-list" *ngIf="isFilterSectionOpen('craftType')">
         <label *ngFor="let craft of craftTypeFilters" class="material-checkbox">
           <input 
             type="checkbox" 
@@ -167,11 +172,12 @@
       </div>
     </div>
 
-    <!-- Material -->
     <div class="filter-section">
-      <h3 class="filter-title">Shop By Material</h3>
-      <div class="collapse-icon">–</div>
-      <div class="material-list">
+      <button type="button" class="filter-header" (click)="toggleFilterSection('material')" [attr.aria-expanded]="isFilterSectionOpen('material')">
+        <h3 class="filter-title">Shop By Material</h3>
+        <span class="collapse-icon">{{ isFilterSectionOpen('material') ? '−' : '+' }}</span>
+      </button>
+      <div class="material-list" *ngIf="isFilterSectionOpen('material')">
         <label *ngFor="let material of materials" class="material-checkbox">
           <input 
             type="checkbox" 
@@ -182,14 +188,36 @@
       </div>
     </div>
 
-    <button type="button" class="mobile-filters-close" (click)="closeMobileFilters()">
-      Apply Filters
-    </button>
+    <div class="mobile-filter-actions">
+      <button type="button" class="mobile-filters-clear" (click)="clearAllFilters()">Clear All Filters</button>
+      <button type="button" class="mobile-filters-close" (click)="closeMobileFilters()">Apply Filters</button>
+    </div>
   </aside>
 
-  <!-- Main Content -->
   <main class="shop-content">
-    <!-- Products Grid -->
+    <nav class="shop-breadcrumb" aria-label="Breadcrumb">
+      <span>Home</span>
+      <span class="sep">›</span>
+      <span>Shop</span>
+    </nav>
+
+    <div class="heading-row" *ngIf="!isLoading && !errorMessage">
+      <div>
+        <!-- <h1 class="shop-title">All Products</h1> -->
+        <p class="shop-results">Showing {{ visibleStartIndex }}–{{ visibleEndIndex }} of {{ filteredProducts.length }} results</p>
+      </div>
+      <div class="sort-section-top" *ngIf="filteredProducts.length">
+        <label for="sort-top">Sort by</label>
+        <select id="sort-top" class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange(sortBy)">
+          <option value="popularity">Popularity</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="newest">Newest</option>
+          <option value="rating">Rating</option>
+        </select>
+      </div>
+    </div>
+
     <div class="products-section">
       <div class="shop-state" *ngIf="isLoading">
         <div class="spinner"></div>
@@ -205,74 +233,64 @@
         <p>No products match the current filters.</p>
       </div>
 
-      <!-- Sort By -->
-      <div class="sort-section-top" *ngIf="!isLoading && !errorMessage && filteredProducts.length">
-        <label for="sort-top">Sort by</label>
-        <select id="sort-top" class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange(sortBy)">
-          <option value="popularity">Popularity</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="newest">Newest</option>
-          <option value="rating">Rating</option>
-        </select>
-      </div>
-
-      <div class="products-grid">
-        <div *ngFor="let product of getPaginatedProducts(); trackBy: trackByProductId" class="product-card">
-          <a class="product-image-link" [routerLink]="['/product', product.id]">
-          <div class="product-image-wrapper">
-            <img [src]="product.image" [alt]="product.name" class="product-image">
-          </div>
-          </a>
-
-          <a class="product-name-link" [routerLink]="['/product', product.id]">
-            <h3 class="product-name">{{ product.name }}</h3>
-          </a>
-
-          <div class="product-rating">
-            <span class="stars">★★★★★</span>
-            <span class="rating-count">({{ product.reviews }})</span>
-          </div>
-
-          <p class="product-price">{{ product.price | displayCurrency:2 }}</p>
-
-          <!-- Stock Status Display -->
-          <div class="stock-status" *ngIf="isOutOfStock(product.stock) || isLowStock(product.stock)">
-            <span [class.out-of-stock]="isOutOfStock(product.stock)" [class.low-stock]="isLowStock(product.stock)">
-              {{ getStockStatus(product.stock) }}
-            </span>
-          </div>
-
-          <div class="product-actions">
-            <button 
-              class="btn-add-to-cart" 
-              *ngIf="!recentlyAddedProductIds.has(product.id)" 
-              [disabled]="isOutOfStock(product.stock)"
-              [class.is-out-of-stock]="isOutOfStock(product.stock)"
-              (click)="addToCart(product)"
-              [attr.aria-label]="isOutOfStock(product.stock) ? 'Out of stock' : 'Add to cart'">
-              <ng-container *ngIf="!isOutOfStock(product.stock)">
-                Add to Cart →
-              </ng-container>
-              <ng-container *ngIf="isOutOfStock(product.stock)">
-                Out of Stock
-              </ng-container>
-            </button>
-            
-            <div class="quantity-control" *ngIf="recentlyAddedProductIds.has(product.id)">
-              <button type="button" class="quantity-btn decrease" (click)="decrementQuantity(product)" aria-label="Decrease quantity">−</button>
-              <span class="quantity-display">{{ getProductQuantity(product.id) }}</span>
-              <button type="button" class="quantity-btn increase" (click)="incrementQuantity(product)" aria-label="Increase quantity">+</button>
+      <div class="products-layout" *ngIf="!isLoading && !errorMessage && filteredProducts.length">
+        <div class="products-grid">
+          <div class="dc-card" *ngFor="let product of getPaginatedProducts(); trackBy: trackByProductId"
+               [routerLink]="['/product', product.id]" role="button" tabindex="0">
+            <div class="dc-card__img-wrap">
+              <span class="dc-card__badge" [class.sold-out-badge]="isOutOfStock(product.stock)">
+                {{ isOutOfStock(product.stock) ? 'OUT OF STOCK' : 'HANDCRAFTED' }}
+              </span>
+              <button type="button" class="dc-card__wish"
+                      [class.is-wishlisted]="isWishlisted(product.id)"
+                      (click)="addToWishlist(product); $event.stopPropagation()"
+                      aria-label="Add to wishlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+              <img [src]="product.image" [alt]="product.name" class="dc-card__img"
+                   (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
+            </div>
+            <div class="dc-card__body">
+              <p class="dc-card__brand">Divara Craft</p>
+              <h3 class="dc-card__name">
+                <span class="dc-card__name-desktop">{{ product.name }}</span>
+                <span class="dc-card__name-mobile">{{ product.name.replace('Divara Craft ', '') }}</span>
+              </h3>
+              <div class="dc-card__divider">⁓</div>
+              <div class="dc-card__footer">
+                <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+                <div class="dc-card__qty" *ngIf="recentlyAddedProductIds.has(product.id)">
+                  <button type="button" (click)="decrementQuantity(product); $event.stopPropagation()" aria-label="Decrease">−</button>
+                  <span>{{ getProductQuantity(product.id) }}</span>
+                  <button type="button" (click)="incrementQuantity(product); $event.stopPropagation()" aria-label="Increase">+</button>
+                </div>
+                <button class="dc-card__atc" *ngIf="!recentlyAddedProductIds.has(product.id)"
+                        [class.sold-out]="isOutOfStock(product.stock)"
+                        [disabled]="isOutOfStock(product.stock)"
+                        (click)="addToCart(product); $event.stopPropagation()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <span class="dc-card__atc-text">{{ isOutOfStock(product.stock) ? 'OUT OF STOCK' : 'ADD TO CART' }}</span>
+                </button>
+              </div>
+              <div class="dc-card__trust">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Premium Quality
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  Handcrafted with Care
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Elegant &amp; Unique
+                </span>
+              </div>
             </div>
           </div>
-
-          <button class="btn-add-to-wishlist" [class.is-wishlisted]="isWishlisted(product.id)" (click)="addToWishlist(product)">
-            {{ isWishlisted(product.id) ? 'Wishlisted ✓' : 'Add to Wishlist ♡' }}
-          </button>
         </div>
       </div>
 
-      <!-- Pagination -->
       <div class="pagination" *ngIf="!isLoading && !errorMessage && filteredProducts.length">
         <button 
           class="pagination-btn"
@@ -310,56 +328,26 @@
       </div>
     </div>
   </main>
-</div>
-
-<!-- Newsletter Section -->
-<section class="newsletter">
-  <div class="section-container newsletter-content">
-    <div class="newsletter-text">
-      <h3 class="newsletter-title">Join Our Newsletter</h3>
-      <p class="newsletter-subtitle">Get 10% OFF your first order & exclusive offers!</p>
-    </div>
-
-    <div class="newsletter-form">
-      <input type="email" placeholder="Enter your email address" class="email-input">
-      <button class="btn-subscribe">Subscribe →</button>
-    </div>
   </div>
-</section>
 
-<!-- Trust Badges Section -->
-<section class="trust-badges">
-  <div class="section-container">
-    <div class="badges-grid">
-      <div class="badge-item">
-        <div class="badge-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          </svg>
-        </div>
-        <h4 class="badge-title">100% Handmade</h4>
-        <p class="badge-desc">Authentic craftsmanship</p>
+  <section class="shop-benefits" *ngIf="!isLoading && !errorMessage">
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <h4>Free Shipping</h4>
+        <p>On all orders above {{ 999 | displayCurrency:0 }}</p>
       </div>
-
-      <div class="badge-item">
-        <div class="badge-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-        </div>
-        <h4 class="badge-title">Premium Quality</h4>
-        <p class="badge-desc">Finest materials & attention to detail</p>
+      <div class="benefit-item">
+        <h4>Easy Returns</h4>
+        <p>7-day return policy</p>
       </div>
-
-      <div class="badge-item">
-        <div class="badge-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18 18.5a1.5 1.5 0 01-3 0m-4 0a1.5 1.5 0 01-3 0m10-7v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6m16-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v2m16 0a2 2 0 01-2-2V3a1 1 0 00-1-1h-2a1 1 0 00-1 1v2m-4 0V3a1 1 0 00-1-1H9a1 1 0 00-1 1v2m-4 0a2 2 0 01-2 2H3v4m0 6h16"/>
-          </svg>
-        </div>
-        <h4 class="badge-title">Free Worldwide Shipping</h4>
-        <p class="badge-desc">On orders over {{ 50 | displayCurrency:0 }}</p>
+      <div class="benefit-item">
+        <h4>Secure Payment</h4>
+        <p>100% secure checkout</p>
+      </div>
+      <div class="benefit-item">
+        <h4>24/7 Support</h4>
+        <p>We are here to help</p>
       </div>
     </div>
-  </div>
+  </section>
 </section>

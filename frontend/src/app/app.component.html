@@ -1,5 +1,8 @@
 <app-header *ngIf="!isAdminRoute"></app-header>
-<router-outlet></router-outlet>
+<div class="app-shell-content" [class.has-storefront-header]="!isAdminRoute">
+  <router-outlet></router-outlet>
+  <app-footer *ngIf="!isAdminRoute"></app-footer>
+</div>
 <app-auth-signup-popup *ngIf="!isAdminRoute"></app-auth-signup-popup>
 <app-rating-popup *ngIf="!isAdminRoute"></app-rating-popup>
 <button
@@ -9,4 +12,25 @@
   (click)="openRatingTestPopup()">
   ⭐ Test Rating Popup
 </button>
-<app-footer *ngIf="!isAdminRoute"></app-footer>
+
+<nav class="mobile-bottom-nav" *ngIf="!isAdminRoute" aria-label="Mobile navigation">
+  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+    <span class="nav-icon">⌂</span>
+    <span>Home</span>
+  </a>
+  <a routerLink="/shop" routerLinkActive="active">
+    <span class="nav-icon">▦</span>
+    <span>Categories</span>
+  </a>
+  <a routerLink="/ai-matcher" routerLinkActive="active" class="nav-ai">
+    <span class="nav-icon">✧</span>
+  </a>
+  <a routerLink="/wishlist" routerLinkActive="active">
+    <span class="nav-icon">♡</span>
+    <span>Wishlist</span>
+  </a>
+  <a routerLink="/profile" routerLinkActive="active">
+    <span class="nav-icon">♙</span>
+    <span>Account</span>
+  </a>
+</nav>

@@ -1,0 +1,265 @@
+<section class="pp-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="pp-header">
+    <div class="pp-header__content">
+      <h1 class="pp-title">Product Performance</h1>
+      <p class="pp-subtitle">Analyze sales, revenue, and inventory metrics</p>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="pp-filter-group">
+      <button
+        class="pp-filter-btn"
+        [class.pp-filter-btn--active]="selectedDateFilter === '7days'"
+        (click)="setDateFilter('7days')"
+      >Last 7 Days</button>
+      <button
+        class="pp-filter-btn"
+        [class.pp-filter-btn--active]="selectedDateFilter === '30days'"
+        (click)="setDateFilter('30days')"
+      >Last 30 Days</button>
+    </div>
+  </div>
+
+  <!-- ── Top Selling Products ───────────────────────────────────────────── -->
+  <div class="pp-card">
+    <div class="pp-card__header">
+      <h2 class="pp-section-title">📈 Top Selling Products</h2>
+      <span class="pp-badge">{{ topSellingProducts.length }}/10</span>
+    </div>
+
+    <!-- Error -->
+    <div class="pp-alert pp-alert--error" *ngIf="topSellingError && !topSellingLoading">
+      <span>⚠️ {{ topSellingError }}</span>
+      <button class="pp-alert__btn" (click)="retryTopSelling()">Retry</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="pp-table-skeleton" *ngIf="topSellingLoading">
+      <div class="pp-table-skeleton__row" *ngFor="let i of [1,2,3,4,5]">
+        <div class="sk-cell"></div>
+        <div class="sk-cell sk-cell--lg"></div>
+        <div class="sk-cell"></div>
+        <div class="sk-cell"></div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="pp-empty" *ngIf="!topSellingLoading && !hasTopSelling && !topSellingError">
+      <p>No sales data available</p>
+    </div>
+
+    <!-- Table -->
+    <div class="pp-table-wrap" *ngIf="!topSellingLoading && hasTopSelling">
+      <table class="pp-table">
+        <thead class="pp-table__head">
+          <tr>
+            <th class="pp-table__th pp-table__th--rank">Rank</th>
+            <th class="pp-table__th">Product Name</th>
+            <th class="pp-table__th pp-table__th--numeric">Qty Sold</th>
+            <th class="pp-table__th pp-table__th--numeric">Revenue</th>
+          </tr>
+        </thead>
+        <tbody class="pp-table__body">
+          <tr *ngFor="let product of topSellingProducts; let i = index; trackBy: trackByTitle"
+              class="pp-table__row">
+            <td class="pp-table__td pp-table__td--rank">
+              <span class="pp-rank-badge" [class.pp-rank-badge--gold]="i === 0"
+                    [class.pp-rank-badge--silver]="i === 1"
+                    [class.pp-rank-badge--bronze]="i === 2">
+                {{ i + 1 }}
+              </span>
+            </td>
+            <td class="pp-table__td">{{ product.title }}</td>
+            <td class="pp-table__td pp-table__td--numeric">{{ product.totalQuantity }}</td>
+            <td class="pp-table__td pp-table__td--numeric">
+              <strong>{{ formatCurrency(product.totalRevenue) }}</strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Low Selling Products ────────────────────────────────────────────── -->
+  <div class="pp-card">
+    <div class="pp-card__header">
+      <h2 class="pp-section-title">📉 Low Selling Products</h2>
+      <span class="pp-badge">{{ lowSellingProducts.length }}/10</span>
+    </div>
+
+    <!-- Error -->
+    <div class="pp-alert pp-alert--error" *ngIf="lowSellingError && !lowSellingLoading">
+      <span>⚠️ {{ lowSellingError }}</span>
+      <button class="pp-alert__btn" (click)="retryLowSelling()">Retry</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="pp-table-skeleton" *ngIf="lowSellingLoading">
+      <div class="pp-table-skeleton__row" *ngFor="let i of [1,2,3,4,5]">
+        <div class="sk-cell"></div>
+        <div class="sk-cell sk-cell--lg"></div>
+        <div class="sk-cell"></div>
+        <div class="sk-cell"></div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="pp-empty" *ngIf="!lowSellingLoading && !hasLowSelling && !lowSellingError">
+      <p>All products are selling well!</p>
+    </div>
+
+    <!-- Table -->
+    <div class="pp-table-wrap" *ngIf="!lowSellingLoading && hasLowSelling">
+      <table class="pp-table pp-table--striped">
+        <thead class="pp-table__head">
+          <tr>
+            <th class="pp-table__th">Product Name</th>
+            <th class="pp-table__th pp-table__th--numeric">Qty Sold</th>
+            <th class="pp-table__th pp-table__th--numeric">Revenue</th>
+          </tr>
+        </thead>
+        <tbody class="pp-table__body">
+          <tr *ngFor="let product of lowSellingProducts; trackBy: trackByTitle"
+              class="pp-table__row">
+            <td class="pp-table__td">{{ product.title }}</td>
+            <td class="pp-table__td pp-table__td--numeric">{{ product.totalQuantity }}</td>
+            <td class="pp-table__td pp-table__td--numeric">
+              {{ formatCurrency(product.totalRevenue) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Product-wise Revenue ────────────────────────────────────────────── -->
+  <div class="pp-card">
+    <div class="pp-card__header">
+      <h2 class="pp-section-title">💰 Product-wise Revenue</h2>
+    </div>
+
+    <!-- Error -->
+    <div class="pp-alert pp-alert--error" *ngIf="revenueError && !revenueLoading">
+      <span>⚠️ {{ revenueError }}</span>
+      <button class="pp-alert__btn" (click)="retryRevenue()">Retry</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="pp-chart-skeleton" *ngIf="revenueLoading">
+      <div class="pp-chart-skeleton__bar" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]"></div>
+    </div>
+
+    <!-- Empty -->
+    <div class="pp-empty" *ngIf="!revenueLoading && !hasRevenue && !revenueError">
+      <p>No revenue data available</p>
+    </div>
+
+    <!-- Chart -->
+    <div class="pp-chart-wrap" *ngIf="!revenueLoading && hasRevenue">
+      <canvas
+        baseChart
+        [data]="revenueChartData"
+        [options]="revenueChartOptions"
+        type="bar"
+        height="400"
+      ></canvas>
+    </div>
+  </div>
+
+  <!-- ── Inventory Status ───────────────────────────────────────────────── -->
+  <div class="pp-card">
+    <div class="pp-card__header">
+      <h2 class="pp-section-title">📦 Inventory Status</h2>
+    </div>
+
+    <!-- Error -->
+    <div class="pp-alert pp-alert--error" *ngIf="inventoryError && !inventoryLoading">
+      <span>⚠️ {{ inventoryError }}</span>
+      <button class="pp-alert__btn" (click)="retryInventory()">Retry</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="pp-inventory-skeleton" *ngIf="inventoryLoading">
+      <div class="pp-inventory-skeleton__section">
+        <div class="sk-header"></div>
+        <div class="sk-row" *ngFor="let i of [1,2,3,4]"></div>
+      </div>
+    </div>
+
+    <!-- Loaded -->
+    <ng-container *ngIf="!inventoryLoading && !inventoryError">
+
+      <!-- Out of Stock -->
+      <div class="pp-inventory-section" *ngIf="inventoryStatus">
+        <h3 class="pp-inventory-title">
+          ❌ Out of Stock
+          <span class="pp-inventory-count" *ngIf="hasOutOfStock">
+            {{ inventoryStatus.outOfStock.length }}
+          </span>
+        </h3>
+
+        <div class="pp-empty" *ngIf="!hasOutOfStock">
+          <p>All products are in stock ✓</p>
+        </div>
+
+        <div class="pp-table-wrap" *ngIf="hasOutOfStock">
+          <table class="pp-table">
+            <thead class="pp-table__head">
+              <tr>
+                <th class="pp-table__th">Product Name</th>
+                <th class="pp-table__th pp-table__th--numeric">Stock</th>
+              </tr>
+            </thead>
+            <tbody class="pp-table__body">
+              <tr *ngFor="let item of inventoryStatus.outOfStock; trackBy: trackByTitle"
+                  class="pp-table__row pp-table__row--danger">
+                <td class="pp-table__td">{{ item.title }}</td>
+                <td class="pp-table__td pp-table__td--numeric">
+                  <span class="pp-status-badge pp-status-badge--danger">0</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Low Stock -->
+      <div class="pp-inventory-section" *ngIf="inventoryStatus">
+        <h3 class="pp-inventory-title">
+          ⚠️ Low Stock (< {{ inventoryStatus.threshold }})
+          <span class="pp-inventory-count" *ngIf="hasLowStock">
+            {{ inventoryStatus.lowStock.length }}
+          </span>
+        </h3>
+
+        <div class="pp-empty" *ngIf="!hasLowStock">
+          <p>All low-stock products are above threshold</p>
+        </div>
+
+        <div class="pp-table-wrap" *ngIf="hasLowStock">
+          <table class="pp-table">
+            <thead class="pp-table__head">
+              <tr>
+                <th class="pp-table__th">Product Name</th>
+                <th class="pp-table__th pp-table__th--numeric">Stock</th>
+              </tr>
+            </thead>
+            <tbody class="pp-table__body">
+              <tr *ngFor="let item of inventoryStatus.lowStock; trackBy: trackByTitle"
+                  class="pp-table__row pp-table__row--warning">
+                <td class="pp-table__td">{{ item.title }}</td>
+                <td class="pp-table__td pp-table__td--numeric">
+                  <span class="pp-status-badge pp-status-badge--warning">{{ item.stock }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+
+</section>

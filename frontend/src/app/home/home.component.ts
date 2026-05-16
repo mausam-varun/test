@@ -19,6 +19,8 @@ interface Product {
   id: number;
   name: string;
   image: string;
+  image_url?: string;
+  images?: Array<{ image_url: string; is_primary_image: boolean }>;
   price: number;
   rating: number;
   reviews: number;
@@ -79,6 +81,7 @@ interface PromotionalBanner {
 export class HomeComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private countdownInterval$ = interval(1000).pipe(takeUntil(this.destroy$));
+  private mobileSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   private readonly productApiBaseUrl = API_ENDPOINTS.products;
   private readonly categoryApiBaseUrl = API_ENDPOINTS.categories;
@@ -127,6 +130,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   newsletterEmail = '';
   isSubscribing = false;
   newsletterMessage = '';
+  mobileSearchQuery = '';
+  mobileSearchResults: Product[] = [];
+  isMobileSearching = false;
+  showMobileSearchDropdown = false;
 
   // Quantity input for adding products
   addQuantities: { [productId: number]: number } = {};
@@ -144,13 +151,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('🏠 Home Component initialized');
-    
     // Subscribe to cart changes to trigger UI updates
-    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe((items) => {
-      console.log('🔄 Cart changed! New items:', items);
+    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.cdr.markForCheck();
-      console.log('✨ Change detection marked for check');
     });
     
     this.loadHeroSlides();
@@ -173,6 +176,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.mobileSearchTimeout) {
+      clearTimeout(this.mobileSearchTimeout);
+      this.mobileSearchTimeout = null;
+    }
+
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -211,7 +219,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Use the /public endpoint which returns active slider items
     this.http.get<any>(`${API_ENDPOINTS.slider}/public`).subscribe({
       next: (response) => {
-        console.log('Hero Slider Response:', response);
         // Handle both response structures: images array or items array
         const items = response?.images || response?.items || response || [];
         
@@ -226,20 +233,15 @@ export class HomeComponent implements OnInit, OnDestroy {
             if (response?.autoplay_interval > 0) {
               this.heroAutoplayInterval = Number(response.autoplay_interval);
             }
-            console.log('Loaded', this.heroSlides.length, 'Hero Slides from API:', this.heroSlides);
           } else {
-            console.log('No active sliders found, using defaults');
             this.loadDefaultSlides();
           }
         } else {
-          console.log('Invalid response structure, using defaults');
           this.loadDefaultSlides();
         }
         this.currentSlideIndex = 0;
       },
-      error: (error) => {
-        console.error('Failed to load hero sliders:', error);
-        console.log('Falling back to default slides');
+      error: () => {
         this.loadDefaultSlides();
       }
     });
@@ -264,19 +266,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private loadPromotionalBanners(): void {
-    console.log('📢 Loading promotional banners from', API_ENDPOINTS.banners);
     this.http.get<PromotionalBanner[]>(API_ENDPOINTS.banners).subscribe({
       next: (response) => {
         const banners = Array.isArray(response) ? response : [];
         this.promotionalBanners = banners.sort((a: PromotionalBanner, b: PromotionalBanner) => 
           (a.display_order || 0) - (b.display_order || 0)
         );
-        console.log('✅ Loaded promotional banners:', this.promotionalBanners);
-        console.log(`📊 Total banners: ${this.promotionalBanners.length}`);
       },
-      error: (error) => {
-        console.error('❌ Failed to load promotional banners:', error);
-        console.error('📡 Error Details:', error.message, error.status);
+      error: () => {
         this.promotionalBanners = [];
       }
     });
@@ -296,7 +293,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     ];
     this.heroSliderImages = [this.heroSlides[0].image_url];
     this.heroImage = this.heroSlides[0].image_url;
-    console.log('Using default hero slides');
   }
 
   private loadCategories(): void {
@@ -358,10 +354,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private loadRecentProducts(): void {
     this.recentlyViewedService.getRecentProducts(10).subscribe({
-      //console here
-      
       next: (products) => {
-        console.log('📦 Loaded recent products:', products);
         this.recentProducts = products.map((p: any) => ({
           id: p.id,
           name: p.name,
@@ -500,8 +493,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   // ========== ACTIONS ==========
 
   addToCart(product: any): void {
-    console.log('🛒 ADD TO CART clicked', product);
-    
     // Prepare cart item with all details including sizes
     const cartItem = {
       id: product.id,
@@ -510,34 +501,28 @@ export class HomeComponent implements OnInit, OnDestroy {
       price: product.price,
       sizes: product.sizes // Include available sizes
     };
-    
+
     this.cartService.addToCart(cartItem);
-    console.log('📦 Cart after add:', this.cartService.getCartItemsSnapshot());
   }
 
   isProductAdded(productId: number): boolean {
     const cartItems = this.cartService.getCartItemsSnapshot();
-    const exists = cartItems.some(item => item.id === productId);
-    console.log(`✅ isProductAdded(${productId}):`, exists, 'cart items:', cartItems);
-    return exists;
+    return cartItems.some(item => item.id === productId);
   }
 
   getProductQuantity(productId: number): number {
     const cartItems = this.cartService.getCartItemsSnapshot();
     const item = cartItems.find(item => item.id === productId);
-    console.log(`📊 getProductQuantity(${productId}):`, item?.quantity || 0);
     return item?.quantity || 0;
   }
 
   incrementQuantity(productId: number): void {
     const currentQuantity = this.getProductQuantity(productId);
-    console.log(`➕ incrementQuantity(${productId}): ${currentQuantity} → ${currentQuantity + 1}`);
     this.cartService.updateQuantity(productId, currentQuantity + 1);
   }
 
   decrementQuantity(productId: number): void {
     const currentQuantity = this.getProductQuantity(productId);
-    console.log(`➖ decrementQuantity(${productId}): ${currentQuantity} → ${Math.max(0, currentQuantity - 1)}`);
     if (currentQuantity > 1) {
       this.cartService.updateQuantity(productId, currentQuantity - 1);
     } else if (currentQuantity === 1) {
@@ -565,8 +550,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     const quantity = this.addQuantities[product.id] || 1;
     const selectedSize = this.selectedSizes[product.id];
 
-    console.log(`🛒 Adding ${quantity}x ${product.name}${selectedSize ? ` (${selectedSize})` : ''} to cart`);
-
     // Prepare cart item with all details including sizes
     const cartItem = {
       id: product.id,
@@ -585,13 +568,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Reset quantity input and size selection
     delete this.addQuantities[product.id];
     delete this.selectedSizes[product.id];
-
-    console.log(`✅ Added to cart! Total items: ${this.cartService.getCartCountSnapshot()}`);
   }
 
   openQuickView(product: any): void {
     // TODO: Implement quick view modal or drawer
-    console.log('Opening quick view for product:', product);
   }
 
   addToWishlist(product: any): void {
@@ -621,6 +601,57 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/product', productId]);
   }
 
+  onMobileSearchInput(event: Event): void {
+    this.mobileSearchQuery = (event.target as HTMLInputElement).value;
+
+    if (this.mobileSearchTimeout) {
+      clearTimeout(this.mobileSearchTimeout);
+      this.mobileSearchTimeout = null;
+    }
+
+    if (!this.mobileSearchQuery.trim()) {
+      this.mobileSearchResults = [];
+      this.showMobileSearchDropdown = false;
+      this.isMobileSearching = false;
+      return;
+    }
+
+    this.showMobileSearchDropdown = true;
+    this.isMobileSearching = true;
+    this.mobileSearchTimeout = setTimeout(() => {
+      this.searchMobileProductsApi();
+    }, 300);
+  }
+
+  submitMobileSearch(): void {
+    const search = this.mobileSearchQuery.trim();
+    this.showMobileSearchDropdown = false;
+    this.router.navigate(['/shop'], search ? { queryParams: { q: search } } : undefined);
+  }
+
+  hideMobileSearchDropdown(): void {
+    setTimeout(() => {
+      this.showMobileSearchDropdown = false;
+    }, 150);
+  }
+
+  viewMobileSearchProduct(product: Product): void {
+    this.showMobileSearchDropdown = false;
+    this.router.navigate(['/product', product.id]);
+  }
+
+  getMobileSearchImage(product: Product): string {
+    if (product.images && product.images.length > 0) {
+      const primaryImage = product.images.find((image) => image.is_primary_image);
+      if (primaryImage) {
+        return primaryImage.image_url;
+      }
+      return product.images[0].image_url;
+    }
+
+    return product.image_url || product.image || 'assets/placeholder.png';
+  }
+
   subscribeNewsletter(): void {
     if (!this.newsletterEmail || !this.validateEmail(this.newsletterEmail)) {
       this.newsletterMessage = 'Please enter a valid email address';
@@ -644,6 +675,29 @@ export class HomeComponent implements OnInit, OnDestroy {
   private validateEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  private searchMobileProductsApi(): void {
+    const query = this.mobileSearchQuery.trim();
+    if (!query) {
+      this.isMobileSearching = false;
+      this.mobileSearchResults = [];
+      return;
+    }
+
+    this.http.get<Product[]>(`${this.productApiBaseUrl}/search?q=${encodeURIComponent(query)}&limit=8`)
+      .subscribe({
+        next: (products) => {
+          this.mobileSearchResults = products;
+          this.isMobileSearching = false;
+          this.showMobileSearchDropdown = true;
+        },
+        error: () => {
+          this.isMobileSearching = false;
+          this.mobileSearchResults = [];
+          this.showMobileSearchDropdown = true;
+        }
+      });
   }
 
   // ========== COUNTDOWN TIMER ==========

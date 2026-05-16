@@ -27,7 +27,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   verificationCodeSent = false;
   emailVerified = false;
   verificationCode = '';
-  pendingPayload: { name: string; email: string; phone: string } | null = null;
+  pendingPayload: { name: string; email: string; phone: string; avatarUrl: string } | null = null;
   avatarUrl = '';
   cropSourceImage = '';
   cropScaleFactor = 1;
@@ -250,6 +250,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.cancelCrop();
   }
 
+  onAvatarPreviewError(): void {
+    this.avatarUrl = '';
+  }
+
   submit(): void {
     this.resetMessages();
 
@@ -276,7 +280,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const payload = {
       name: this.name.trim(),
       email: this.email.trim(),
-      phone: this.phone.trim()
+      phone: this.phone.trim(),
+      avatarUrl: this.avatarUrl
     };
 
     const currentEmail = String(this.user.email || '').trim().toLowerCase();
@@ -292,7 +297,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.http.put<any>(`${this.apiUrl}/profile/${this.user.id}`, {
       name: payload.name,
       email: payload.email,
-      phone: payload.phone
+      phone: payload.phone,
+      avatarUrl: payload.avatarUrl
     }).subscribe({
       next: (response) => {
         this.isSaving = false;
@@ -349,12 +355,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
           name: this.pendingPayload?.name,
           email: this.pendingPayload?.email,
           phone: this.pendingPayload?.phone,
-          avatarUrl: this.avatarUrl
+          avatarUrl: this.pendingPayload?.avatarUrl || this.avatarUrl
         };
 
         this.authSessionService.updateProfile({
           ...updatedUser,
-          avatarUrl: this.avatarUrl
+          avatarUrl: this.pendingPayload?.avatarUrl || this.avatarUrl
         });
         this.successMessage = response?.message || 'Email verified and profile updated successfully.';
         this.verificationCodeSent = false;
@@ -380,13 +386,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const payload = {
       name: this.name.trim(),
       email: this.email.trim(),
-      phone: this.phone.trim()
+      phone: this.phone.trim(),
+      avatarUrl: this.avatarUrl
     };
 
     this.requestEmailVerification(payload);
   }
 
-  private requestEmailVerification(payload: { name: string; email: string; phone: string }): void {
+  private requestEmailVerification(payload: { name: string; email: string; phone: string; avatarUrl: string }): void {
     if (!this.user?.id) {
       this.errorMessage = 'User session not found. Please login again.';
       return;

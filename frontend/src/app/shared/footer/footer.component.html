@@ -1,18 +1,107 @@
-<footer class="footer">
-  <div class="footer-container">
-    <a class="footer-logo" routerLink="/" aria-label="Divara Craft home">
-      <img src="assets/divara_final.jpg" alt="Divara Craft" class="footer-logo-img">
-    </a>
+<footer class="site-footer">
+  <section class="footer-benefits" aria-label="Why choose Divara Craft">
+    <div class="footer-benefits__inner">
+      <h2>Why Choose Divara Craft?</h2>
 
-    <nav class="footer-links" aria-label="Footer links">
-      <a routerLink="/shop">Shop</a>
-      <a routerLink="/track-order">Track Order</a>
-      <a routerLink="/about">About Us</a>
-      <a routerLink="/contact">Contact</a>
-      <a href="#">FAQ</a>
-      <a href="#">Shipping & Returns</a>
-    </nav>
+      <div class="benefit-grid">
+        <article class="benefit-item">
+          <span class="benefit-icon">💎</span>
+          <h3>Artisan Crafted</h3>
+          <p>Made with care by skilled craftspeople</p>
+        </article>
+        <article class="benefit-item">
+          <span class="benefit-icon">⭐</span>
+          <h3>Premium Quality</h3>
+          <p>Finest materials and timeless designs</p>
+        </article>
+        <article class="benefit-item">
+          <span class="benefit-icon">🚚</span>
+          <h3>Worldwide Shipping</h3>
+          <p>Safe &amp; fast delivery everywhere</p>
+        </article>
+        <article class="benefit-item">
+          <span class="benefit-icon">🔒</span>
+          <h3>Secure Payment</h3>
+          <p>100% secure checkout process</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <p class="footer-bottom">© {{ currentYear }} Divara Craft. All Rights Reserved.</p>
-  </div>
+  <section class="footer-main">
+    <div class="footer-main__inner">
+      <div class="footer-brand">
+        <a routerLink="/" aria-label="Divara Craft home">
+          <img src="assets/new_divara_logo.png" alt="Divara Craft">
+        </a>
+        <p>Handcrafted with passion, designed to celebrate tradition and elegance. Thank you for supporting artisan craftsmanship.</p>
+        <div class="social-links" aria-label="Social links">
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="Pinterest">p</a>
+          <a href="#" aria-label="YouTube">▶</a>
+          <a href="#" aria-label="WhatsApp">◌</a>
+        </div>
+      </div>
+
+      <nav class="footer-column" aria-label="Shop links">
+        <h3>Shop</h3>
+        <a routerLink="/shop">All Products</a>
+        <a routerLink="/shop" [queryParams]="{ category: 'bangles' }">Bangles</a>
+        <a routerLink="/shop" [queryParams]="{ category: 'necklaces' }">Necklaces</a>
+        <a routerLink="/shop" [queryParams]="{ category: 'earrings' }">Earrings</a>
+        <a routerLink="/shop" [queryParams]="{ category: 'rings' }">Rings</a>
+        <a routerLink="/shop">New Arrivals</a>
+        <a routerLink="/shop">Best Sellers</a>
+      </nav>
+
+      <nav class="footer-column" aria-label="Customer service links">
+        <h3>Customer Service</h3>
+        <a routerLink="/track-order">Track Order</a>
+        <a routerLink="/about">About Us</a>
+        <a routerLink="/contact">Contact Us</a>
+        <a href="#">FAQ</a>
+        <a href="#">Shipping &amp; Returns</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms &amp; Conditions</a>
+      </nav>
+
+      <div class="footer-instagram">
+        <div class="footer-instagram__head">
+          <div>
+            <h3>Instagram Feed</h3>
+            <p>See our latest handcrafted styles and behind-the-scenes moments.</p>
+          </div>
+          <a [href]="instagramProfileUrl" target="_blank" rel="noopener noreferrer">Follow</a>
+        </div>
+
+        <div class="instagram-grid" [class.is-loading]="isInstagramLoading" aria-label="Instagram feed">
+          <a
+            *ngFor="let post of instagramPosts"
+            [href]="post.permalink || instagramProfileUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="instagram-post">
+            <img [src]="post.thumbnailUrl || post.mediaUrl" [alt]="post.caption || 'Divara Craft Instagram post'">
+            <span>View on Instagram</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="footer-bottom-bar">
+    <p>© {{ currentYear }} Divara Craft. All Rights Reserved.</p>
+    <div class="payment-methods" aria-label="Accepted payment methods">
+      <span><i class="payment-logo-icon payment-logo-icon--visa">V</i>VISA</span>
+      <span><i class="payment-logo-icon payment-logo-icon--mastercard"></i>Mastercard</span>
+      <span><i class="payment-logo-icon payment-logo-icon--rupay">R</i>RuPay</span>
+      <span><i class="payment-logo-icon payment-logo-icon--upi">U</i>UPI</span>
+      <span><i class="payment-logo-icon payment-logo-icon--paytm">P</i>Paytm</span>
+    </div>
+    <div class="secure-checkout">
+      <span aria-hidden="true">⬟</span>
+      <p>100% Secure Checkout</p>
+    </div>
+  </section>
 </footer>

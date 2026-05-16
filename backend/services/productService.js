@@ -548,10 +548,12 @@ async function createProduct({
   tags = '',
   colors = '',
   colorHexes = '',
-  productCategoryId = null
+  productCategoryId = null,
+  initialQuantity = 0
 }) {
   const db = getPool();
   const schema = await getProductSchemaConfig();
+  const qty = Math.max(0, parseInt(initialQuantity, 10) || 0);
   let result;
 
   if (schema.productMode === 'normalized') {
@@ -560,23 +562,23 @@ async function createProduct({
     if (schema.hasProductSlug) {
       const slug = await buildUniqueProductSlug(db, name);
       [result] = await db.execute(
-        `INSERT INTO products (title, slug, description, seo_title, seo_meta_description, tags, base_price, stock, category_id, is_active, product_category_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, slug, description, seoTitle || null, seoMetaDescription || null, tags || null, price, 0, categoryId, 1, productCategoryId || null]
+        `INSERT INTO products (title, slug, description, seo_title, seo_meta_description, tags, base_price, stock, total_added_quantity, category_id, is_active, product_category_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, slug, description, seoTitle || null, seoMetaDescription || null, tags || null, price, qty, qty, categoryId, 1, productCategoryId || null]
       );
     } else {
       [result] = await db.execute(
-        `INSERT INTO products (title, description, seo_title, seo_meta_description, tags, base_price, stock, category_id, is_active, product_category_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, description, seoTitle || null, seoMetaDescription || null, tags || null, price, 0, categoryId, 1, productCategoryId || null]
+        `INSERT INTO products (title, description, seo_title, seo_meta_description, tags, base_price, stock, total_added_quantity, category_id, is_active, product_category_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, description, seoTitle || null, seoMetaDescription || null, tags || null, price, qty, qty, categoryId, 1, productCategoryId || null]
       );
     }
   } else {
     const primaryImage = images.find((image) => image.is_primary_image) || images[0] || null;
     [result] = await db.execute(
-      `INSERT INTO products (name, price, category, description, seo_title, seo_meta_description, tags, image_url, product_category_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, price, category || '', description, seoTitle || null, seoMetaDescription || null, tags || null, primaryImage ? primaryImage.image_url : null, productCategoryId || null]
+      `INSERT INTO products (name, price, category, description, seo_title, seo_meta_description, tags, image_url, stock, total_added_quantity, product_category_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, price, category || '', description, seoTitle || null, seoMetaDescription || null, tags || null, primaryImage ? primaryImage.image_url : null, qty, qty, productCategoryId || null]
     );
   }
 
@@ -638,6 +640,70 @@ async function fetchAllProducts() {
       reviewAggregatesByProductId
     )
   );
+}
+
+async function fetchProductsByIds(ids = []) {
+  if (!ids.length) return [];
+  const safeIds = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+  if (!safeIds.length) return [];
+
+  const db = getPool();
+  const schema = await getProductSchemaConfig();
+  const placeholders = safeIds.map(() => '?').join(',');
+
+  const query = schema.productMode === 'normalized'
+    ? `SELECT p.id,
+              p.name,
+              p.price,
+              p.stock,
+              COALESCE(c.name, '') AS category,
+              p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
+              NULL AS image_url
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       WHERE p.id IN (${placeholders})`
+    : `SELECT p.id,
+              p.name,
+              p.price,
+              p.stock,
+              p.category,
+              p.description,
+              p.seo_title,
+              p.seo_meta_description,
+              p.tags,
+              p.product_category_id,
+              p.image_url
+       FROM products p
+       WHERE p.id IN (${placeholders})`;
+
+  const [rows] = await db.query(query, safeIds);
+
+  const productIds = rows.map((row) => row.id);
+  const imagesByProductId = await fetchImagesByProductIds(productIds);
+  const colorsByProductId = await fetchColorsByProductIds(productIds);
+  const attributesByProductId = await fetchAttributesByProductIds(productIds);
+  const reviewAggregatesByProductId = await fetchReviewAggregatesByProductIds(productIds);
+
+  // Return in the same order as the input ids array
+  const byId = new Map(
+    rows.map((row) => [
+      row.id,
+      attachReviewAggregates(
+        buildProductWithImages(
+          row,
+          imagesByProductId.get(row.id) || [],
+          colorsByProductId.get(row.id) || [],
+          attributesByProductId.get(row.id) || {}
+        ),
+        reviewAggregatesByProductId
+      )
+    ])
+  );
+  return safeIds.map((id) => byId.get(id)).filter(Boolean);
 }
 
 async function fetchFeaturedProducts(limit = 8) {
@@ -943,6 +1009,7 @@ module.exports = {
   createProduct,
   fetchAllProducts,
   fetchFeaturedProducts,
+  fetchProductsByIds,
   fetchProductById,
   updateProductById,
   setPrimaryImage,

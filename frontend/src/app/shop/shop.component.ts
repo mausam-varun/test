@@ -37,6 +37,16 @@ interface AttributeFilter {
   checked: boolean;
 }
 
+type FilterSectionKey =
+  | 'category'
+  | 'price'
+  | 'primaryColor'
+  | 'secondaryColor'
+  | 'style'
+  | 'pattern'
+  | 'craftType'
+  | 'material';
+
 @Component({
   selector: 'app-shop',
   templateUrl: './shop.component.html',
@@ -68,6 +78,16 @@ export class ShopComponent implements OnInit, OnDestroy {
   errorMessage = '';
   isMobileFiltersOpen = false;
   recentlyAddedProductIds = new Set<number>();
+  filterSectionState: Record<FilterSectionKey, boolean> = {
+    category: true,
+    price: true,
+    primaryColor: true,
+    secondaryColor: false,
+    style: false,
+    pattern: false,
+    craftType: false,
+    material: true
+  };
   private requestedCategoryName = '';
   private readonly addedTextTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
   private readonly subscriptions = new Subscription();
@@ -91,7 +111,9 @@ export class ShopComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.route.queryParamMap.subscribe((params) => {
         this.requestedCategoryName = (params.get('category') || '').trim();
+        this.searchText = (params.get('q') || params.get('search') || '').trim();
         this.applyRequestedCategory();
+        this.filterProducts();
       })
     );
 
@@ -302,6 +324,32 @@ export class ShopComponent implements OnInit, OnDestroy {
     this.filterProducts();
   }
 
+  toggleFilterSection(section: FilterSectionKey): void {
+    this.filterSectionState[section] = !this.filterSectionState[section];
+  }
+
+  isFilterSectionOpen(section: FilterSectionKey): boolean {
+    return this.filterSectionState[section];
+  }
+
+  clearAllFilters(closeDrawer = false): void {
+    this.categories = this.categories.map((category) => ({ ...category, selected: false }));
+    this.materials = this.materials.map((material) => ({ ...material, checked: false }));
+    this.primaryColors = this.primaryColors.map((color) => ({ ...color, checked: false }));
+    this.secondaryColors = this.secondaryColors.map((color) => ({ ...color, checked: false }));
+    this.styleFilters = this.styleFilters.map((style) => ({ ...style, checked: false }));
+    this.patternFilters = this.patternFilters.map((pattern) => ({ ...pattern, checked: false }));
+    this.craftTypeFilters = this.craftTypeFilters.map((craft) => ({ ...craft, checked: false }));
+    this.searchText = '';
+    this.minRating = 0;
+    this.priceRange = [this.minPrice, this.maxPrice];
+    this.filterProducts();
+
+    if (closeDrawer) {
+      this.closeMobileFilters();
+    }
+  }
+
   toggleMobileFilters(): void {
     this.isMobileFiltersOpen = !this.isMobileFiltersOpen;
   }
@@ -325,6 +373,20 @@ export class ShopComponent implements OnInit, OnDestroy {
   onSortChange(sortValue: string): void {
     this.sortBy = sortValue;
     this.filterProducts();
+  }
+
+  get visibleStartIndex(): number {
+    if (!this.filteredProducts.length) {
+      return 0;
+    }
+    return (this.currentPage - 1) * this.itemsPerPage + 1;
+  }
+
+  get visibleEndIndex(): number {
+    if (!this.filteredProducts.length) {
+      return 0;
+    }
+    return Math.min(this.currentPage * this.itemsPerPage, this.filteredProducts.length);
   }
 
   addToCart(product: Product): void {

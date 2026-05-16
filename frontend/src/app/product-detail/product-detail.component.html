@@ -14,14 +14,16 @@
     <ng-container *ngIf="!isLoading && product as currentProduct">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a routerLink="/home">Home</a>
-        <span>/</span>
+        <span>›</span>
         <a routerLink="/shop">Shop</a>
-        <span>/</span>
-        <span>{{ currentProduct.name }}</span>
+        <span>›</span>
+        <span>{{ currentProduct.name | slice:0:42 }}{{ currentProduct.name.length > 42 ? '…' : '' }}</span>
       </nav>
 
-      <section class="product-detail-grid">
-        <div class="gallery-panel">
+      <section class="hero-grid">
+        <article class="gallery-card">
+          <div class="badge-new">NEW</div>
+
           <div
             class="main-image-frame"
             (mousemove)="onImageMove($event)"
@@ -32,133 +34,196 @@
               class="main-image"
               [class.is-zooming]="isZooming"
               [style.transform-origin]="zoomOrigin">
-            <span class="zoom-hint">Hover to zoom</span>
+            <button type="button" class="image-zoom-btn" aria-label="Zoom image">⌕</button>
           </div>
 
-          <div
-            class="thumb-strip"
-            *ngIf="galleryImages.length > 0"
-            [class.is-single]="galleryImages.length === 1">
+          <div class="thumb-row" *ngIf="galleryImages.length > 0">
+            <button type="button" class="thumb-nav" aria-label="Previous images">‹</button>
             <button
               type="button"
               class="thumb-btn"
-              *ngFor="let image of galleryImages; trackBy: trackByImage"
+              *ngFor="let image of galleryImages | slice:0:4; trackBy: trackByImage"
               [class.is-active]="image.image_url === currentImage"
               (click)="selectImage(image.image_url)">
               <img [src]="image.image_url" [alt]="currentProduct.name">
-              <span *ngIf="image.is_primary_image" class="primary-badge">Primary</span>
             </button>
+            <button type="button" class="thumb-nav" aria-label="Next images">›</button>
           </div>
-        </div>
+        </article>
 
-        <div class="content-panel">
-          <p class="eyebrow">{{ currentProduct.category }}</p>
+        <article class="content-card">
+          <p class="eyebrow">✧ {{ currentProduct.category }}</p>
           <h1>{{ currentProduct.name }}</h1>
 
-          <div class="rating-row" [class.is-unrated]="!hasReviews" [attr.aria-label]="hasReviews ? 'Product rating' : 'No product reviews yet'">
-            <ng-container *ngIf="hasReviews; else unratedDetailState">
+          <div class="rating-row" [class.is-unrated]="!hasReviews">
+            <ng-container *ngIf="hasReviews; else noReviewState">
               <span class="stars">
                 <span *ngFor="let star of starIndices" [class.is-filled]="star <= roundedRating">★</span>
               </span>
-              <strong>{{ currentProduct.rating | number:'1.1-1' }}</strong>
-              <span>({{ currentProduct.reviews }} reviews)</span>
+              <span>{{ currentProduct.rating | number:'1.1-1' }}</span>
+              <span class="rating-note">({{ currentProduct.reviews }} reviews)</span>
             </ng-container>
-            <ng-template #unratedDetailState>
-              <span class="unrated-badge">No reviews yet</span>
-              <span>Delivered-order reviews will appear here.</span>
+            <ng-template #noReviewState>
+              <span class="rating-note">Be the first to review this product</span>
             </ng-template>
           </div>
 
           <p class="price">{{ currentProduct.price | displayCurrency:2 }}</p>
+          <p class="tax-note">Inclusive of all taxes | Free Shipping on orders above 999</p>
 
           <div class="description" [innerHTML]="currentProduct.description"></div>
 
-          <div class="action-row">
-            <button type="button" class="primary-btn" *ngIf="quantity === 0" (click)="addToCart()">Add to Cart</button>
-            
-            <div class="quantity-control" *ngIf="quantity > 0">
-              <button type="button" class="quantity-btn decrease" (click)="onDecrement()" aria-label="Decrease quantity">−</button>
-              <span class="quantity-display">{{ quantity }}</span>
-              <button type="button" class="quantity-btn increase" (click)="onIncrement()" aria-label="Increase quantity">+</button>
+          <div class="micro-highlights">
+            <span>✋ Handmade</span>
+            <span>◇ Premium Quality</span>
+            <span>❋ Lightweight</span>
+          </div>
+
+          <div class="info-tabs">
+            <button type="button" class="tab is-active">Care Instructions</button>
+            <button type="button" class="tab">Product Details</button>
+            <button type="button" class="tab-arrow" aria-label="More details">→</button>
+          </div>
+        </article>
+
+        <aside class="buy-card">
+          <div class="stock-row" [class.in-stock]="(currentProduct.stock || 0) > 0">
+            <span class="stock-dot"></span>
+            <strong>{{ (currentProduct.stock || 0) > 0 ? 'In Stock' : 'Out of Stock' }}</strong>
+          </div>
+
+          <p class="delivery-note">Delivery by 24 May, 2025</p>
+
+          <div class="buy-quantity">
+            <span>Quantity</span>
+            <div class="quantity-control">
+              <button type="button" class="quantity-btn" (click)="onDecrement()" aria-label="Decrease quantity">−</button>
+              <span class="quantity-display">{{ quantity || 1 }}</span>
+              <button type="button" class="quantity-btn" (click)="onIncrement()" aria-label="Increase quantity">+</button>
             </div>
-
-            <button type="button" class="secondary-btn" [class.is-wishlisted]="isWishlisted" (click)="addToWishlist()">
-              {{ isWishlisted ? 'Wishlisted ✓' : 'Add to Wishlist' }}
-            </button>
           </div>
 
-          <div class="detail-meta">
-            <article>
-              <span class="meta-label">Category</span>
-              <strong>{{ currentProduct.category }}</strong>
-            </article>
-            <article *ngIf="currentProduct.colors?.length">
-              <span class="meta-label">Colors</span>
-              <strong>{{ currentProduct.colors.join(', ') }}</strong>
-            </article>
-            <article>
-              <span class="meta-label">Material</span>
-              <strong>{{ currentProduct.material }}</strong>
-            </article>
-            <article>
-              <span class="meta-label">Gallery</span>
-              <strong>{{ currentProduct.images.length }} image{{ currentProduct.images.length === 1 ? '' : 's' }}</strong>
-            </article>
-          </div>
+          <button type="button" class="buy-btn primary" (click)="addToCart()">Add to Cart</button>
+          <button type="button" class="buy-btn secondary"
+                  (click)="buyItNow()"
+                  [disabled]="(currentProduct.stock || 0) === 0 || isBuyingNow">
+            {{ isBuyingNow ? 'Redirecting…' : 'Buy It Now' }}
+          </button>
+          <button type="button" class="buy-btn ghost" [class.is-wishlisted]="isWishlisted" (click)="addToWishlist()">
+            {{ isWishlisted ? 'Wishlisted ✓' : 'Add to Wishlist' }}
+          </button>
 
-          <section class="story-panel">
-            <h2>Product Description</h2>
-            <div class="story-panel__content" [innerHTML]="currentProduct.description"></div>
-          </section>
+          <div class="buy-toast" *ngIf="toastMessage" role="alert">{{ toastMessage }}</div>
 
-          <section class="reviews-panel">
-            <div class="reviews-panel__header">
+          <div class="assurance-list">
+            <div class="assurance-item">
+              <span>🛡</span>
               <div>
-                <h2>Customer Reviews</h2>
-                <p *ngIf="hasReviews">Verified feedback from delivered orders</p>
-                <p *ngIf="!hasReviews">Be the first verified customer to share feedback after delivery.</p>
-              </div>
-              <div class="reviews-summary" *ngIf="hasReviews">
-                <strong>{{ currentProduct.rating | number:'1.1-1' }}/5</strong>
-                <span>{{ currentProduct.reviews }} review{{ currentProduct.reviews === 1 ? '' : 's' }}</span>
+                <strong>Secure Payment</strong>
+                <p>100% safe and secure checkout</p>
               </div>
             </div>
-
-            <div class="review-breakdown" *ngIf="hasReviews">
-              <div class="breakdown-row" *ngFor="let item of reviewBreakdownEntries">
-                <span class="breakdown-label">{{ item.stars }}★</span>
-                <div class="breakdown-bar">
-                  <span class="breakdown-fill" [style.width.%]="item.percent"></span>
-                </div>
-                <span class="breakdown-count">{{ item.count }}</span>
+            <div class="assurance-item">
+              <span>↻</span>
+              <div>
+                <strong>Easy Replacement</strong>
+                <p>Hassle-Free Replacement on Damaged Delivery</p>
               </div>
             </div>
-
-            <div class="review-list" *ngIf="recentReviews.length > 0; else noRecentReviews">
-              <article class="review-card" *ngFor="let review of recentReviews">
-                <div class="review-card__top">
-                  <div>
-                    <strong>{{ review.customer_name }}</strong>
-                    <p>{{ review.created_at | date:'dd MMM yyyy' }}</p>
-                  </div>
-                  <div class="review-card__rating">{{ buildReviewStars(review.rating) }}</div>
-                </div>
-
-                <div class="review-card__emotion" *ngIf="review.emotion">{{ review.emotion }}</div>
-                <p class="review-card__text" *ngIf="review.review_text">{{ review.review_text }}</p>
-
-                <div class="review-card__images" *ngIf="review.images.length">
-                  <img *ngFor="let image of review.images" [src]="image" alt="Customer review image" />
-                </div>
-              </article>
-            </div>
-
-            <ng-template #noRecentReviews>
-              <div class="reviews-empty-state">
-                <p>No detailed review snippets yet for this product.</p>
+            <div class="assurance-item">
+              <span>🚚</span>
+              <div>
+                <strong>Cash on Delivery</strong>
+                <p>Pay at your doorstep anywhere in India.</p>
               </div>
-            </ng-template>
-          </section>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="feature-strip top">
+        <article>
+          <span>🤲</span>
+          <div>
+            <h3>Handcrafted with Love</h3>
+          </div>
+        </article>
+        <article>
+          <span>◇</span>
+          <div>
+            <h3>Premium Quality</h3>
+          </div>
+        </article>
+        <article>
+          <span>❋</span>
+          <div>
+            <h3>Lightweight &amp; Comfortable</h3>
+          </div>
+        </article>
+      </section>
+
+      <section class="feature-strip bottom">
+        <article>
+          <span>🏅</span>
+          <div>
+            <h3>Premium Craftsmanship</h3>
+            <p>Expertly handcrafted by skilled artisans with attention to detail.</p>
+          </div>
+        </article>
+        <article>
+          <span>🍃</span>
+          <div>
+            <h3>Skin Friendly Materials</h3>
+            <p>Made with high-quality, skin-safe materials and threads.</p>
+          </div>
+        </article>
+        <article>
+          <span>🎁</span>
+          <div>
+            <h3>Perfect for Gifting</h3>
+            <p>Beautifully packaged to make your moments even more special.</p>
+          </div>
+        </article>
+        <article>
+          <span>✦</span>
+          <div>
+            <h3>Festive &amp; Versatile</h3>
+            <p>Ideal for weddings, festivals, parties and everyday elegance.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="reviews-panel">
+        <div class="reviews-panel__header">
+          <h2>Customer Reviews</h2>
+          <div class="reviews-summary" *ngIf="hasReviews">
+            <strong>{{ currentProduct.rating | number:'1.1-1' }}/5</strong>
+            <span>{{ currentProduct.reviews }} review{{ currentProduct.reviews === 1 ? '' : 's' }}</span>
+          </div>
+        </div>
+
+        <div class="review-breakdown" *ngIf="hasReviews">
+          <div class="breakdown-row" *ngFor="let item of reviewBreakdownEntries">
+            <span class="breakdown-label">{{ item.stars }}★</span>
+            <div class="breakdown-bar">
+              <span class="breakdown-fill" [style.width.%]="item.percent"></span>
+            </div>
+            <span class="breakdown-count">{{ item.count }}</span>
+          </div>
+        </div>
+
+        <div class="review-list" *ngIf="recentReviews.length > 0">
+          <article class="review-card" *ngFor="let review of recentReviews">
+            <div class="review-card__top">
+              <div>
+                <strong>{{ review.customer_name }}</strong>
+                <p>{{ review.created_at | date:'dd MMM yyyy' }}</p>
+              </div>
+              <div class="review-card__rating">{{ buildReviewStars(review.rating) }}</div>
+            </div>
+            <div class="review-card__emotion" *ngIf="review.emotion">{{ review.emotion }}</div>
+            <p class="review-card__text" *ngIf="review.review_text">{{ review.review_text }}</p>
+          </article>
         </div>
       </section>
     </ng-container>

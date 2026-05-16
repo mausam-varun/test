@@ -5,6 +5,80 @@ const emailVerificationService = require('../services/emailVerificationService')
 
 const router = express.Router();
 
+// ── OTP store (identifier-keyed, in-memory) ─────────────────────────────────
+const otpStore = new Map();
+const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function generateOtpCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function isPhoneIdentifier(identifier) {
+  return /^\+?[\d\s\-()]{7,15}$/.test(String(identifier).replace(/[\s\-()]/g, ''));
+}
+
+// POST /auth/send-otp
+router.post('/send-otp', async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier || !String(identifier).trim()) {
+      return res.status(400).json({ error: 'identifier is required' });
+    }
+
+    const key = String(identifier).trim().toLowerCase();
+    const type = isPhoneIdentifier(identifier) ? 'phone' : 'email';
+    const code = generateOtpCode();
+
+    otpStore.set(key, { code, type, expiresAt: Date.now() + OTP_TTL_MS });
+
+    if (type === 'email') {
+      await emailService.sendOtpEmail({ to: identifier.trim(), code });
+    } else {
+      // SMS not configured — log in dev (replace with Twilio/MSG91 in production)
+      console.log(`[DEV] OTP for ${identifier}: ${code}`);
+    }
+
+    res.json({ status: 'ok', type, message: `OTP sent to your ${type}` });
+  } catch (error) {
+    console.error('send-otp error:', error);
+    res.status(500).json({ error: error.message || 'Failed to send OTP' });
+  }
+});
+
+// POST /auth/verify-otp
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { identifier, code, name } = req.body;
+    if (!identifier || !code) {
+      return res.status(400).json({ error: 'identifier and code are required' });
+    }
+
+    const key = String(identifier).trim().toLowerCase();
+    const entry = otpStore.get(key);
+
+    if (!entry) {
+      return res.status(400).json({ error: 'OTP not found or expired. Please request a new one.' });
+    }
+    if (Date.now() > entry.expiresAt) {
+      otpStore.delete(key);
+      return res.status(400).json({ error: 'OTP expired. Please request a new one.' });
+    }
+    if (String(entry.code) !== String(code).trim()) {
+      return res.status(400).json({ error: 'Invalid OTP. Please try again.' });
+    }
+
+    // Valid — find or create user
+    const user = await authService.findOrCreateUserByIdentifier(identifier.trim(), (name || '').trim());
+    otpStore.delete(key);
+
+    res.json({ status: 'ok', user, token: `user-token-${user.id}` });
+  } catch (error) {
+    console.error('verify-otp error:', error);
+    res.status(500).json({ error: error.message || 'Verification failed' });
+  }
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -53,17 +127,24 @@ router.post('/user-login', async (req, res) => {
 router.put('/profile/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone } = req.body;
+    const { name, email, phone, avatarUrl, avatar_url } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
     }
 
-    const user = await authService.updateCustomerProfile(id, {
+    const profilePayload = {
       name,
       email,
-      phone
-    });
+      phone,
+    };
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'avatarUrl')
+      || Object.prototype.hasOwnProperty.call(req.body, 'avatar_url')) {
+      profilePayload.avatarUrl = avatarUrl ?? avatar_url;
+    }
+
+    const user = await authService.updateCustomerProfile(id, profilePayload);
 
     res.json({
       status: 'ok',
@@ -78,7 +159,7 @@ router.put('/profile/:id', async (req, res) => {
 router.post('/profile/:id/request-email-verification', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone } = req.body;
+    const { name, email, phone, avatarUrl, avatar_url } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
@@ -98,12 +179,19 @@ router.post('/profile/:id/request-email-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email is unchanged; no verification needed' });
     }
 
-    const { code } = emailVerificationService.createVerification(id, {
+    const verificationPayload = {
       userId: Number(id),
       name: String(name || '').trim(),
       email: nextEmail,
       phone: String(phone || '').trim()
-    });
+    };
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'avatarUrl')
+      || Object.prototype.hasOwnProperty.call(req.body, 'avatar_url')) {
+      verificationPayload.avatarUrl = avatarUrl ?? avatar_url;
+    }
+
+    const { code } = emailVerificationService.createVerification(id, verificationPayload);
 
     await emailService.sendProfileVerificationEmail({
       to: nextEmail,
@@ -138,11 +226,17 @@ router.post('/profile/:id/verify-email-update', async (req, res) => {
       return res.status(400).json({ error: 'Verification expired. Request a new code.' });
     }
 
-    const user = await authService.updateCustomerProfile(id, {
+    const profilePayload = {
       name: verification.name,
       email: verification.email,
       phone: verification.phone
-    });
+    };
+
+    if (Object.prototype.hasOwnProperty.call(verification, 'avatarUrl')) {
+      profilePayload.avatarUrl = verification.avatarUrl;
+    }
+
+    const user = await authService.updateCustomerProfile(id, profilePayload);
 
     emailVerificationService.clearVerification(id);
 

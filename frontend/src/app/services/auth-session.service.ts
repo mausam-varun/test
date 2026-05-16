@@ -87,7 +87,10 @@ export class AuthSessionService {
       candidate['avatarUrl'],
       candidate['avatar_url'],
       candidate['profileImage'],
-      candidate['profile_image']
+      candidate['profile_image'],
+      candidate['picture'],
+      candidate['photoURL'],
+      candidate['imageUrl']
     ].find((value) => typeof value === 'string' && String(value).trim().length > 0) as string | undefined;
 
     const rawName = [

@@ -1,0 +1,478 @@
+/* ─── Layout ──────────────────────────────────────────────────── */
+.inv-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.inv-header {
+  margin-bottom: 28px;
+}
+
+.inv-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.inv-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ─── KPI Cards ───────────────────────────────────────────────── */
+.inv-kpi-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.inv-kpi-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.inv-card-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: #ffffff;
+}
+
+.inv-card-accent {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  color: #ffffff;
+}
+
+.inv-card-success {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+  color: #ffffff;
+}
+
+.inv-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  margin: 0 0 8px;
+}
+
+.inv-kpi-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Section layout ──────────────────────────────────────────── */
+.inv-section {
+  padding: 24px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.inv-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.inv-section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.inv-section-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inv-threshold-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.inv-threshold-input {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: border 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.inv-badge-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* ─── Search box ──────────────────────────────────────────────── */
+.inv-search-box {
+  margin-bottom: 16px;
+}
+
+.inv-search-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+}
+
+/* ─── Tables ──────────────────────────────────────────────────── */
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.inv-table-header {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.inv-table-cell {
+  padding: 12px 16px;
+  text-align: left;
+  color: #475569;
+
+  &.inv-table-cell--name {
+    min-width: 150px;
+    font-weight: 600;
+  }
+
+  &.inv-table-cell--stock {
+    width: 100px;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  &.inv-table-cell--status {
+    width: 120px;
+    text-align: center;
+  }
+
+  &.inv-table-cell--price {
+    width: 130px;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  &.inv-table-cell--value {
+    width: 140px;
+    text-align: right;
+    font-weight: 600;
+    color: #0f172a;
+  }
+}
+
+.inv-table-row {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #f8fafc;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  td {
+    padding: 12px 16px;
+  }
+
+  &.inv-table-row--warning {
+    &:hover {
+      background: #fffbeb;
+    }
+  }
+
+  &.inv-table-row--danger {
+    &:hover {
+      background: #fef2f2;
+    }
+  }
+}
+
+/* ─── Status badges ───────────────────────────────────────────── */
+.inv-status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &.inv-status-badge--warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  &.inv-status-badge--danger {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}
+
+/* ─── Error state ─────────────────────────────────────────────── */
+.inv-card-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.inv-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.inv-error-text {
+  font-size: 0.9rem;
+  color: #991b1b;
+  margin: 0;
+}
+
+.inv-error-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.inv-retry-btn {
+  padding: 6px 16px;
+  border: 1px solid #991b1b;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #991b1b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #fee2e2;
+  }
+}
+
+/* ─── Empty state ─────────────────────────────────────────────── */
+.inv-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+
+  &.inv-empty-state--success {
+    background: #f0fdf4;
+    border-color: #86efac;
+
+    .inv-empty-text {
+      color: #166534;
+    }
+  }
+}
+
+.inv-empty-text {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ─── Shimmer animation ───────────────────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.inv-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 50%,
+    #f1f5f9 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.inv-table-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .inv-page {
+    padding: 16px;
+  }
+
+  .inv-title {
+    font-size: 1.5rem;
+  }
+
+  .inv-kpi-section {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inv-table-cell {
+    padding: 10px 8px;
+    font-size: 0.8rem;
+
+    &.inv-table-cell--name {
+      min-width: 100px;
+    }
+
+    &.inv-table-cell--price,
+    &.inv-table-cell--value {
+      width: auto;
+    }
+  }
+
+  .inv-search-input {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .inv-page {
+    padding: 12px;
+  }
+
+  .inv-title {
+    font-size: 1.2rem;
+  }
+
+  .inv-section-title {
+    font-size: 1rem;
+  }
+
+  .inv-section {
+    padding: 16px;
+  }
+
+  .inv-kpi-value {
+    font-size: 1.8rem;
+  }
+
+  .inv-table-cell {
+    padding: 8px 4px;
+    font-size: 0.75rem;
+
+    &.inv-table-cell--price {
+      display: none;
+    }
+  }
+
+  .inv-status-badge {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+  }
+
+  .inv-section-controls {
+    width: 100%;
+
+    .inv-threshold-input {
+      flex: 1;
+    }
+  }
+}
+
+// ── All Products table extras ───────────────────────────────────
+.inv-all-table {
+  .inv-product-thumb {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    display: block;
+  }
+  .inv-no-img {
+    width: 42px;
+    text-align: center;
+    color: #94a3b8;
+  }
+}
+
+.inv-col-center {
+  text-align: center;
+}
+
+.inv-qty-total {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.inv-qty-sold {
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.inv-qty-stock {
+  font-weight: 700;
+  color: #15803d;
+  margin-right: 4px;
+  &.inv-zero { color: #b91c1c; }
+}

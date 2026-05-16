@@ -25,6 +25,26 @@
 	}
 }
 
+.btn-inventory-report {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 38px;
+	padding: 8px 16px;
+	border-radius: 8px;
+	border: 1px solid #2563eb;
+	background: #eff6ff;
+	color: #1d4ed8;
+	font-weight: 700;
+	font-size: 0.88rem;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.btn-inventory-report:hover {
+	background: #dbeafe;
+}
+
 .admin-currency-control {
 	display: flex;
 	flex-direction: column;

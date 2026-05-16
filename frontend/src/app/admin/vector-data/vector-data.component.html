@@ -1,0 +1,146 @@
+<section class="vector-page">
+  <header class="vector-header">
+    <div>
+      <h1>Vector Data</h1>
+      <p>Inspect existing records stored in the vector database.</p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="isLoadingCollections || isLoadingPoints">
+      {{ isLoadingCollections || isLoadingPoints ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </header>
+
+  <div class="vector-error" *ngIf="errorMessage">
+    <span>{{ errorMessage }}</span>
+    <button type="button" (click)="refresh()">Retry</button>
+  </div>
+
+  <section class="vector-toolbar">
+    <label>
+      <span>Collection</span>
+      <select [(ngModel)]="selectedCollection" (change)="onCollectionChange()" [disabled]="isLoadingCollections">
+        <option *ngFor="let collection of collections" [value]="collection.name">{{ collection.name }}</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Rows</span>
+      <select [(ngModel)]="limit" (change)="onLimitChange()">
+        <option [ngValue]="10">10</option>
+        <option [ngValue]="25">25</option>
+        <option [ngValue]="50">50</option>
+        <option [ngValue]="100">100</option>
+      </select>
+    </label>
+
+    <label class="vector-toggle">
+      <input type="checkbox" [(ngModel)]="withVector" (change)="onVectorToggle()">
+      <span>Load vector preview</span>
+    </label>
+
+    <label class="vector-search">
+      <span>Search current page</span>
+      <input type="search" [(ngModel)]="searchTerm" placeholder="Product, color, category, point ID">
+    </label>
+  </section>
+
+  <section class="vector-summary" *ngIf="selectedCollectionMeta as collection">
+    <article>
+      <span>Collection</span>
+      <strong>{{ collection.name }}</strong>
+    </article>
+    <article>
+      <span>Status</span>
+      <strong>{{ collection.status || 'unknown' }}</strong>
+    </article>
+    <article>
+      <span>Points</span>
+      <strong>{{ collection.pointsCount }}</strong>
+    </article>
+    <article>
+      <span>Vectors</span>
+      <strong>{{ collection.vectorsCount || collection.indexedVectorsCount || 0 }}</strong>
+    </article>
+  </section>
+
+  <div class="vector-loading" *ngIf="isLoadingPoints">
+    <div class="spinner"></div>
+    <p>Loading vector records...</p>
+  </div>
+
+  <section class="vector-table-card" *ngIf="!isLoadingPoints">
+    <div class="table-meta">
+      <span>Page {{ currentPage }}</span>
+      <span>{{ filteredPoints.length }} shown from {{ points.length }} loaded</span>
+    </div>
+
+    <div class="table-wrap" *ngIf="filteredPoints.length; else emptyState">
+      <table class="vector-table">
+        <thead>
+          <tr>
+            <th>Point</th>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Colors</th>
+            <th>Vector</th>
+            <th>Payload</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let point of filteredPoints; trackBy: trackByPointId">
+            <tr>
+              <td class="point-id">{{ point.id }}</td>
+              <td>
+                <img *ngIf="point.image_url; else noImage" [src]="point.image_url" [alt]="point.title || 'Vector product image'" class="product-thumb">
+                <ng-template #noImage><span class="no-image">No image</span></ng-template>
+              </td>
+              <td>
+                <div class="product-title">{{ point.title || 'Untitled vector record' }}</div>
+                <div class="product-sub">Product ID: {{ point.product_id }}</div>
+                <div class="product-sub" *ngIf="point.price">Price: {{ point.price | displayCurrency:2 }}</div>
+              </td>
+              <td>{{ point.category || '-' }}</td>
+              <td>
+                <div class="color-stack">
+                  <span class="primary-color" *ngIf="point.primary_color">{{ point.primary_color }}</span>
+                  <span *ngFor="let color of point.colors | slice:0:5">{{ color }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="vector-pill" [class.muted]="!point.hasVector">
+                  {{ point.hasVector ? point.vectorSize + ' dims' : (withVector ? 'No vector' : 'Hidden') }}
+                </span>
+                <div class="vector-preview" *ngIf="withVector && point.vectorPreview.length">
+                  {{ point.vectorPreview.join(', ') }}
+                </div>
+              </td>
+              <td>
+                <button type="button" class="payload-btn" (click)="togglePayload(point.id)">
+                  {{ expandedPointId === point.id ? 'Hide' : 'View' }} JSON
+                </button>
+              </td>
+            </tr>
+            <tr class="payload-row" *ngIf="expandedPointId === point.id">
+              <td colspan="7">
+                <pre>{{ formatPayload(point.payload) }}</pre>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <h2>No vector records found</h2>
+        <p>There are no records on this page or the search filter matched nothing.</p>
+      </div>
+    </ng-template>
+
+    <div class="vector-pagination">
+      <button type="button" (click)="previousPage()" [disabled]="currentPage === 1 || isLoadingPoints">Previous</button>
+      <span>Page {{ currentPage }}</span>
+      <button type="button" (click)="nextPage()" [disabled]="!nextPageOffset || isLoadingPoints">Next</button>
+    </div>
+  </section>
+</section>

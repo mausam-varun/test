@@ -1,0 +1,159 @@
+<div class="om-page">
+  <div class="om-header">
+    <h1 class="om-title">Order Management</h1>
+    <p class="om-subtitle">Track and monitor all orders across your store</p>
+  </div>
+
+  <!-- Date Filter -->
+  <div class="om-filter-bar">
+    <div class="om-filter-group">
+      <button
+        *ngFor="let filter of ['7days', '30days', 'custom']"
+        class="om-filter-btn"
+        [class.active]="selectedDateFilter === filter"
+        (click)="setDateFilter($any(filter))"
+      >
+        {{ filter === '7days' ? 'Last 7 Days' : filter === '30days' ? 'Last 30 Days' : 'Custom' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Cards Section -->
+  <div class="om-kpi-section">
+    <h2 class="om-section-title">Order Summary</h2>
+
+    <div *ngIf="errorSummary" class="om-error-card">
+      <p>{{ errorSummary }}</p>
+      <button (click)="retryFetch('summary')" class="om-retry-btn">Retry</button>
+    </div>
+
+    <div *ngIf="isLoadingSummary" class="om-kpi-grid">
+      <div *ngFor="let i of [1, 2, 3, 4]" class="om-kpi-skeleton">
+        <div class="om-skeleton-header"></div>
+        <div class="om-skeleton-content"></div>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoadingSummary && !errorSummary && summary" class="om-kpi-grid">
+      <!-- Pending Orders Card -->
+      <div class="om-kpi-card om-card-pending">
+        <div class="om-card-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="om-card-content">
+          <p class="om-card-label">Pending Orders</p>
+          <h3 class="om-card-value">{{ summary.pending }}</h3>
+          <p class="om-card-meta">Awaiting processing</p>
+        </div>
+      </div>
+
+      <!-- Shipped Orders Card -->
+      <div class="om-kpi-card om-card-shipped">
+        <div class="om-card-icon">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="om-card-content">
+          <p class="om-card-label">Shipped Orders</p>
+          <h3 class="om-card-value">{{ summary.shipped }}</h3>
+          <p class="om-card-meta">In transit</p>
+        </div>
+      </div>
+
+      <!-- Delivered Orders Card -->
+      <div class="om-kpi-card om-card-delivered">
+        <div class="om-card-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="om-card-content">
+          <p class="om-card-label">Delivered Orders</p>
+          <h3 class="om-card-value">{{ summary.delivered }}</h3>
+          <p class="om-card-meta">Successfully delivered</p>
+        </div>
+      </div>
+
+      <!-- Cancelled Orders Card -->
+      <div class="om-kpi-card om-card-cancelled">
+        <div class="om-card-icon">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="om-card-content">
+          <p class="om-card-label">Cancelled Orders</p>
+          <h3 class="om-card-value">{{ summary.cancelled }}</h3>
+          <p class="om-card-meta">Order cancellations</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Status Distribution Chart -->
+  <div class="om-chart-section">
+    <h2 class="om-section-title">Order Status Distribution</h2>
+
+    <div *ngIf="errorChart" class="om-error-card">
+      <p>{{ errorChart }}</p>
+      <button (click)="retryFetch('chart')" class="om-retry-btn">Retry</button>
+    </div>
+
+    <div *ngIf="isLoadingChart" class="om-chart-skeleton">
+      <div class="om-skeleton-chart"></div>
+    </div>
+
+    <div *ngIf="!isLoadingChart && !errorChart && orderStatusChartConfig" class="om-chart-container">
+      <canvas
+        baseChart
+        [type]="orderStatusChartConfig.type"
+        [data]="orderStatusChartConfig.data"
+        [options]="orderStatusChartConfig.options"
+        aria-label="Order Status Distribution"
+      ></canvas>
+    </div>
+  </div>
+
+  <!-- Recent Orders Table -->
+  <div class="om-table-section">
+    <h2 class="om-section-title">Recent Orders</h2>
+
+    <div *ngIf="errorTable" class="om-error-card">
+      <p>{{ errorTable }}</p>
+      <button (click)="retryFetch('table')" class="om-retry-btn">Retry</button>
+    </div>
+
+    <div *ngIf="isLoadingTable" class="om-table-skeleton">
+      <div *ngFor="let i of [1, 2, 3, 4, 5]" class="om-skeleton-row"></div>
+    </div>
+
+    <div *ngIf="!isLoadingTable && !errorTable" class="om-table-wrapper">
+      <div *ngIf="recentOrders.length === 0" class="om-empty-state">
+        <p>No orders found</p>
+      </div>
+
+      <table *ngIf="recentOrders.length > 0" class="om-table">
+        <thead>
+          <tr class="om-table-header">
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of recentOrders" class="om-table-row">
+            <td class="om-table-cell">#{{ order.id }}</td>
+            <td class="om-table-cell">{{ order.customer_name }}</td>
+            <td class="om-table-cell om-amount">{{ formatCurrency(order.total_amount) }}</td>
+            <td class="om-table-cell">
+              <span
+                class="om-status-badge"
+                [style.background-color]="getStatusBadgeColor(order.status)"
+              >
+                {{ capitalizeStatus(order.status) }}
+              </span>
+            </td>
+            <td class="om-table-cell">{{ formatDate(order.created_at) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

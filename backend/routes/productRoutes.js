@@ -6,6 +6,7 @@ const {
   updateProduct,
   deleteProduct,
   getAllProducts,
+  getProductsByIds,
   getFeaturedProducts,
   searchProducts,
   getProduct,
@@ -19,6 +20,7 @@ const {
 const router = express.Router();
 
 router.get('/', getAllProducts);
+router.get('/by-ids', getProductsByIds);
 router.get('/search', searchProducts);
 router.get('/featured', getFeaturedProducts);
 router.get('/ai-indexing-mode', getAiIndexingMode);

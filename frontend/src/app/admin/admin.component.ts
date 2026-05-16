@@ -38,6 +38,7 @@ interface Product {
   id: number;
   name: string;
   price: number;
+  stock?: number;
   category: string;
   description: string;
   product_category_id?: number | null;
@@ -116,6 +117,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Form fields
   productName = '';
   productPrice: number | null = null;
+  productQuantity: number | null = null;
   productCategoryId: number | null = null;
   productDescription = '';
   productSeoTitle = '';
@@ -355,6 +357,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.editingProductId = product.id;
     this.productName = product.name;
     this.productPrice = product.price;
+    this.productQuantity = product.stock ?? null;
     this.productCategoryId = product.product_category_id ?? null;
     const attrs = product.attributes || {};
     this.productType = attrs.product_type || '';
@@ -496,6 +499,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     const payload = new FormData();
     payload.append('name', this.productName.trim());
     payload.append('price', String(this.productPrice));
+    payload.append('quantity', String(Math.max(0, Number(this.productQuantity) || 0)));
     payload.append('currency', this.selectedCurrency);
     if (this.adminId) {
       payload.append('admin_id', String(this.adminId));
@@ -611,6 +615,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private resetForm(): void {
     this.productName = '';
     this.productPrice = null;
+    this.productQuantity = null;
     this.productCategoryId = null;
     this.productType = '';
     this.productSubCategory = '';

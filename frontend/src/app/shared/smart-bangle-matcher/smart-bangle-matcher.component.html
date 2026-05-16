@@ -41,7 +41,7 @@
           </div>
           <div class="card-content-vert">
             <h4 class="card-title-vert">{{ product.name | slice:0:28 }}{{ product.name.length > 28 ? '…' : '' }}</h4>
-            <div class="card-price-vert">₹{{ product.price }}</div>
+            <div class="card-price-vert">{{ product.price | displayCurrency:2 }}</div>
             <div class="card-rating-vert">★★★★☆</div>
             <button class="view-product-btn-vert" (click)="navigateToProduct(product.id)">View Product</button>
           </div>

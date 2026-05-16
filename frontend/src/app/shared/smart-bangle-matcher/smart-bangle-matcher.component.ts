@@ -88,7 +88,8 @@ export class SmartBangleMatcherComponent implements OnDestroy {
     this.matchResults            = [];
     this.detectedDetails         = null;
     this.generatedBangleImageUrl = null;
-    this.clearState();
+    // Do NOT clearState here — keep last successful results in localStorage
+    // so returning from a product page still shows previous matches.
 
     if (!file) {
       this.selectedDressImage        = null;
@@ -144,9 +145,7 @@ export class SmartBangleMatcherComponent implements OnDestroy {
 
           if (!safeMatches.length) {
             this.isMatching  = false;
-            this.matchError  = this.generatedBangleImageUrl
-              ? 'No direct vector match found. Showing AI-generated bangle concept.'
-              : 'No similar bangles found for this image.';
+            this.matchError  = 'No bangles found matching your outfit\'s color. Try a different image.';
             return;
           }
           this.loadMatchedProductCards(safeMatches);
@@ -162,11 +161,12 @@ export class SmartBangleMatcherComponent implements OnDestroy {
     const productIds = matches.map((m: any) => m.product_id || m.id).filter(Boolean);
     if (!productIds.length) { this.isMatching = false; return; }
 
-    this.http.get<any>(this.productsApi)
+    this.http.get<any>(`${this.productsApi}/by-ids`, { params: { ids: productIds.join(',') } })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (allProducts) => {
-          const products    = Array.isArray(allProducts) ? allProducts : allProducts?.data || [];
+        next: (fetchedProducts) => {
+          const products = Array.isArray(fetchedProducts) ? fetchedProducts : [];
+          // Preserve the AI-ranked order from the matches array
           const productsMap = new Map(products.map((p: any) => [p.id, p]));
 
           this.matchedProducts = productIds
@@ -201,6 +201,7 @@ export class SmartBangleMatcherComponent implements OnDestroy {
   }
 
   navigateToProduct(productId: number): void {
+    this.saveState(); // ensure latest results are in localStorage before leaving
     this.router.navigate(['/product', productId]);
   }
 

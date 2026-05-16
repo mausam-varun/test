@@ -13,6 +13,7 @@ export interface ThemeSettings {
   addToCartButtonHoverColor: string;
   wishlistButtonHoverColor: string;
   headerMenuHoverColor: string;
+  fontFamily: string;
 }
 
 @Injectable({
@@ -26,7 +27,8 @@ export class ThemeService implements OnDestroy {
     addToCartButtonColor: '#0f3e7e',
     addToCartButtonHoverColor: '#0a2547',
     wishlistButtonHoverColor: '#fecaca',
-    headerMenuHoverColor: '#f3f4f6'
+    headerMenuHoverColor: '#f3f4f6',
+    fontFamily: 'Poppins'
   });
 
   theme$ = this.themeSubject.asObservable();
@@ -38,7 +40,8 @@ export class ThemeService implements OnDestroy {
     addToCartButtonColor: '#0f3e7e',
     addToCartButtonHoverColor: '#0a2547',
     wishlistButtonHoverColor: '#fecaca',
-    headerMenuHoverColor: '#f3f4f6'
+    headerMenuHoverColor: '#f3f4f6',
+    fontFamily: 'Poppins'
   };
 
   private pollSubscription: Subscription | null = null;
@@ -63,11 +66,12 @@ export class ThemeService implements OnDestroy {
     this.http.get<{ sections: any; theme: ThemeSettings }>(`${APP_CONFIG.API_URL}/settings/admin/settings`).subscribe({
       next: (data) => {
         if (data?.theme) {
+          const normalizedTheme = this.normalizeTheme(data.theme);
           const currentTheme = this.themeSubject.value;
-          if (JSON.stringify(currentTheme) !== JSON.stringify(data.theme)) {
-            this.applyTheme(data.theme);
-            this.themeSubject.next(data.theme);
-            this.saveToLocalStorage(data.theme);
+          if (JSON.stringify(currentTheme) !== JSON.stringify(normalizedTheme)) {
+            this.applyTheme(normalizedTheme);
+            this.themeSubject.next(normalizedTheme);
+            this.saveToLocalStorage(normalizedTheme);
           }
         }
       },
@@ -90,12 +94,13 @@ export class ThemeService implements OnDestroy {
       )
       .subscribe((data) => {
         if (data?.theme) {
+          const normalizedTheme = this.normalizeTheme(data.theme);
           const currentTheme = this.themeSubject.value;
           // Only update if theme has actually changed
-          if (JSON.stringify(currentTheme) !== JSON.stringify(data.theme)) {
-            this.applyTheme(data.theme);
-            this.themeSubject.next(data.theme);
-            this.saveToLocalStorage(data.theme);
+          if (JSON.stringify(currentTheme) !== JSON.stringify(normalizedTheme)) {
+            this.applyTheme(normalizedTheme);
+            this.themeSubject.next(normalizedTheme);
+            this.saveToLocalStorage(normalizedTheme);
             console.log('🎨 Theme updated from server');
           }
         }
@@ -107,9 +112,10 @@ export class ThemeService implements OnDestroy {
   }
 
   setTheme(theme: ThemeSettings): void {
-    this.applyTheme(theme);
-    this.themeSubject.next(theme);
-    this.saveToLocalStorage(theme);
+    const normalizedTheme = this.normalizeTheme(theme);
+    this.applyTheme(normalizedTheme);
+    this.themeSubject.next(normalizedTheme);
+    this.saveToLocalStorage(normalizedTheme);
   }
 
   applyTheme(theme: ThemeSettings): void {
@@ -121,6 +127,46 @@ export class ThemeService implements OnDestroy {
     root.style.setProperty('--button-add-to-cart-hover', theme.addToCartButtonHoverColor);
     root.style.setProperty('--button-wishlist-hover', theme.wishlistButtonHoverColor);
     root.style.setProperty('--menu-hover', theme.headerMenuHoverColor);
+    root.style.setProperty('--app-font-family', this.resolveFontStack(theme.fontFamily));
+  }
+
+  private normalizeTheme(theme: Partial<ThemeSettings>): ThemeSettings {
+    return {
+      ...this.defaultTheme,
+      ...theme,
+      fontFamily: this.resolveAllowedFont(theme.fontFamily)
+    };
+  }
+
+  private resolveAllowedFont(fontFamily?: string): string {
+    const allowedFonts = [
+      'Poppins',
+      'Inter',
+      'Montserrat',
+      'Manrope',
+      'DM Sans',
+      'Lora',
+      'Merriweather',
+      'Playfair Display',
+      'Segoe UI'
+    ];
+    return allowedFonts.includes(String(fontFamily || '')) ? String(fontFamily) : this.defaultTheme.fontFamily;
+  }
+
+  private resolveFontStack(fontFamily: string): string {
+    const stacks: Record<string, string> = {
+      'Poppins': "'Poppins', 'Segoe UI', sans-serif",
+      'Inter': "'Inter', 'Segoe UI', sans-serif",
+      'Montserrat': "'Montserrat', 'Segoe UI', sans-serif",
+      'Manrope': "'Manrope', 'Segoe UI', sans-serif",
+      'DM Sans': "'DM Sans', 'Segoe UI', sans-serif",
+      'Lora': "'Lora', Georgia, serif",
+      'Merriweather': "'Merriweather', Georgia, serif",
+      'Playfair Display': "'Playfair Display', Georgia, serif",
+      'Segoe UI': "'Segoe UI', sans-serif"
+    };
+
+    return stacks[fontFamily] || stacks['Poppins'];
   }
 
   private saveToLocalStorage(theme: ThemeSettings): void {

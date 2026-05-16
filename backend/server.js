@@ -27,6 +27,13 @@ const flashDealsRoutes = require('./routes/flashDealsRoutes');
 const recentlyViewedRoutes = require('./routes/recentlyViewedRoutes');
 const aiMatchingRoutes = require('./routes/aiMatchingRoutes');
 const promoBannerRoutes = require('./routes/promoBannerRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const productPerformanceRoutes = require('./routes/productPerformanceRoutes');
+const customerInsightsRoutes = require('./routes/customerInsightsRoutes');
+const inventoryReportRoutes = require('./routes/inventoryReportRoutes');
+const orderManagementRoutes = require('./routes/orderManagementRoutes');
+const vectorDataRoutes = require('./routes/vectorDataRoutes');
+const instagramRoutes = require('./routes/instagramRoutes');
 const { initializeDatabase } = require('./services/db');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
@@ -45,7 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -81,6 +88,13 @@ app.use('/api', festiveSeasonBannerRoutes);
 app.use('/api', flashDealsRoutes);
 app.use('/api/ai', aiMatchingRoutes);
 app.use('/api', promoBannerRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/dashboard/product', productPerformanceRoutes);
+app.use('/api/dashboard/customer', customerInsightsRoutes);
+app.use('/api/dashboard/inventory', inventoryReportRoutes);
+app.use('/api/dashboard/order', orderManagementRoutes);
+app.use('/api/admin/vector-data', vectorDataRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -92,7 +106,7 @@ async function startServer() {
       console.log(`Admin backend running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error.message);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 }

@@ -8,7 +8,7 @@
     <section class="profile-avatar-editor" aria-label="Profile picture editor">
       <div class="profile-avatar-editor__preview-wrap">
         <div class="profile-avatar-editor__preview">
-          <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Profile preview">
+          <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Profile preview" referrerpolicy="no-referrer" (error)="onAvatarPreviewError()">
           <span *ngIf="!avatarUrl">No photo</span>
         </div>
       </div>

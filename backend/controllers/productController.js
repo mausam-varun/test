@@ -4,6 +4,7 @@ const {
   createProduct,
   fetchAllProducts,
   fetchFeaturedProducts,
+  fetchProductsByIds,
   fetchProductById,
   updateProductById,
   setPrimaryImage,
@@ -163,6 +164,7 @@ exports.addProduct = asyncHandler(async (req, res) => {
     ai_provider,
     category,
     product_category_id,
+    quantity = 0,
     description = '',
     seo_title = '',
     seo_meta_description = '',
@@ -276,7 +278,8 @@ exports.addProduct = asyncHandler(async (req, res) => {
     tags: String(tags || '').trim(),
     colors: mergedMetadata.colors,
     colorHexes: mergedMetadata.color_hex,
-    productCategoryId: product_category_id ? Number(product_category_id) : null
+    productCategoryId: product_category_id ? Number(product_category_id) : null,
+    initialQuantity: quantity
   });
 
   // Update product description in DB with AI-generated text if it was auto-derived
@@ -469,6 +472,15 @@ exports.getAllProducts = asyncHandler(async (req, res) => {
   res.status(200).json(products);
 });
 
+exports.getProductsByIds = asyncHandler(async (req, res) => {
+  const rawIds = String(req.query.ids || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!rawIds.length) {
+    return res.status(400).json({ error: 'ids query param is required (comma-separated)' });
+  }
+  const products = await fetchProductsByIds(rawIds);
+  res.status(200).json(products);
+});
+
 exports.getFeaturedProducts = asyncHandler(async (req, res) => {
   const parsedLimit = Number(req.query.limit);
   const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : 8;
@@ -573,6 +585,16 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   if (req.body.seo_title !== undefined) updates.seo_title = String(req.body.seo_title || '').trim() || null;
   if (req.body.seo_meta_description !== undefined) updates.seo_meta_description = String(req.body.seo_meta_description || '').trim() || null;
   if (req.body.tags !== undefined) updates.tags = String(req.body.tags || '').trim() || null;
+
+  if (req.body.quantity !== undefined) {
+    const parsedQuantity = Number(req.body.quantity);
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0) {
+      throw new AppError('quantity must be a valid non-negative number', 400);
+    }
+    const quantity = Math.floor(parsedQuantity);
+    updates.stock = quantity;
+    updates.total_added_quantity = quantity;
+  }
 
   if (req.body.product_category_id !== undefined) {
     const pcId = Number(req.body.product_category_id);
@@ -859,218 +881,108 @@ exports.matchBangles = asyncHandler(async (req, res) => {
       }
     }
 
-    // Extract dress colors, patterns, style, material from analyzed metadata
+    // ── Color-based filter using Python AI service's matched_colors ───────────
+    // The Python service already computed matched_colors = intersection(dress_colors, bangle_qdrant_colors).
+    // Filtering by matched_colors.length > 0 avoids a MySQL/Qdrant data inconsistency
+    // and is consistent with the AI service's own color matching.
+    // Pattern / style → ranking boost only, not used for filtering.
+    // No AI image generation fallback — if nothing found, return empty.
     const dressColors = (queryMetadata.colors || []).slice(0, 3);
     const dressPattern = (queryMetadata.pattern || []).slice(0, 2);
-    const dressStyle = (queryMetadata.style || []).slice(0, 2);
-    const dressMaterial = (queryMetadata.material || []).slice(0, 2);
-    
-    console.log(`Dress attributes detected - Colors: ${dressColors.join(', ')}, Pattern: ${dressPattern.join(', ')}, Style: ${dressStyle.join(', ')}`);
+    const dressStyle   = (queryMetadata.style   || []).slice(0, 2);
 
-    // Color-based ranking: use COLOR as primary filter, pattern/style/material only for boosting
-    let finalMatches = [];
-    const minFinalScore = Number(process.env.AI_MATCH_MIN_FINAL_SCORE || 0.1);  // 10% minimum
+    console.log(`🎨 Dress colors: [${dressColors.join(', ')}], pattern: [${dressPattern.join(', ')}], style: [${dressStyle.join(', ')}]`);
 
-    if (dressColors.length === 0) {
-      // No colors - rank by AI similarity only
-      console.log('⚠️  No colors extracted. Using AI similarity only.');
-      finalMatches = matchesToUse
-        .sort((a, b) => (b.similarity + b.score) - (a.similarity + a.score))
-        .slice(0, 8)
-        .map(match => ({
-          id: match.id,
-          ai_similarity: match.similarity,
-          attribute_score: 0,
-          final_score: match.similarity || 0,
-          scores: {
-            primary_color: 0,
-            pattern: 0,
-            style: 0,
-            material: 0,
-            secondary_color: 0
-          },
-          matched_attributes: {},
-          score: match.score
-        }));
-    } else {
-      // Color-based matching: PRIMARY color → SECONDARY color → boost with pattern/style/material
-      console.log(`🎨 Matching by PRIMARY color (${dressColors[0]}), fallback to SECONDARY colors (${dressColors.slice(1).join(', ')})`);
-      
-      const rankedByColor = await Promise.all(
-        matchesToUse.map(async match => {
-          try {
-            // Get product metadata
-            const pool = getPool();
-            const [rows] = await pool.query(
-              'SELECT colors, pattern, style, material FROM product_ai_metadata WHERE product_id = ?',
-              [match.id]
-            );
-            const product = rows && rows[0] ? rows[0] : null;
-            
-            if (!product) {
-              return {
-                id: match.id,
-                ai_similarity: match.similarity,
-                attribute_score: 0,
-                final_score: match.similarity * 0.5,
-                matching_percentage: Math.round((match.similarity * 0.5) * 100),
-                scores: { primary_color: 0, pattern: 0, style: 0, material: 0, secondary_color: 0 },
-                matched_attributes: {},
-                score: match.score
-              };
-            }
+    let candidates = matchesToUse.slice(0, 20);
 
-            // COLOR MATCHING (FILTER-BASED)
-            const productColors = product.colors ? JSON.parse(product.colors) : [];
-            let colorScore = 0;
-            let colorMatchType = 'none';  // Track which color matched
-            
-            // PRIMARY color matching
-            if (productColors.length > 0 && dressColors[0]) {
-              const primaryMatch = productColors.some(c => 
-                String(c).toLowerCase().includes(String(dressColors[0]).toLowerCase())
-              );
-              if (primaryMatch) {
-                colorScore = 1.0;
-                colorMatchType = 'primary';
-              } else {
-                // SECONDARY color matching (fallback)
-                const secondaryMatch = dressColors.slice(1).some(dc => 
-                  productColors.some(pc => 
-                    String(pc).toLowerCase().includes(String(dc).toLowerCase())
-                  )
-                );
-                if (secondaryMatch) {
-                  colorScore = 0.8;  // Secondary match gets 80%
-                  colorMatchType = 'secondary';
-                }
-              }
-            }
-
-            // BOOSTING: Pattern, Style, Material (only for ranking, not filtering)
-            let boost = 0;
-            const productPattern = product.pattern ? JSON.parse(product.pattern) : [];
-            const productStyle = product.style ? JSON.parse(product.style) : [];
-            const productMaterial = product.material ? JSON.parse(product.material) : [];
-
-            if (productPattern.length > 0 && dressPattern.some(dp => productPattern.some(pp => String(pp).toLowerCase().includes(String(dp).toLowerCase())))) {
-              boost += 0.1;
-            }
-            if (productStyle.length > 0 && dressStyle.some(ds => productStyle.some(ps => String(ps).toLowerCase().includes(String(ds).toLowerCase())))) {
-              boost += 0.1;
-            }
-            if (productMaterial.length > 0 && dressMaterial.some(dm => productMaterial.some(pm => String(pm).toLowerCase().includes(String(dm).toLowerCase())))) {
-              boost += 0.05;
-            }
-
-            // Final Score: Primary weight on color match + AI similarity + boost
-            const finalScore = Math.min(1.0, (colorScore * 0.6) + (match.similarity * 0.3) + boost);
-            const matchingPercentage = Math.round(finalScore * 100);
-
-            return {
-              id: match.id,
-              ai_similarity: match.similarity,
-              attribute_score: colorScore + boost,
-              final_score: Math.max(minFinalScore, finalScore),
-              matching_percentage: matchingPercentage,
-              scores: {
-                primary_color: colorScore,
-                pattern: productPattern.length > 0 && dressPattern.some(dp => productPattern.some(pp => String(pp).toLowerCase().includes(String(dp).toLowerCase()))) ? 1 : 0,
-                style: productStyle.length > 0 && dressStyle.some(ds => productStyle.some(ps => String(ps).toLowerCase().includes(String(ds).toLowerCase()))) ? 1 : 0,
-                material: productMaterial.length > 0 && dressMaterial.some(dm => productMaterial.some(pm => String(pm).toLowerCase().includes(String(dm).toLowerCase()))) ? 1 : 0,
-                secondary_color: productColors.slice(1).some(pc => dressColors.some(dc => String(pc).toLowerCase().includes(String(dc).toLowerCase()))) ? 0.5 : 0
-              },
-              matched_attributes: {
-                colors: productColors,
-                pattern: productPattern,
-                style: productStyle,
-                material: productMaterial
-              },
-              score: match.score
-            };
-          } catch (err) {
-            console.warn(`Error ranking product ${match.id}:`, err.message);
-            return {
-              id: match.id,
-              ai_similarity: match.similarity,
-              attribute_score: 0,
-              final_score: match.similarity * 0.5,
-              matching_percentage: Math.round((match.similarity * 0.5) * 100),
-              scores: { primary_color: 0, pattern: 0, style: 0, material: 0, secondary_color: 0 },
-              matched_attributes: {},
-              score: match.score
-            };
-          }
-        })
+    // Color filter: keep only bangles whose colors intersect with dress colors
+    if (dressColors.length > 0) {
+      candidates = candidates.filter(m =>
+        Array.isArray(m.matched_colors) && m.matched_colors.length > 0
       );
-
-      finalMatches = rankedByColor
-        .sort((a, b) => b.final_score - a.final_score)
-        .filter(m => m.final_score >= minFinalScore)
-        .slice(0, 8);
-        
-      console.log(`✅ Found ${finalMatches.length} matches ranked by color`);
+      console.log(`🎨 After color filter: ${candidates.length} candidates (dress: [${dressColors.join(', ')}])`);
     }
 
+    // Pattern/style boost: single batch query, only for the color-matched set
+    if (candidates.length > 0 && (dressPattern.length > 0 || dressStyle.length > 0)) {
+      const pool = getPool();
+      const ids  = candidates.map(m => m.id);
+      const ph   = ids.map(() => '?').join(',');
+      const [metaRows] = await pool.query(
+        `SELECT product_id, pattern, style FROM product_ai_metadata WHERE product_id IN (${ph})`,
+        ids
+      );
+      const parse = (val) => { try { return val ? JSON.parse(val) : []; } catch { return []; } };
+      const metaMap = new Map(metaRows.map(r => [r.product_id, {
+        pattern: parse(r.pattern),
+        style:   parse(r.style)
+      }]));
+
+      candidates = candidates.map(m => {
+        const meta = metaMap.get(m.id);
+        let boost = 0;
+        if (meta) {
+          if (dressPattern.some(dp => meta.pattern.some(pp => String(pp).toLowerCase().includes(String(dp).toLowerCase())))) boost += 0.10;
+          if (dressStyle.some(ds => meta.style.some(ps => String(ps).toLowerCase().includes(String(ds).toLowerCase()))))   boost += 0.05;
+        }
+        return { ...m, _boost: boost };
+      }).sort((a, b) => {
+        const bd = (b._boost || 0) - (a._boost || 0);
+        if (Math.abs(bd) > 0.04) return bd; // different boost tier → sort by boost
+        return (b.score || b.similarity || 0) - (a.score || a.similarity || 0); // same tier → AI score
+      });
+    }
+
+    const finalMatches = candidates.slice(0, 8).map(match => ({
+      id:                  match.id,
+      ai_similarity:       match.similarity,
+      attribute_score:     match.score,
+      final_score:         (match.score || match.similarity || 0) + (match._boost || 0),
+      matching_percentage: Math.round((match.score || match.similarity || 0) * 100),
+      matched_colors:      match.matched_colors || [],
+      score:               match.score
+    }));
+
+    console.log(`✅ Final matches: ${finalMatches.length} (from ${matchesToUse.length} AI candidates, dress colors: [${dressColors.join(', ')}])`);
+
     const responseFinalMatches = finalMatches.map(match => ({
-      id: match.id,
-      similarity: match.final_score || match.ai_similarity || 0,
-      matching_percentage: match.matching_percentage || Math.round((match.final_score || 0) * 100),
-      ai_similarity: match.ai_similarity || 0,
-      attribute_score: match.attribute_score || 0,
-      final_score: match.final_score,
-      scores: match.scores || {
-        primary_color: 0,
-        pattern: 0,
-        style: 0,
-        material: 0,
-        secondary_color: 0
-      },
-      matched_attributes: match.matched_attributes || match.metadata?.bangle || {},
-      score: match.score
+      id:                  match.id,
+      similarity:          match.final_score || match.ai_similarity || 0,
+      matching_percentage: match.matching_percentage,
+      ai_similarity:       match.ai_similarity || 0,
+      attribute_score:     match.attribute_score || 0,
+      final_score:         match.final_score,
+      matched_colors:      match.matched_colors || [],
+      score:               match.score
     }));
 
     res.status(200).json({
       matches: responseFinalMatches,
       dress_metadata: {
-        colors: dressColors,
-        primary_color: dressColors[0],
+        colors:           dressColors,
+        primary_color:    dressColors[0],
         secondary_colors: dressColors.slice(1),
-        pattern: dressPattern,
-        style: dressStyle,
-        material: dressMaterial
+        pattern:          dressPattern,
+        style:            dressStyle
       },
       query_metadata: {
-        title: queryMetadata.title,
-        colors: queryMetadata.colors,
-        primary_color: queryMetadata.primary_color,
+        title:            queryMetadata.title,
+        colors:           queryMetadata.colors,
+        primary_color:    queryMetadata.primary_color,
         secondary_colors: queryMetadata.secondary_colors,
-        occasion: queryMetadata.occasion,
-        style: queryMetadata.style
-      },
-      ranking_system: {
-        weights: {
-          primary_color: '40%',
-          pattern: '25%',
-          style: '20%',
-          material: '10%',
-          secondary_color: '5%'
-        },
-        ai_similarity_weight: '25%',
-        attribute_ranking_weight: '75%',
-        min_final_score_threshold: minFinalScore
+        occasion:         queryMetadata.occasion,
+        style:            queryMetadata.style
       },
       matching_stats: {
-        ai_matches_found: matchesToUse.length,
-        ranked_matches_found: finalMatches.length,
+        ai_matches_found:    matchesToUse.length,
         final_matches_found: finalMatches.length,
         ranking_message: finalMatches.length > 0
-          ? `Found ${finalMatches.length} bangles ranked by primary color match with pattern/style/material boosting`
-          : `No bangles found. Try different colors or style.`
+          ? `Found ${finalMatches.length} bangles matching dress color [${dressColors.join(', ')}] (pattern/style used for ranking)`
+          : `No bangles found matching dress colors: [${dressColors.join(', ')}]`
       },
       message: finalMatches.length
-        ? 'Matching bangles found with multi-attribute ranking analysis.'
-        : 'No matching bangles found. Try different colors or style.'
+        ? 'Matching bangles found.'
+        : 'No matching bangles found for this outfit color.'
     });
   } catch (error) {
     throw new AppError(`AI match failed: ${error.message}`, 502);

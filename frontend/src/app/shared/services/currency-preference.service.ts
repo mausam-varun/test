@@ -62,13 +62,15 @@ export class CurrencyPreferenceService {
     
     if (currentCurrency === 'INR') {
       const converted = Number((safeAmount * USD_TO_INR_RATE).toFixed(2));
-      console.log(`💱 USD $${safeAmount} → INR ₹${converted} (rate: 1:${USD_TO_INR_RATE})`);
-      return converted;
+      const rounded = this.roundUpToNearest99(converted);
+      console.log(`💱 USD $${safeAmount} → INR ₹${converted} → rounded ₹${rounded} (rate: 1:${USD_TO_INR_RATE})`);
+      return rounded;
     }
 
     const converted = Number((safeAmount * multiplier).toFixed(2));
-    console.log(`💰 USD $${safeAmount} × ${multiplier}x multiplier → $${converted}`);
-    return converted;
+    const rounded = this.roundUpToNearest99(converted);
+    console.log(`💰 USD $${safeAmount} × ${multiplier}x multiplier → $${converted} → rounded $${rounded}`);
+    return rounded;
   }
 
   convertToUsd(amount: number, sourceCurrency: DisplayCurrency): number {
@@ -92,9 +94,17 @@ export class CurrencyPreferenceService {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
-      minimumFractionDigits: fractionDigits,
-      maximumFractionDigits: fractionDigits
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(convertedAmount);
+  }
+
+  private roundUpToNearest99(value: number): number {
+    if (value <= 0) {
+      return value;
+    }
+    // Ceiling to nearest number ending in 99: 956→999, 1029→1099, 1660→1699
+    return Math.ceil((value - 99) / 100) * 100 + 99;
   }
 
   setUsdMultiplier(value: number): void {

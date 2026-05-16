@@ -4,6 +4,7 @@ import { filter } from 'rxjs/operators';
 import { ReviewService } from './services/review.service';
 import { ThemeService } from './shared/services/theme.service';
 import { CurrencyPreferenceService } from './shared/services/currency-preference.service';
+import { ScrollRestorationService } from './services/scroll-restoration.service';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,9 @@ export class AppComponent {
     private readonly router: Router,
     private readonly reviewService: ReviewService,
     private readonly themeService: ThemeService,
-    private readonly currencyPreferenceService: CurrencyPreferenceService
+    private readonly currencyPreferenceService: CurrencyPreferenceService,
+    // Injecting activates the service — it wires up router event listeners
+    private readonly scrollRestorationService: ScrollRestorationService
   ) {
     // Initialize currency detection and multiplier loading on app startup
     console.log('🚀 App initializing... Syncing currency with system timezone');

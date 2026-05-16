@@ -18,41 +18,96 @@
           [link]="promoBanners.bridal.link || '/shop?category=bridal'"
           [imageUrl]="promoBanners.bridal.image_url || 'https://images.unsplash.com/photo-1611950710985-7b2b4c4f8d3e?w=600&q=80'">
         </app-promo-banner>
-        <app-promo-banner
-          [title]="promoBanners.festive.title || 'FESTIVE PICKS'"
-          [subtitle]="promoBanners.festive.subtitle || 'Celebrate in Every Color'"
-          [buttonText]="promoBanners.festive.button_text || 'SHOP NOW →'"
-          [link]="promoBanners.festive.link || '/shop?category=festive'"
-          [imageUrl]="promoBanners.festive.image_url || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=80'">
-        </app-promo-banner>
+        <div class="hero-festive-promo">
+          <app-promo-banner
+            [title]="promoBanners.festive.title || 'FESTIVE PICKS'"
+            [subtitle]="promoBanners.festive.subtitle || 'Celebrate in Every Color'"
+            [buttonText]="promoBanners.festive.button_text || 'SHOP NOW →'"
+            [link]="promoBanners.festive.link || '/shop?category=festive'"
+            [imageUrl]="promoBanners.festive.image_url || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=80'">
+          </app-promo-banner>
+        </div>
       </div>
     </div>
+
+    <section class="mobile-home-tools" aria-label="Mobile product search">
+      <div class="mobile-search-row">
+        <label class="mobile-search-box" aria-label="Search jewellery">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.5-3.5"></path>
+          </svg>
+          <input
+            type="search"
+            placeholder="Search jewellery..."
+            [(ngModel)]="mobileSearchQuery"
+            (keyup)="onMobileSearchInput($event)"
+            (focus)="showMobileSearchDropdown = mobileSearchResults.length > 0 || isMobileSearching"
+            (blur)="hideMobileSearchDropdown()"
+            (keyup.enter)="submitMobileSearch()">
+        </label>
+        <button type="button" class="mobile-filter-btn" routerLink="/shop" aria-label="Open filters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M4 7h10"></path>
+            <path d="M18 7h2"></path>
+            <circle cx="16" cy="7" r="2"></circle>
+            <path d="M4 17h2"></path>
+            <path d="M10 17h10"></path>
+            <circle cx="8" cy="17" r="2"></circle>
+          </svg>
+        </button>
+
+        <div class="mobile-search-dropdown" *ngIf="showMobileSearchDropdown && (mobileSearchResults.length > 0 || isMobileSearching)">
+          <div class="mobile-search-loader" *ngIf="isMobileSearching">
+            <div class="mobile-search-spinner"></div>
+            <span>Searching...</span>
+          </div>
+
+          <div class="mobile-search-results" *ngIf="!isMobileSearching && mobileSearchResults.length > 0">
+            <div class="mobile-search-result-item" *ngFor="let product of mobileSearchResults" (mousedown)="viewMobileSearchProduct(product)">
+              <div class="mobile-search-result-image">
+                <img [src]="getMobileSearchImage(product)" [alt]="product.name">
+              </div>
+              <div class="mobile-search-result-info">
+                <h4>{{ product.name }}</h4>
+                <p class="mobile-search-result-price">{{ product.price | displayCurrency:0 }}</p>
+                <p class="mobile-search-result-category">{{ product.category }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-category-chips" aria-label="Popular categories">
+        <a routerLink="/shop" class="active">All</a>
+        <a *ngFor="let cat of categories | slice:0:4" [routerLink]="['/shop']" [queryParams]="{ category: cat.id }">{{ cat.name }}</a>
+      </div>
+    </section>
 
 <!-- FEATURES SECTION -->
 <section class="features-banner">
   <div class="section-container">
     <div class="features-list">
-      <div class="feature-item">
+      <div class="feature-item feature-item--mobile">
         <div class="feature-icon">🚚</div>
         <h3>Free Delivery</h3>
         <p>Free shipping worldwide</p>
       </div>
-      <div class="feature-item">
+      <div class="feature-item feature-item--mobile">
         <div class="feature-icon">👥</div>
         <h3>Member Discount</h3>
         <p>Free deals everyweek</p>
       </div>
-      <div class="feature-item">
+      <div class="feature-item feature-item--hidden-mobile">
         <div class="feature-icon">💰</div>
         <h3>Money Back</h3>
         <p>Refund in 30 days</p>
       </div>
-      <div class="feature-item">
+      <div class="feature-item feature-item--mobile">
         <div class="feature-icon">🔒</div>
         <h3>Secure Payment</h3>
         <p>No transaction fees</p>
       </div>
-      <div class="feature-item">
+      <div class="feature-item feature-item--hidden-mobile">
         <div class="feature-icon">📦</div>
         <h3>Free Return</h3>
         <p>Refund in 365 days</p>
@@ -142,6 +197,7 @@
         <!-- name + description -->
         <div class="col-card__content">
           <p class="col-card__name">{{ cat.name }}</p>
+          <p class="col-card__mobile-count">{{ cat.productCount || 160 }}+ Products</p>
           <p class="col-card__desc">
             <ng-container [ngSwitch]="i % 4">
               <ng-container *ngSwitchCase="0">Exquisite pieces for your special day</ng-container>
@@ -175,8 +231,6 @@
   </div>
 </section>
 
-
-
 <!-- TOP FLASH DEALS SECTION -->
 <section class="top-deals" *ngIf="sectionVisibility.flashDeals">
   <div class="section-container">
@@ -208,18 +262,24 @@
           <img [src]="deal.image" [alt]="deal.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
         </div>
         <div class="dc-card__body">
-          <h3 class="dc-card__name">{{ deal.name }}</h3>
+          <p class="dc-card__brand">Divara Craft</p>
+          <h3 class="dc-card__name">
+            <span class="dc-card__name-desktop">{{ deal.name }}</span>
+            <span class="dc-card__name-mobile">{{ deal.name.replace('Divara Craft ', '') }}</span>
+          </h3>
           <div class="dc-card__divider">⁓</div>
-          <div class="dc-card__price">{{ deal.price | displayCurrency:2 }}</div>
-          <div class="dc-card__qty" *ngIf="isProductAdded(deal.id)">
-            <button type="button" (click)="decrementQuantity(deal.id); $event.stopPropagation()" aria-label="Decrease">−</button>
-            <span>{{ getProductQuantity(deal.id) }}</span>
-            <button type="button" (click)="incrementQuantity(deal.id); $event.stopPropagation()" aria-label="Increase">+</button>
+          <div class="dc-card__footer">
+            <div class="dc-card__price">{{ deal.price | displayCurrency:2 }}</div>
+            <div class="dc-card__qty" *ngIf="isProductAdded(deal.id)">
+              <button type="button" (click)="decrementQuantity(deal.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+              <span>{{ getProductQuantity(deal.id) }}</span>
+              <button type="button" (click)="incrementQuantity(deal.id); $event.stopPropagation()" aria-label="Increase">+</button>
+            </div>
+            <button class="dc-card__atc" *ngIf="!isProductAdded(deal.id)" (click)="addToCart(deal); $event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <span class="atc-text">ADD TO CART</span>
+            </button>
           </div>
-          <button class="dc-card__atc" *ngIf="!isProductAdded(deal.id)" (click)="addToCart(deal); $event.stopPropagation()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            ADD TO CART
-          </button>
           <div class="dc-card__trust">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
@@ -230,6 +290,20 @@
     </div>
   </div>
 </section>
+
+<!-- Mobile Promo Banner 3 -->
+<div class="mobile-promo-slot" *ngIf="(promotionalBanners?.length ?? 0) > 2">
+  <div class="promo-card" [style.background]="promotionalBanners[2].background_color">
+    <div class="promo-content">
+      <span class="promo-label">{{ promotionalBanners[2].label }}</span>
+      <h2>{{ promotionalBanners[2].title }}</h2>
+      <a [href]="promotionalBanners[2].cta_link" class="promo-cta">{{ promotionalBanners[2].cta_text }}</a>
+    </div>
+    <div class="promo-image">
+      <img [src]="promotionalBanners[2].image_url" [alt]="promotionalBanners[2].title">
+    </div>
+  </div>
+</div>
 
 <!-- NEW PRODUCTS SECTION -->
 <section class="new-products">
@@ -317,18 +391,24 @@
               <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
             </div>
             <div class="dc-card__body">
-              <h3 class="dc-card__name">{{ product.name }}</h3>
+              <p class="dc-card__brand">Divara Craft</p>
+              <h3 class="dc-card__name">
+                <span class="dc-card__name-desktop">{{ product.name }}</span>
+                <span class="dc-card__name-mobile">{{ product.name.replace('Divara Craft ', '') }}</span>
+              </h3>
               <div class="dc-card__divider">⁓</div>
-              <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
-              <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
-                <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
-                <span>{{ getProductQuantity(product.id) }}</span>
-                <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+              <div class="dc-card__footer">
+                <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+                <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+                  <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+                  <span>{{ getProductQuantity(product.id) }}</span>
+                  <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+                </div>
+                <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <span class="atc-text">ADD TO CART</span>
+                </button>
               </div>
-              <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                ADD TO CART
-              </button>
               <!-- <div class="dc-card__trust">
                 <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
                 <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
@@ -341,6 +421,17 @@
     </div>
   </div>
 </section>
+
+<!-- Mobile: Festive Picks banner above Festive section -->
+<div class="mobile-festive-promo">
+  <app-promo-banner
+    [title]="promoBanners.festive.title || 'FESTIVE PICKS'"
+    [subtitle]="promoBanners.festive.subtitle || 'Celebrate in Every Color'"
+    [buttonText]="promoBanners.festive.button_text || 'SHOP NOW →'"
+    [link]="promoBanners.festive.link || '/shop?category=festive'"
+    [imageUrl]="promoBanners.festive.image_url || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=80'">
+  </app-promo-banner>
+</div>
 
 <!-- FESTIVE SEASON SECTION -->
 <section class="festive-season">
@@ -414,18 +505,24 @@
               <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
             </div>
             <div class="dc-card__body">
-              <h3 class="dc-card__name">{{ product.name }}</h3>
+              <p class="dc-card__brand">Divara Craft</p>
+              <h3 class="dc-card__name">
+                <span class="dc-card__name-desktop">{{ product.name }}</span>
+                <span class="dc-card__name-mobile">{{ product.name.replace('Divara Craft ', '') }}</span>
+              </h3>
               <div class="dc-card__divider">⁓</div>
-              <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
-              <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
-                <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
-                <span>{{ getProductQuantity(product.id) }}</span>
-                <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+              <div class="dc-card__footer">
+                <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+                <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+                  <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+                  <span>{{ getProductQuantity(product.id) }}</span>
+                  <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+                </div>
+                <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  <span class="atc-text">ADD TO CART</span>
+                </button>
               </div>
-              <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                ADD TO CART
-              </button>
             </div>
           </div>
         </div>
@@ -486,18 +583,24 @@
           <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
         </div>
         <div class="dc-card__body">
-          <h3 class="dc-card__name">{{ product.name }}</h3>
+          <p class="dc-card__brand">Divara Craft</p>
+          <h3 class="dc-card__name">
+            <span class="dc-card__name-desktop">{{ product.name }}</span>
+            <span class="dc-card__name-mobile">{{ product.name.replace('Divara Craft ', '') }}</span>
+          </h3>
           <div class="dc-card__divider">⁓</div>
-          <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
-          <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
-            <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
-            <span>{{ getProductQuantity(product.id) }}</span>
-            <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+          <div class="dc-card__footer">
+            <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+            <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+              <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+              <span>{{ getProductQuantity(product.id) }}</span>
+              <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+            </div>
+            <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <span class="atc-text">ADD TO CART</span>
+            </button>
           </div>
-          <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            ADD TO CART
-          </button>
           <div class="dc-card__trust">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
@@ -508,6 +611,20 @@
     </div>
   </div>
 </section>
+
+<!-- Mobile Promo Banner 1 -->
+<div class="mobile-promo-slot" *ngIf="(promotionalBanners?.length ?? 0) > 0">
+  <div class="promo-card" [style.background]="promotionalBanners[0].background_color">
+    <div class="promo-content">
+      <span class="promo-label">{{ promotionalBanners[0].label }}</span>
+      <h2>{{ promotionalBanners[0].title }}</h2>
+      <a [href]="promotionalBanners[0].cta_link" class="promo-cta">{{ promotionalBanners[0].cta_text }}</a>
+    </div>
+    <div class="promo-image">
+      <img [src]="promotionalBanners[0].image_url" [alt]="promotionalBanners[0].title">
+    </div>
+  </div>
+</div>
 
 <!-- RECENT PRODUCTS SECTION -->
 <section class="recent-products" *ngIf="sectionVisibility.recentlyViewed && recentProducts.length > 0">
@@ -540,18 +657,24 @@
           <img [src]="product.image" [alt]="product.name" class="dc-card__img" (error)="$any($event.target).src='https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400&q=80'">
         </div>
         <div class="dc-card__body">
-          <h3 class="dc-card__name">{{ product.name }}</h3>
+          <p class="dc-card__brand">Divara Craft</p>
+          <h3 class="dc-card__name">
+            <span class="dc-card__name-desktop">{{ product.name }}</span>
+            <span class="dc-card__name-mobile">{{ product.name.replace('Divara Craft ', '') }}</span>
+          </h3>
           <div class="dc-card__divider">⁓</div>
-          <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
-          <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
-            <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
-            <span>{{ getProductQuantity(product.id) }}</span>
-            <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+          <div class="dc-card__footer">
+            <div class="dc-card__price">{{ product.price | displayCurrency:2 }}</div>
+            <div class="dc-card__qty" *ngIf="isProductAdded(product.id)">
+              <button type="button" (click)="decrementQuantity(product.id); $event.stopPropagation()" aria-label="Decrease">−</button>
+              <span>{{ getProductQuantity(product.id) }}</span>
+              <button type="button" (click)="incrementQuantity(product.id); $event.stopPropagation()" aria-label="Increase">+</button>
+            </div>
+            <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <span class="atc-text">ADD TO CART</span>
+            </button>
           </div>
-          <button class="dc-card__atc" *ngIf="!isProductAdded(product.id)" (click)="addToCart(product); $event.stopPropagation()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            ADD TO CART
-          </button>
           <div class="dc-card__trust">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Handcrafted with Care</span>
@@ -602,22 +725,6 @@
           required>
         <button type="submit" class="subscribe-btn" [disabled]="isSubscribing">
           {{ isSubscribing ? 'Subscribing...' : 'Subscribe!' }}
-        </button>
-      </form>
-    </div>
-    <div class="newsletter-social">
-      <div class="social-content">
-        <h3>Or Follow Us</h3>
-        <p>We make consolidating, marketing and tracking your social</p>
-        <div class="social-links">
-          <a href="#" class="social-icon twitter">𝕏</a>
-          <a href="#" class="social-icon facebook">f</a>
-          <a href="#" class="social-icon instagram">📷</a>
-          <a href="#" class="social-icon youtube">▶</a>
-        </div>
-      </div>
-    </div>
-  </div>
 </section> -->
 
 <!-- AI MATCH FEATURE (SMART BANGLE MATCHER) -->
@@ -677,31 +784,3 @@
     <p class="newsletter-note" *ngIf="newsletterMessage">{{ newsletterMessage }}</p>
   </div>
 </section> -->
-
-<!-- FEATURES SECTION -->
-<section class="features-section">
-  <div class="section-container">
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">💎</div>
-        <h3 class="feature-title">Artisan Crafted</h3>
-        <p class="feature-desc">Made with care by skilled craftspeople</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">⭐</div>
-        <h3 class="feature-title">Premium Quality</h3>
-        <p class="feature-desc">Finest materials and timeless designs</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🚚</div>
-        <h3 class="feature-title">Worldwide Shipping</h3>
-        <p class="feature-desc">Safe & fast delivery everywhere</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔒</div>
-        <h3 class="feature-title">Secure Payment</h3>
-        <p class="feature-desc">100% secure checkout process</p>
-      </div>
-    </div>
-  </div>
-</section>

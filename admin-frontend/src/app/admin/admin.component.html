@@ -171,6 +171,11 @@
 			</label>
 
 			<label>
+				<span>Quantity (Stock)</span>
+				<input type="number" min="0" [(ngModel)]="productQuantity" placeholder="e.g. 50" />
+			</label>
+
+			<label>
 				<span>Category</span>
 				<input type="text" [(ngModel)]="productCategory" placeholder="e.g. bangles" />
 			</label>
@@ -238,6 +243,7 @@
 		<div class="list-header">
 			<h2>Uploaded Products</h2>
 			<span *ngIf="isLoadingProducts">Loading...</span>
+			<button type="button" class="btn-inventory-link" (click)="loadInventory()">📦 Manage Inventory</button>
 		</div>
 
 		<p class="empty-text" *ngIf="!isLoadingProducts && products.length === 0">No products uploaded yet.</p>
@@ -264,6 +270,49 @@
 				</tbody>
 			</table>
 		</div>
+	</div>
+
+	<!-- INVENTORY MANAGEMENT SECTION -->
+	<div class="card inventory-card" *ngIf="showInventorySection">
+		<div class="list-header">
+			<h2>📦 Inventory Management</h2>
+			<button type="button" class="btn-refresh" (click)="loadInventory()" title="Refresh">↺ Refresh</button>
+		</div>
+
+		<p class="loading-text" *ngIf="isLoadingInventory">Loading inventory...</p>
+		<p class="error-text" *ngIf="inventoryError">{{ inventoryError }}</p>
+
+		<div class="table-wrap" *ngIf="!isLoadingInventory && inventoryProducts.length > 0">
+			<table class="inventory-table">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Image</th>
+						<th>Product Name</th>
+						<th>Category</th>
+						<th>Total Added</th>
+						<th>Sold</th>
+						<th>Available Stock</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let p of inventoryProducts" [class.low-stock]="p.current_stock > 0 && p.current_stock <= 5" [class.out-of-stock]="p.current_stock === 0">
+						<td>{{ p.id }}</td>
+						<td><img [src]="p.image_url" [alt]="p.name" class="inv-thumb" /></td>
+						<td>{{ p.name }}</td>
+						<td>{{ p.category }}</td>
+						<td class="qty-cell total">{{ p.total_added_quantity }}</td>
+						<td class="qty-cell sold">{{ p.sold_quantity }}</td>
+						<td class="qty-cell stock" [class.zero]="p.current_stock === 0">
+							{{ p.current_stock }}
+							<span class="stock-badge out" *ngIf="p.current_stock === 0">Out of Stock</span>
+							<span class="stock-badge low" *ngIf="p.current_stock > 0 && p.current_stock <= 5">Low</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<p class="empty-text" *ngIf="!isLoadingInventory && inventoryProducts.length === 0 && !inventoryError">No products found.</p>
 	</div>
 </section>
 

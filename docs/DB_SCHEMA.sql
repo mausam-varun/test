@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255),
   phone VARCHAR(20),
   role ENUM('user','admin') DEFAULT 'user',
+  avatar_url MEDIUMTEXT,
   country_code VARCHAR(10),
   currency_code VARCHAR(10),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

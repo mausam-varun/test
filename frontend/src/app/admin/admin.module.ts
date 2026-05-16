@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { NgChartsModule } from 'ng2-charts';
 
 import { AdminRoutingModule } from './admin-routing.module';
 import { AdminComponent } from './admin.component';
@@ -15,6 +16,12 @@ import { CurrencySettingsComponent } from './currency-settings/currency-settings
 import { ReviewsComponent } from './reviews/reviews.component';
 import { AdminSettingsComponent } from './settings/settings.component';
 import { AdminBannerManagementComponent } from './admin-banner-management/admin-banner-management.component';
+import { SalesOverviewComponent } from './sales-overview/sales-overview.component';
+import { ProductPerformanceComponent } from './product-performance/product-performance.component';
+import { CustomerInsightsComponent } from './customer-insights/customer-insights.component';
+import { InventoryReportComponent } from './inventory-report/inventory-report.component';
+import { OrderManagementComponent } from './order-management/order-management.component';
+import { VectorDataComponent } from './vector-data/vector-data.component';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
@@ -29,12 +36,19 @@ import { SharedModule } from '../shared/shared.module';
     ReviewsComponent,
     CurrencySettingsComponent,
     AdminSettingsComponent,
-    AdminBannerManagementComponent
+    AdminBannerManagementComponent,
+    SalesOverviewComponent,
+    ProductPerformanceComponent,
+    CustomerInsightsComponent,
+    InventoryReportComponent,
+    OrderManagementComponent,
+    VectorDataComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     HttpClientModule,
+    NgChartsModule,
     SharedModule,
     AdminRoutingModule
   ]

@@ -11,6 +11,12 @@ import { CurrencySettingsComponent } from './currency-settings/currency-settings
 import { ReviewsComponent } from './reviews/reviews.component';
 import { AdminSettingsComponent } from './settings/settings.component';
 import { AdminBannerManagementComponent } from './admin-banner-management/admin-banner-management.component';
+import { SalesOverviewComponent } from './sales-overview/sales-overview.component';
+import { ProductPerformanceComponent } from './product-performance/product-performance.component';
+import { CustomerInsightsComponent } from './customer-insights/customer-insights.component';
+import { InventoryReportComponent } from './inventory-report/inventory-report.component';
+import { OrderManagementComponent } from './order-management/order-management.component';
+import { VectorDataComponent } from './vector-data/vector-data.component';
 
 const routes: Routes = [
   {
@@ -27,7 +33,13 @@ const routes: Routes = [
       { path: 'reviews', component: ReviewsComponent },
       { path: 'currency-settings', component: CurrencySettingsComponent },
       { path: 'settings', component: AdminSettingsComponent },
-      { path: 'manage-banners', component: AdminBannerManagementComponent }
+      { path: 'manage-banners', component: AdminBannerManagementComponent },
+      { path: 'sales-overview', component: SalesOverviewComponent },
+      { path: 'product-performance', component: ProductPerformanceComponent },
+      { path: 'customer-insights', component: CustomerInsightsComponent },
+      { path: 'inventory-report', component: InventoryReportComponent },
+      { path: 'order-management', component: OrderManagementComponent },
+      { path: 'vector-data', component: VectorDataComponent }
     ]
   }
 ];

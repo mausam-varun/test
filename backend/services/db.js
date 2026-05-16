@@ -206,6 +206,7 @@ async function initializeDatabase() {
       password VARCHAR(255),
       phone VARCHAR(20),
       role ENUM('user','admin') DEFAULT 'user',
+      avatar_url MEDIUMTEXT,
       country_code VARCHAR(10),
       currency_code VARCHAR(10),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -213,6 +214,8 @@ async function initializeDatabase() {
       INDEX idx_country (country_code)
     )
   `);
+
+  await ensureColumnExists(db, 'users', 'avatar_url', 'MEDIUMTEXT');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS categories (
@@ -418,6 +421,8 @@ async function initializeDatabase() {
   await ensureColumnExists(db, 'products', 'seo_title', 'VARCHAR(255) DEFAULT NULL');
   await ensureColumnExists(db, 'products', 'seo_meta_description', 'TEXT');
   await ensureColumnExists(db, 'products', 'tags', 'TEXT');
+  await ensureColumnExists(db, 'products', 'total_added_quantity', 'INT NOT NULL DEFAULT 0');
+  await ensureColumnExists(db, 'products', 'stock', 'INT NOT NULL DEFAULT 0');
 
   await backfillProductColorsFromMetadata(db);
   await backfillProductColorsFromProductText(db);

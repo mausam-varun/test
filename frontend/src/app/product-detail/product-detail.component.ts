@@ -1,10 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CartService } from '../services/cart.service';
 import { ProductCatalogService, CatalogProduct, CatalogProductImage, CatalogRecentReview } from '../services/product-catalog.service';
 import { WishlistService } from '../services/wishlist.service';
 import { RecentlyViewedService } from '../services/recently-viewed.service';
+import { AuthSessionService } from '../services/auth-session.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -19,16 +20,20 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   isZooming = false;
   zoomOrigin = '50% 50%';
   quantity = 0;
+  isBuyingNow = false;
+  toastMessage = '';
   readonly starIndices = [1, 2, 3, 4, 5];
 
   private readonly subscriptions = new Subscription();
 
   constructor(
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly productCatalogService: ProductCatalogService,
     private readonly cartService: CartService,
     private readonly wishlistService: WishlistService,
-    private readonly recentlyViewedService: RecentlyViewedService
+    private readonly recentlyViewedService: RecentlyViewedService,
+    private readonly authSession: AuthSessionService
   ) {}
 
   ngOnInit(): void {
@@ -124,10 +129,42 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.zoomOrigin = '50% 50%';
   }
 
-  addToCart(): void {
-    if (!this.product) {
+  buyItNow(): void {
+    if (!this.product) return;
+    if (!this.authSession.isAuthenticated()) {
+      this.redirectToLogin();
       return;
     }
+    if ((this.product.stock || 0) === 0) {
+      this.showToast('This product is currently out of stock.');
+      return;
+    }
+    this.isBuyingNow = true;
+    this.cartService.setBuyNow({
+      id:       this.product.id,
+      name:     this.product.name,
+      image:    this.currentImage || this.product.image_url,
+      price:    this.product.price,
+      quantity: Math.max(this.quantity, 1)
+    });
+    this.router.navigate(['/checkout']);
+  }
+
+  private redirectToLogin(): void {
+    this.showToast('Please login to continue.');
+    const returnUrl = this.router.url;
+    setTimeout(() => {
+      this.router.navigate(['/login'], { queryParams: { returnUrl } });
+    }, 1200);
+  }
+
+  private showToast(message: string): void {
+    this.toastMessage = message;
+    setTimeout(() => { this.toastMessage = ''; }, 3000);
+  }
+
+  addToCart(): void {
+    if (!this.product) return;
 
     this.cartService.addToCart({
       id: this.product.id,
@@ -161,9 +198,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   }
 
   addToWishlist(): void {
-    if (!this.product) {
-      return;
-    }
+    if (!this.product) return;
 
     this.wishlistService.addToWishlist({
       id: this.product.id,
