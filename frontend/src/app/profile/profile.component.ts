@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthSessionService, SessionUser } from '../services/auth-session.service';
 import { APP_CONFIG } from '../config/app-config';
+import { CustomerPreferencesService, SavedAddress, SavedPaymentMethod } from '../services/customer-preferences.service';
 
 @Component({
   selector: 'app-profile',
@@ -36,6 +37,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   isApplyingCrop = false;
   successMessage = '';
   errorMessage = '';
+  savedAddresses: SavedAddress[] = [];
+  savedPaymentMethods: SavedPaymentMethod[] = [];
+  isLoadingPreferences = false;
+  areSavedAddressesOpen = false;
+  areSavedPaymentMethodsOpen = false;
 
   private isCropDragging = false;
   private cropDragStartX = 0;
@@ -61,8 +67,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly http: HttpClient,
+    private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly authSessionService: AuthSessionService
+    private readonly authSessionService: AuthSessionService,
+    private readonly customerPreferencesService: CustomerPreferencesService
   ) {}
 
   ngOnInit(): void {
@@ -79,6 +87,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.email = user.email || '';
         this.phone = user.phone || '';
         this.avatarUrl = user.avatarUrl || '';
+
+        if (user.id) {
+          this.loadSavedPreferences();
+        }
+      })
+    );
+
+    this.subscriptions.add(
+      this.route.fragment.subscribe((fragment) => {
+        if (fragment === 'saved-addresses') {
+          this.areSavedAddressesOpen = true;
+        }
+
+        if (fragment === 'payment-methods') {
+          this.areSavedPaymentMethodsOpen = true;
+        }
       })
     );
   }
@@ -418,6 +442,48 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   private isValidEmail(value: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  }
+
+  getPaymentMethodLabel(method: SavedPaymentMethod['payment_method']): string {
+    switch (method) {
+      case 'card':
+        return 'Card';
+      case 'upi':
+        return 'UPI';
+      default:
+        return 'Cash on Delivery';
+    }
+  }
+
+  getAddressSummary(address: SavedAddress): string {
+    return [address.address_line1, address.address_line2, address.city, address.state, address.postal_code, address.country]
+      .filter((value) => String(value || '').trim().length > 0)
+      .join(', ');
+  }
+
+  toggleSavedAddresses(): void {
+    this.areSavedAddressesOpen = !this.areSavedAddressesOpen;
+  }
+
+  toggleSavedPaymentMethods(): void {
+    this.areSavedPaymentMethodsOpen = !this.areSavedPaymentMethodsOpen;
+  }
+
+  private loadSavedPreferences(): void {
+    this.isLoadingPreferences = true;
+
+    this.customerPreferencesService.getPreferences().subscribe({
+      next: (response) => {
+        this.isLoadingPreferences = false;
+        this.savedAddresses = response?.addresses || [];
+        this.savedPaymentMethods = response?.paymentMethods || [];
+      },
+      error: () => {
+        this.isLoadingPreferences = false;
+        this.savedAddresses = [];
+        this.savedPaymentMethods = [];
+      }
+    });
   }
 
   private resetMessages(): void {

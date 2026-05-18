@@ -120,5 +120,61 @@
         </button>
       </div>
     </form>
+
+    <section class="profile-saved-section" id="saved-addresses" aria-label="Saved addresses">
+      <button type="button" class="profile-saved-section__toggle" (click)="toggleSavedAddresses()" [attr.aria-expanded]="areSavedAddressesOpen">
+        <span>
+          <strong>Saved Addresses</strong>
+          <small>Addresses saved from your completed checkouts.</small>
+        </span>
+        <span class="profile-saved-section__chevron" [class.is-open]="areSavedAddressesOpen">⌄</span>
+      </button>
+
+      <div class="profile-saved-section__content" *ngIf="areSavedAddressesOpen">
+        <div class="profile-saved-section__loading" *ngIf="isLoadingPreferences">Loading saved addresses...</div>
+
+        <div class="profile-saved-grid" *ngIf="!isLoadingPreferences && savedAddresses.length; else emptySavedAddresses">
+          <article class="profile-saved-card" *ngFor="let address of savedAddresses">
+            <div class="profile-saved-card__badge" *ngIf="address.is_default">Default</div>
+            <h3>{{ address.recipient_name }}</h3>
+            <p>{{ getAddressSummary(address) }}</p>
+            <span *ngIf="address.phone">{{ address.phone }}</span>
+          </article>
+        </div>
+
+        <ng-template #emptySavedAddresses>
+          <div class="profile-saved-empty" *ngIf="!isLoadingPreferences">
+            No saved addresses yet. Place an order while logged in to save delivery addresses here.
+          </div>
+        </ng-template>
+      </div>
+    </section>
+
+    <section class="profile-saved-section" id="payment-methods" aria-label="Saved payment methods">
+      <button type="button" class="profile-saved-section__toggle" (click)="toggleSavedPaymentMethods()" [attr.aria-expanded]="areSavedPaymentMethodsOpen">
+        <span>
+          <strong>Saved Payment Methods</strong>
+          <small>Payment methods you used most recently.</small>
+        </span>
+        <span class="profile-saved-section__chevron" [class.is-open]="areSavedPaymentMethodsOpen">⌄</span>
+      </button>
+
+      <div class="profile-saved-section__content" *ngIf="areSavedPaymentMethodsOpen">
+        <div class="profile-saved-section__loading" *ngIf="isLoadingPreferences">Loading payment methods...</div>
+
+        <div class="profile-payment-list" *ngIf="!isLoadingPreferences && savedPaymentMethods.length; else emptySavedPaymentMethods">
+          <article class="profile-payment-pill" *ngFor="let method of savedPaymentMethods">
+            <strong>{{ getPaymentMethodLabel(method.payment_method) }}</strong>
+            <span *ngIf="method.is_default">Default</span>
+          </article>
+        </div>
+
+        <ng-template #emptySavedPaymentMethods>
+          <div class="profile-saved-empty" *ngIf="!isLoadingPreferences">
+            No saved payment methods yet. Your payment choices will appear here after checkout.
+          </div>
+        </ng-template>
+      </div>
+    </section>
   </div>
 </section>

@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, HostListener, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ReviewService } from './services/review.service';
+import { AuthSessionService } from './services/auth-session.service';
+import { WishlistService } from './services/wishlist.service';
 import { ThemeService } from './shared/services/theme.service';
 import { CurrencyPreferenceService } from './shared/services/currency-preference.service';
 import { ScrollRestorationService } from './services/scroll-restoration.service';
@@ -14,11 +17,19 @@ import { ScrollRestorationService } from './services/scroll-restoration.service'
 export class AppComponent {
   title = 'Divara Craft';
   isAdminRoute = false;
+  isAuthenticated = false;
+  isAccountMenuOpen = false;
+  currentUserName = 'Guest';
+  currentUserEmail = '';
+  wishlistShortcutCount = 0;
   readonly showRatingTestButton = this.isLocalEnvironment();
+  private readonly subscriptions = new Subscription();
 
   constructor(
     private readonly router: Router,
     private readonly reviewService: ReviewService,
+    private readonly authSessionService: AuthSessionService,
+    private readonly wishlistService: WishlistService,
     private readonly themeService: ThemeService,
     private readonly currencyPreferenceService: CurrencyPreferenceService,
     // Injecting activates the service — it wires up router event listeners
@@ -40,15 +51,66 @@ export class AppComponent {
       }
     } catch { /* ignore */ }
 
-    this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe(e => {
-        this.isAdminRoute = (e as NavigationEnd).urlAfterRedirects.startsWith('/admin');
-      });
+    this.subscriptions.add(
+      this.router.events
+        .pipe(filter(e => e instanceof NavigationEnd))
+        .subscribe(e => {
+          this.isAdminRoute = (e as NavigationEnd).urlAfterRedirects.startsWith('/admin');
+          this.closeAccountMenu();
+        })
+    );
+
+    this.subscriptions.add(
+      this.authSessionService.user$.subscribe((user) => {
+        this.isAuthenticated = Boolean(user);
+        this.currentUserName = user?.name?.trim() || 'Guest';
+        this.currentUserEmail = user?.email?.trim() || '';
+      })
+    );
+
+    this.subscriptions.add(
+      this.wishlistService.wishlistItems$.subscribe((items) => {
+        this.wishlistShortcutCount = items.length;
+      })
+    );
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.closeAccountMenu();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   openRatingTestPopup(): void {
     this.reviewService.triggerPreviewPopup();
+  }
+
+  toggleAccountMenu(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.isAccountMenuOpen = !this.isAccountMenuOpen;
+  }
+
+  closeAccountMenu(): void {
+    this.isAccountMenuOpen = false;
+  }
+
+  navigateFromAccountMenu(path: string, fragment?: string): void {
+    this.closeAccountMenu();
+    void this.router.navigate([path], fragment ? { fragment } : undefined);
+  }
+
+  logoutFromAccountMenu(): void {
+    this.authSessionService.clearSession();
+    this.closeAccountMenu();
+    void this.router.navigate(['/']);
+  }
+
+  get accountInitial(): string {
+    return this.currentUserName.trim().charAt(0).toUpperCase() || 'G';
   }
 
   private isLocalEnvironment(): boolean {

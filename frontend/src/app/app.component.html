@@ -29,8 +29,181 @@
     <span class="nav-icon">♡</span>
     <span>Wishlist</span>
   </a>
-  <a routerLink="/profile" routerLinkActive="active">
+  <button
+    type="button"
+    class="mobile-nav-account"
+    [class.active]="isAccountMenuOpen"
+    (click)="toggleAccountMenu($event)">
     <span class="nav-icon">♙</span>
     <span>Account</span>
-  </a>
+  </button>
 </nav>
+
+<div
+  class="mobile-account-sheet-backdrop"
+  *ngIf="isAccountMenuOpen && !isAdminRoute"
+  (click)="closeAccountMenu()"></div>
+
+<section
+  class="mobile-account-sheet"
+  *ngIf="isAccountMenuOpen && !isAdminRoute"
+  aria-label="Account options"
+  (click)="$event.stopPropagation()">
+  <div class="mobile-account-sheet__handle"></div>
+
+  <div class="mobile-account-sheet__hero">
+    <div class="mobile-account-sheet__avatar">{{ accountInitial }}</div>
+    <div class="mobile-account-sheet__identity">
+      <p class="mobile-account-sheet__eyebrow">{{ isAuthenticated ? 'Welcome Back,' : 'Welcome,' }}</p>
+      <h3>{{ currentUserName }}</h3>
+      <p class="mobile-account-sheet__meta">★ {{ isAuthenticated ? 'Divara Craft' : 'Sign in to continue' }}</p>
+    </div>
+    <button
+      type="button"
+      class="mobile-account-sheet__close"
+      (click)="navigateFromAccountMenu(isAuthenticated ? '/profile' : '/login')"
+      aria-label="Account settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.2"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.52 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 4.6H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.19.46.64.76 1.14.76H21a2 2 0 1 1 0 4h-.09c-.5 0-.95.3-1.14.76Z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="mobile-account-sheet__quick-grid" *ngIf="isAuthenticated">
+    <button
+      *ngIf="isAuthenticated"
+      type="button"
+      class="mobile-account-sheet__quick-card"
+      (click)="navigateFromAccountMenu('/track-order')">
+      <span class="mobile-account-sheet__quick-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M6 7h12l-1 11H7L6 7Z"></path>
+          <path d="M9 7a3 3 0 0 1 6 0"></path>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__quick-copy">
+        <strong>My Orders</strong>
+        <small>Track &amp; view orders</small>
+      </span>
+      <span class="mobile-account-sheet__quick-badge" *ngIf="isAuthenticated">•</span>
+    </button>
+
+    <button
+      type="button"
+      class="mobile-account-sheet__quick-card"
+      (click)="navigateFromAccountMenu('/wishlist')">
+      <span class="mobile-account-sheet__quick-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M12 20.5s-6.5-4.35-8.5-8A5.15 5.15 0 0 1 12 6.54 5.15 5.15 0 0 1 20.5 12.5c-2 3.65-8.5 8-8.5 8Z"></path>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__quick-copy">
+        <strong>Wishlist</strong>
+        <small>Your saved items</small>
+      </span>
+      <span class="mobile-account-sheet__quick-badge" *ngIf="wishlistShortcutCount > 0">{{ wishlistShortcutCount }}</span>
+    </button>
+  </div>
+
+  <div class="mobile-account-sheet__list">
+    <button
+      *ngIf="!isAuthenticated"
+      type="button"
+      class="mobile-account-sheet__row"
+      (click)="navigateFromAccountMenu('/shop')">
+      <span class="mobile-account-sheet__row-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M6 7h12l-1 11H7L6 7Z"></path>
+          <path d="M9 7a3 3 0 0 1 6 0"></path>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__row-label">Shop</span>
+      <span class="mobile-account-sheet__row-chevron">›</span>
+    </button>
+    <button
+      *ngIf="isAuthenticated"
+      type="button"
+      class="mobile-account-sheet__row"
+      (click)="navigateFromAccountMenu('/profile', 'saved-addresses')">
+      <span class="mobile-account-sheet__row-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z"></path>
+          <circle cx="12" cy="11" r="2.8"></circle>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__row-label">Saved Addresses</span>
+      <span class="mobile-account-sheet__row-chevron">›</span>
+    </button>
+    <button
+      *ngIf="isAuthenticated"
+      type="button"
+      class="mobile-account-sheet__row"
+      (click)="navigateFromAccountMenu('/profile', 'payment-methods')">
+      <span class="mobile-account-sheet__row-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <rect x="3.5" y="6.5" width="17" height="11" rx="2"></rect>
+          <path d="M3.5 10.5h17"></path>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__row-label">Payment Methods</span>
+      <span class="mobile-account-sheet__row-chevron">›</span>
+    </button>
+    <button
+      *ngIf="isAuthenticated"
+      type="button"
+      class="mobile-account-sheet__row"
+      (click)="navigateFromAccountMenu('/profile')">
+      <span class="mobile-account-sheet__row-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M12 21a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"></path>
+          <path d="M18 16H6l1.2-1.6A4 4 0 0 0 8 12V10a4 4 0 1 1 8 0v2a4 4 0 0 0 .8 2.4L18 16Z"></path>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__row-label">Notifications</span>
+      <span class="mobile-account-sheet__row-chevron">›</span>
+    </button>
+    <button
+      type="button"
+      class="mobile-account-sheet__row"
+      (click)="navigateFromAccountMenu('/contact')">
+      <span class="mobile-account-sheet__row-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M4 12a8 8 0 0 1 16 0"></path>
+          <rect x="3" y="12" width="4" height="7" rx="2"></rect>
+          <rect x="17" y="12" width="4" height="7" rx="2"></rect>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__row-label">Contact</span>
+      <span class="mobile-account-sheet__row-chevron">›</span>
+    </button>
+    <button
+      type="button"
+      class="mobile-account-sheet__row"
+      (click)="navigateFromAccountMenu('/about')">
+      <span class="mobile-account-sheet__row-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 10v6"></path>
+          <circle cx="12" cy="7.5" r=".75" fill="currentColor" stroke="none"></circle>
+        </svg>
+      </span>
+      <span class="mobile-account-sheet__row-label">About Us</span>
+      <span class="mobile-account-sheet__row-chevron">›</span>
+    </button>
+  </div>
+
+  <button
+    type="button"
+    class="mobile-account-sheet__auth-cta"
+    (click)="isAuthenticated ? logoutFromAccountMenu() : navigateFromAccountMenu('/login')">
+    <span>{{ isAuthenticated ? 'LOGOUT' : 'LOGIN' }}</span>
+    <span class="mobile-account-sheet__auth-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M14 8l4 4-4 4"></path>
+        <path d="M6 12h12"></path>
+        <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"></path>
+      </svg>
+    </span>
+  </button>
+</section>

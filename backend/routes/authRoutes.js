@@ -2,6 +2,8 @@ const express = require('express');
 const authService = require('../services/authService');
 const emailService = require('../services/emailService');
 const emailVerificationService = require('../services/emailVerificationService');
+const { requireCustomerAuth } = require('../middlewares/customerAuth');
+const { getCustomerPreferences } = require('../services/customerPreferenceService');
 
 const router = express.Router();
 
@@ -121,6 +123,18 @@ router.post('/user-login', async (req, res) => {
     });
   } catch (error) {
     res.status(401).json({ error: error.message });
+  }
+});
+
+router.get('/me/preferences', requireCustomerAuth, async (req, res) => {
+  try {
+    const preferences = await getCustomerPreferences(req.user.id);
+    res.json({
+      status: 'ok',
+      ...preferences
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to load customer preferences' });
   }
 });
 

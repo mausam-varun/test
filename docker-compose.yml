@@ -9,7 +9,11 @@ version: '3.9'
 services:
 
   # ── 0. Frontend (Angular build + Nginx) ──
+  # Opt-in only for Dockerized frontend runs. During development, use
+  # `cd frontend && npm start` for hot reload without rebuilding Docker.
   frontend:
+    profiles:
+      - frontend
     build:
       context: .
       dockerfile: frontend/Dockerfile

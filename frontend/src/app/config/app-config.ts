@@ -52,6 +52,7 @@ export const API_ENDPOINTS = {
   flashDealsBanner: `${APP_CONFIG.API_URL}/flash-deals-banner`,
   festiveSeasonBanner: `${APP_CONFIG.API_URL}/festive-season-banner`,
   orders: `${APP_CONFIG.API_URL}/orders`,
+  customerPreferences: `${APP_CONFIG.AUTH_API_URL}/me/preferences`,
   reviews: `${APP_CONFIG.API_URL}/reviews`,
   pendingReview: `${APP_CONFIG.API_URL}/reviews/pending`,
   reviewUploads: `${APP_CONFIG.API_URL}/reviews/uploads`,

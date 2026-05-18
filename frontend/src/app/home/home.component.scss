@@ -6447,4 +6447,18 @@ $font-poppins: 'Poppins', sans-serif;
     padding-left: 5px !important;
     padding-right: 5px !important;
   }
+
+  .top-categories .col-card,
+  .new-products .new-products-wrapper,
+  .new-products .new-products-grid,
+  .festive-season .festive-season-wrapper,
+  .festive-season .festive-products-grid {
+    background: #fff !important;
+  }
+
+  .dc-card .dc-card__img-wrap,
+  .upload-box,
+  .upload-box__icon {
+    background: #f7f8fb !important;
+  }
 }

@@ -1,7 +1,9 @@
 import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CartItem, CartService } from '../services/cart.service';
+import { CustomerPreferencesService, SavedAddress, SavedPaymentMethod } from '../services/customer-preferences.service';
 import { OrderService } from '../services/order.service';
 import { AuthSessionService } from '../services/auth-session.service';
 import { APP_CONFIG } from '../config/app-config';
@@ -36,6 +38,43 @@ import { SearchCountryField, CountryISO, PhoneNumberFormat } from 'ngx-intl-tel-
             Track Your Order
           </a>
         </div>
+
+        <section class="saved-checkout-preferences" *ngIf="savedAddresses.length || savedPaymentMethods.length">
+          <div class="saved-checkout-preferences__group" *ngIf="savedAddresses.length">
+            <div class="saved-checkout-preferences__head">
+              <h3>Saved Addresses</h3>
+              <p>Tap an address to fill your delivery details.</p>
+            </div>
+            <div class="saved-checkout-preferences__list">
+              <button
+                type="button"
+                class="saved-checkout-preferences__address"
+                *ngFor="let address of savedAddresses"
+                [class.is-active]="selectedSavedAddressId === address.id"
+                (click)="applySavedAddress(address)">
+                <strong>{{ address.recipient_name }}</strong>
+                <span>{{ formatSavedAddress(address) }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="saved-checkout-preferences__group" *ngIf="savedPaymentMethods.length">
+            <div class="saved-checkout-preferences__head">
+              <h3>Saved Payment Methods</h3>
+              <p>Choose a previously used payment method.</p>
+            </div>
+            <div class="saved-checkout-preferences__chips">
+              <button
+                type="button"
+                class="saved-checkout-preferences__chip"
+                *ngFor="let method of savedPaymentMethods"
+                [class.is-active]="paymentMethod === method.payment_method"
+                (click)="applySavedPaymentMethod(method)">
+                {{ getSavedPaymentMethodLabel(method) }}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <div class="form-grid">
           <label>
@@ -347,6 +386,9 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
   isUsingCurrentLocation = false;
   currentLocationMessage = '';
   showCurrentLocationMap = false;
+  savedAddresses: SavedAddress[] = [];
+  savedPaymentMethods: SavedPaymentMethod[] = [];
+  selectedSavedAddressId: number | null = null;
 
   get shouldShowNoAddressFound(): boolean {
     return this.addressLine1.trim().length >= 3
@@ -359,6 +401,8 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly cartService: CartService,
     private readonly orderService: OrderService,
     private readonly authSessionService: AuthSessionService,
+    private readonly customerPreferencesService: CustomerPreferencesService,
+    private readonly router: Router,
     private readonly ngZone: NgZone
   ) {}
 
@@ -392,6 +436,14 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
         if (sessionEmail) {
           this.email = sessionEmail;
           this.saveCheckoutDraft();
+        }
+
+        if (user?.id) {
+          this.loadSavedPreferences();
+        } else {
+          this.savedAddresses = [];
+          this.savedPaymentMethods = [];
+          this.selectedSavedAddressId = null;
         }
       })
     );
@@ -816,7 +868,11 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.cartService.clearCart();
         }
-          this.saveCheckoutDraft();
+        this.saveCheckoutDraft();
+
+        if (this.placedOrderNumber) {
+          void this.router.navigate(['/track-order', this.placedOrderNumber]);
+        }
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -861,6 +917,10 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
               this.cartService.clearCart();
             }
             this.saveCheckoutDraft();
+
+            if (this.placedOrderNumber) {
+              void this.router.navigate(['/track-order', this.placedOrderNumber]);
+            }
           },
           error: (err) => {
             this.isSubmitting = false;
@@ -908,6 +968,45 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return null;
+  }
+
+  applySavedAddress(address: SavedAddress): void {
+    this.selectedSavedAddressId = address.id;
+    this.fullName = address.recipient_name || this.fullName;
+    this.addressLine1 = address.address_line1 || '';
+    this.addressLine2 = address.address_line2 || '';
+    this.city = address.city || '';
+    this.state = address.state || '';
+    this.postalCode = address.postal_code || '';
+    this.country = address.country || 'India';
+    this.saveCheckoutDraft();
+  }
+
+  applySavedPaymentMethod(method: SavedPaymentMethod): void {
+    this.paymentMethod = method.payment_method;
+    this.saveCheckoutDraft();
+  }
+
+  formatSavedAddress(address: SavedAddress): string {
+    return [
+      address.address_line1,
+      address.address_line2,
+      address.city,
+      address.state,
+      address.postal_code,
+      address.country
+    ].filter((value) => String(value || '').trim().length > 0).join(', ');
+  }
+
+  getSavedPaymentMethodLabel(method: SavedPaymentMethod): string {
+    switch (method.payment_method) {
+      case 'card':
+        return 'Card';
+      case 'upi':
+        return 'UPI';
+      default:
+        return 'Cash on Delivery';
+    }
   }
 
   private resetForm(): void {
@@ -984,5 +1083,30 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch {
       localStorage.removeItem(this.checkoutDraftStorageKey);
     }
+  }
+
+  private loadSavedPreferences(): void {
+    this.customerPreferencesService.getPreferences().subscribe({
+      next: (response) => {
+        this.savedAddresses = response?.addresses || [];
+        this.savedPaymentMethods = response?.paymentMethods || [];
+
+        if (!this.addressLine1.trim() && this.savedAddresses.length) {
+          const preferredAddress = this.savedAddresses.find((item) => item.is_default) || this.savedAddresses[0];
+          this.applySavedAddress(preferredAddress);
+        }
+
+        if (this.savedPaymentMethods.length) {
+          const preferredMethod = this.savedPaymentMethods.find((item) => item.is_default) || this.savedPaymentMethods[0];
+          if (!this.paymentMethod || this.paymentMethod === 'cod') {
+            this.applySavedPaymentMethod(preferredMethod);
+          }
+        }
+      },
+      error: () => {
+        this.savedAddresses = [];
+        this.savedPaymentMethods = [];
+      }
+    });
   }
 }

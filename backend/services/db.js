@@ -405,6 +405,44 @@ async function initializeDatabase() {
   `);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS user_saved_addresses (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      recipient_name VARCHAR(150) NOT NULL,
+      phone VARCHAR(40) DEFAULT NULL,
+      address_line1 VARCHAR(255) NOT NULL,
+      address_line2 VARCHAR(255) DEFAULT NULL,
+      city VARCHAR(120) NOT NULL,
+      state VARCHAR(120) NOT NULL,
+      postal_code VARCHAR(40) NOT NULL,
+      country VARCHAR(120) NOT NULL,
+      is_default TINYINT(1) NOT NULL DEFAULT 0,
+      last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_saved_addresses_user (user_id),
+      INDEX idx_saved_addresses_user_last_used (user_id, last_used_at),
+      CONSTRAINT fk_saved_addresses_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_saved_payment_methods (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      payment_method ENUM('cod', 'card', 'upi') NOT NULL,
+      is_default TINYINT(1) NOT NULL DEFAULT 0,
+      last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_saved_payment_method_user_method (user_id, payment_method),
+      INDEX idx_saved_payment_method_user (user_id),
+      INDEX idx_saved_payment_method_user_last_used (user_id, last_used_at),
+      CONSTRAINT fk_saved_payment_methods_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS order_items (
       id INT AUTO_INCREMENT PRIMARY KEY,
       order_id INT,

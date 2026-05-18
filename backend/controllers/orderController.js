@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const { createOrder } = require('../services/orderService');
+const { saveCustomerCheckoutPreferences } = require('../services/customerPreferenceService');
 const { sendOrderConfirmationEmail } = require('../services/emailService');
 const { generateInvoicePdfBuffer } = require('../services/invoiceService');
 const { createShiprocketOrder } = require('../services/shiprocketService');
@@ -92,6 +93,25 @@ exports.placeOrder = asyncHandler(async (req, res) => {
     }
 
     throw error;
+  }
+
+  if (req?.user?.id) {
+    try {
+      await saveCustomerCheckoutPreferences({
+        userId: req.user.id,
+        customerName: trimmedFullName,
+        customerPhone: trimmedPhone,
+        addressLine1: trimmedAddressLine1,
+        addressLine2: trimmedAddressLine2,
+        city: trimmedCity,
+        state: trimmedState,
+        postalCode: trimmedPostalCode,
+        country: trimmedCountry,
+        paymentMethod
+      });
+    } catch (error) {
+      console.error('[CustomerPreferences] Failed to persist checkout preferences:', error.message);
+    }
   }
 
   // For online payments, create Razorpay order and return it for frontend to process
