@@ -335,3 +335,13 @@
   font-size: 0.9rem;
   text-align: center;
 }
+
+@media (max-width: 720px) {
+  .tracking-page {
+    padding: 1.5rem 1rem 132px;
+  }
+
+  .tracking-container {
+    padding-bottom: 24px;
+  }
+}

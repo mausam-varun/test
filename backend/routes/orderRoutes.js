@@ -5,12 +5,12 @@ const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const { trackShipment, trackByShipmentId } = require('../services/shiprocketService');
 const { getPool } = require('../services/db');
-const { optionalCustomerAuth, requireCustomerAuth } = require('../middlewares/customerAuth');
+const { requireCustomerAuth } = require('../middlewares/customerAuth');
 
 const router = express.Router();
 
-router.post('/', optionalCustomerAuth, placeOrder);
-router.post('/verify-payment', optionalCustomerAuth, verifyPayment);
+router.post('/', requireCustomerAuth, placeOrder);
+router.post('/verify-payment', requireCustomerAuth, verifyPayment);
 router.get('/:orderId/rating-eligibility', requireCustomerAuth, getRatingEligibility);
 
 // GET /api/orders/:orderNumber/tracking

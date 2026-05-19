@@ -212,7 +212,7 @@ import { SearchCountryField, CountryISO, PhoneNumberFormat } from 'ngx-intl-tel-
           class="place-order-btn place-order-btn--mobile"
           (click)="placeOrder()"
           [disabled]="!cartItems.length || isSubmitting">
-          {{ isSubmitting ? 'Placing Order...' : 'Place Order' }}
+          {{ placeOrderButtonLabel }}
         </button>
 
         <div class="trust-strip">
@@ -243,46 +243,62 @@ import { SearchCountryField, CountryISO, PhoneNumberFormat } from 'ngx-intl-tel-
 
         <div class="summary-items" *ngIf="cartItems.length; else emptyCartState">
           <article class="summary-item" *ngFor="let item of cartItems">
-            <img [src]="item.image" [alt]="item.name">
-            <div class="summary-item-body">
-              <h4>{{ item.name }}</h4>
-
-              <div class="summary-item-row">
-                <label>Qty:</label>
-                <div class="summary-quantity-control" aria-label="Quantity controls">
-                  <button
-                    type="button"
-                    class="summary-quantity-btn"
-                    (click)="changeItemQuantity(item, -1)"
-                    [disabled]="item.quantity <= 1"
-                    aria-label="Decrease quantity">
-                    -
-                  </button>
-                  <span class="summary-quantity-value">{{ item.quantity }}</span>
-                  <button
-                    type="button"
-                    class="summary-quantity-btn"
-                    (click)="changeItemQuantity(item, 1)"
-                    aria-label="Increase quantity">
-                    +
-                  </button>
-                </div>
-
-                <label class="size-label">Size:</label>
-                <select
-                  [(ngModel)]="selectedSizes[item.id]"
-                  [ngModelOptions]="{ updateOn: 'change' }"
-                  [attr.name]="'size-' + item.id">
-                  <option value="" disabled selected>Select size</option>
-                  <option *ngFor="let sizeOption of getSizeOptions(item)" [value]="sizeOption">
-                    {{ sizeOption }}
-                  </option>
-                </select>
+            <div class="summary-item__top">
+              <img [src]="item.image" [alt]="item.name">
+              <div class="summary-item-body">
+                <h4>{{ item.name }}</h4>
               </div>
             </div>
 
-            <div class="summary-item-price">
-              <button type="button" class="remove-item-btn" (click)="removeItem(item.id)" aria-label="Remove item">🗑️</button>
+            <div class="summary-item__detail-row">
+              <label>Quantity</label>
+              <div class="summary-quantity-control" aria-label="Quantity controls">
+                <button
+                  type="button"
+                  class="summary-quantity-btn"
+                  (click)="changeItemQuantity(item, -1)"
+                  [disabled]="item.quantity <= 1"
+                  aria-label="Decrease quantity">
+                  -
+                </button>
+                <span class="summary-quantity-value">{{ item.quantity }}</span>
+                <button
+                  type="button"
+                  class="summary-quantity-btn"
+                  (click)="changeItemQuantity(item, 1)"
+                  aria-label="Increase quantity">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="summary-item__detail-row">
+              <label>Size</label>
+              <select
+                class="summary-size-select"
+                [(ngModel)]="selectedSizes[item.id]"
+                [ngModelOptions]="{ updateOn: 'change' }"
+                [attr.name]="'size-' + item.id">
+                <option value="" disabled>Select size</option>
+                <option *ngFor="let sizeOption of getSizeOptions(item)" [value]="sizeOption">
+                  {{ sizeOption }}
+                </option>
+              </select>
+            </div>
+
+            <div class="summary-item__footer">
+              <button type="button" class="remove-item-btn" (click)="removeItem(item.id)" aria-label="Remove item">
+                <span class="remove-item-btn__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M4 7h16"></path>
+                    <path d="M9 7V5h6v2"></path>
+                    <path d="M7 7l1 12h8l1-12"></path>
+                    <path d="M10 11v5"></path>
+                    <path d="M14 11v5"></path>
+                  </svg>
+                </span>
+                <span class="remove-item-btn__label">Remove</span>
+              </button>
               <strong>{{ (item.price * item.quantity) | displayCurrency:0 }}</strong>
             </div>
           </article>
@@ -316,7 +332,7 @@ import { SearchCountryField, CountryISO, PhoneNumberFormat } from 'ngx-intl-tel-
         </div>
 
         <button type="button" class="place-order-btn place-order-btn--summary" (click)="placeOrder()" [disabled]="!cartItems.length || isSubmitting">
-          {{ isSubmitting ? 'Placing Order...' : 'Place Order' }}
+          {{ placeOrderButtonLabel }}
         </button>
 
         <p class="secure-note">Your data is safe and secure with us.</p>
@@ -389,6 +405,18 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
   savedAddresses: SavedAddress[] = [];
   savedPaymentMethods: SavedPaymentMethod[] = [];
   selectedSavedAddressId: number | null = null;
+
+  get isCustomerLoggedIn(): boolean {
+    return Boolean(this.authSessionService.getCurrentUser()?.id);
+  }
+
+  get placeOrderButtonLabel(): string {
+    if (this.isSubmitting) {
+      return 'Placing Order...';
+    }
+
+    return this.isCustomerLoggedIn ? 'Place Order' : 'Login to Place Order';
+  }
 
   get shouldShowNoAddressFound(): boolean {
     return this.addressLine1.trim().length >= 3
@@ -822,6 +850,14 @@ export class CheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.submitErrorMessage = '';
     this.submitSuccessMessage = '';
     this.placedOrderNumber = '';
+
+    if (!this.isCustomerLoggedIn) {
+      this.validationMessage = 'Please log in to place your order.';
+      void this.router.navigate(['/login'], {
+        queryParams: { redirectTo: '/checkout' }
+      });
+      return;
+    }
 
     if (!this.cartItems.length) {
       this.validationMessage = 'Your cart is empty. Add products before placing an order.';
